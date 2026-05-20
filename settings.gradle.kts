@@ -1,6 +1,7 @@
 rootProject.name = "kanama-demos"
 
 val demos = listOf(
+    "Bunnymark" to "bunnymark",
     "Starter-Kit-3D-Platformer" to "starter-kit-3d-platformer",
     "Starter-Kit-Match3" to "starter-kit-match3",
     "Starter-Kit-FPS" to "starter-kit-fps",

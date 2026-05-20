@@ -217,6 +217,21 @@ The Gradle task delegates to `scripts/android_smoke_all.sh`, which runs the
 Kanama Android smoke script once per Android-enabled demo and writes APKs,
 logcat captures, and screenshots under `/tmp/kanama-android-smokes` by default.
 
+## Benchmarking
+
+`Bunnymark` is a benchmark project for comparing GDScript and Kotlin script
+throughput in a simple 2D stress test. It includes Kanama ports of the
+Godot/JVM Bunnymark harness plus local GDScript baselines.
+
+Run it the same way as the gameplay demos:
+
+```sh
+./gradlew bunnymarkBuildAndRunGodot
+```
+
+Current one-pass desktop results and the exact Godot/JVM commit used for
+comparison are recorded in `Bunnymark/BENCHMARK_RESULTS.md`.
+
 ## Ported Demos
 
 | Demo | Folder | Upstream | Status |
@@ -244,6 +259,7 @@ logcat captures, and screenshots under `/tmp/kanama-android-smokes` by default.
 | `godot-4-3d-character-controller-tutorial` | GDQuest `godot-4-3d-character-controller-tutorial` | Code MIT; assets CC BY 4.0; all else Copyright 2016-2026 GDQuest | https://github.com/gdquest-demos/godot-4-3d-character-controller-tutorial |
 | `godot-demo-3d-squash-the-creeps` | Godot demo projects `3d/squash_the_creeps` | Code MIT; `House In a Forest Loop.ogg` CC BY 3.0; Montserrat OFL 1.1 | https://github.com/godotengine/godot-demo-projects/tree/master/3d/squash_the_creeps |
 | `godot-demo-2d-dodge-the-creeps` | Godot demo projects `2d/dodge_the_creeps` | Code MIT; images CC0; `House In a Forest Loop.ogg` CC BY 3.0; Xolonium OFL 1.1 | https://github.com/godotengine/godot-demo-projects/tree/master/2d/dodge_the_creeps |
+| `Bunnymark` | Godot/JVM Bunnymark harness | MIT | https://github.com/utopia-rise/godot-kotlin-jvm/tree/master/harness/bunnymark |
 
 ## Porting Guidelines
 

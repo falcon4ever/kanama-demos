@@ -1,0 +1,14 @@
+; Engine configuration file.
+
+config_version=5
+
+[application]
+
+config/name="Kanama Bunnymark"
+run/main_scene="res://Benchmarker.tscn"
+config/features=PackedStringArray("4.7")
+
+[display]
+
+window/vsync/vsync_mode=false
+

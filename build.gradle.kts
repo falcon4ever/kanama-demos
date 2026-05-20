@@ -15,6 +15,7 @@ fun gradleCommand(projectDir: File): List<String> {
 }
 
 val demoBuilds = listOf(
+    DemoBuild("bunnymark", "Bunnymark", "bunnymark", "Bunnymark"),
     DemoBuild("starter-kit-3d-platformer", "Starter-Kit-3D-Platformer", "platformer", "Starter Kit 3D Platformer"),
     DemoBuild("starter-kit-match3", "Starter-Kit-Match3", "match3", "Starter Kit Match-3"),
     DemoBuild("starter-kit-fps", "Starter-Kit-FPS", "fps", "Starter Kit FPS"),
