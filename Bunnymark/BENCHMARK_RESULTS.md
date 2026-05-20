@@ -15,8 +15,9 @@ scene stabilizes near 60 FPS, so higher numbers are better.
 - Kanama runtime: original full-pass rows used
   `beafe6dcd47cea2c68c8f543368f461cff74f288`; supplemental V2/V3 probes
   used `3cb81a33f34d3fb8e313ed0fd0f7962ab067516c`.
-- Kanama demos: benchmark source unchanged during this pass; only this
-  results document was updated.
+- Kanama demos: benchmark source came from
+  `28639bc6121913c273fda8b3e7d141e1cb2e8106`; later commits in this
+  section update only this results document.
 - Godot/JVM repo: <https://github.com/utopia-rise/godot-kotlin-jvm>
 - Godot/JVM commit: [`aff67e2a93c669cffb9575fd6dd6d66dc4a53e1c`](https://github.com/utopia-rise/godot-kotlin-jvm/commit/aff67e2a93c669cffb9575fd6dd6d66dc4a53e1c)
 - Godot/JVM engine: Godot 4.6.2 JVM 0.16.0
