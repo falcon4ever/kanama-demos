@@ -44,6 +44,12 @@ Performance learnings since the initial recorded benchmark:
   bunny per frame. These scratch buffers are reusable native argument/return
   slots for synchronous ptrcalls, not cached Godot objects or cached benchmark
   results.
+- **V1 Sprites improved through the same shared wrapper path.** The benchmark
+  keeps one Kanama script on the root but still performs high-volume typed
+  wrapper calls for viewport bounds and sprite position updates. Scratch-backed
+  `Rect2` and primitive/small-struct ptrcall helpers reduce the tiny native
+  allocations around those repeated Kotlin-to-Godot calls, so the row benefits
+  without changing the Sprite2D-per-bunny benchmark shape.
 - **Typed container decoding should avoid wrapper churn.** Typed object-array
   decoding can wrap directly as the requested Godot type, avoiding a temporary
   `GodotObject` wrapper for each element. This helps normal scene-tree code
