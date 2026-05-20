@@ -12,8 +12,11 @@ scene stabilizes near 60 FPS, so higher numbers are better.
   pass updates only the V2 and V3 rows, where clean probes improved.
 - Kanama engine: Godot 4.7 beta 2
 - Kanama Java: OpenJDK 25.0.3
-- Kanama runtime commit: `3cb81a33f34d3fb8e313ed0fd0f7962ab067516c`
-- Kanama demos commit: this benchmark-results commit
+- Kanama runtime: original full-pass rows used
+  `beafe6dcd47cea2c68c8f543368f461cff74f288`; supplemental V2/V3 probes
+  used `3cb81a33f34d3fb8e313ed0fd0f7962ab067516c`.
+- Kanama demos: benchmark source unchanged during this pass; only this
+  results document was updated.
 - Godot/JVM repo: <https://github.com/utopia-rise/godot-kotlin-jvm>
 - Godot/JVM commit: [`aff67e2a93c669cffb9575fd6dd6d66dc4a53e1c`](https://github.com/utopia-rise/godot-kotlin-jvm/commit/aff67e2a93c669cffb9575fd6dd6d66dc4a53e1c)
 - Godot/JVM engine: Godot 4.6.2 JVM 0.16.0
