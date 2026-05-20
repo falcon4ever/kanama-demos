@@ -6,12 +6,13 @@ scene stabilizes near 60 FPS, so higher numbers are better.
 ## 2026-05-20 Runtime Performance Pass
 
 - Hardware: Apple M1 Max, 64 GB RAM, Metal 4.0
-- Method: windowed runs. Kanama Kotlin rows were rerun after one warm-up/probe
-  pass and two direct measured passes per row; the table publishes the lower
-  measured value for each rerun row.
+- Method: windowed runs. The original runtime-pass Kanama Kotlin rows used
+  one warm-up/probe pass and two direct measured passes per row, publishing
+  the lower measured value for each rerun row. A later hot-path supplemental
+  pass updates only the V2 and V3 rows, where clean probes improved.
 - Kanama engine: Godot 4.7 beta 2
 - Kanama Java: OpenJDK 25.0.3
-- Kanama runtime commit: `beafe6dcd47cea2c68c8f543368f461cff74f288`
+- Kanama runtime commit: `3cb81a33f34d3fb8e313ed0fd0f7962ab067516c`
 - Kanama demos commit: this benchmark-results commit
 - Godot/JVM repo: <https://github.com/utopia-rise/godot-kotlin-jvm>
 - Godot/JVM commit: [`aff67e2a93c669cffb9575fd6dd6d66dc4a53e1c`](https://github.com/utopia-rise/godot-kotlin-jvm/commit/aff67e2a93c669cffb9575fd6dd6d66dc4a53e1c)
@@ -28,8 +29,8 @@ Performance learnings since the initial recorded benchmark:
 | --- | ---: | ---: | ---: |
 | V1 Sprites | 39,700 | 50,400 | +10,700 |
 | V1 DrawTexture | 73,000 | 171,273 | +98,273 |
-| V2 | 25,500 | 36,000 | +10,500 |
-| V3 | 20,500 | 26,000 | +5,500 |
+| V2 | 25,500 | 37,800 | +12,300 |
+| V3 | 20,500 | 31,200 | +10,700 |
 
 - **Direct lifecycle dispatch pays off broadly.** KSP-generated registrars now
   expose direct `_process(delta)` and `_physics_process(delta)` lambdas, so
@@ -57,16 +58,20 @@ Current table:
 | --- | ---: | ---: | ---: | ---: |
 | V1 Sprites | 27,700 | 50,400 | 27,300 | 46,000 |
 | V1 DrawTexture | 47,100 | 171,273 | 46,700 | 96,800 |
-| V2 | 28,200 | 36,000 | 27,600 | 34,100 |
-| V3 | 24,100 | 26,000 | 23,000 | 27,700 |
+| V2 | 28,200 | 37,800 | 27,600 | 34,100 |
+| V3 | 24,100 | 31,200 | 23,000 | 27,700 |
 
 ## Notes
 
 - Kanama Kotlin V1 DrawTexture uses the typed `CanvasItem.drawTexture` wrapper.
   The older generic `call("draw_texture", ...)` path measured much lower.
-- Kanama Kotlin measured ranges for this pass: V1 Sprites 50,400-51,600
-  (warm-up/probe 52,100), V1 DrawTexture 171,273-187,654, V2 36,000-36,400,
-  and V3 26,000-29,400.
+- Kanama Kotlin measured ranges for the full runtime pass: V1 Sprites
+  50,400-51,600 (warm-up/probe 52,100), V1 DrawTexture 171,273-187,654,
+  V2 36,000-36,400, and V3 26,000-29,400.
+- Supplemental hot-path probes after `3cb81a3`: V1 Sprites 49,700-50,500
+  and V1 DrawTexture 168,532 stayed in the same ballpark but did not beat
+  their table rows; V2 37,800 and V3 31,200 replace the previous V2/V3
+  table rows.
 - Kanama Kotlin sprite variants use typed texture loading and `Sprite2D`
   texture assignment.
 - Godot/JVM and GDScript rows were not rerun during this Kanama runtime
