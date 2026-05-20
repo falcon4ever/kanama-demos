@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://q3osrwkgcbi0"]
+
+[ext_resource type="Script" path="res://kotlin-src/CameraMode.kt" id="1_iqqgo"]
+
+[node name="CameraMode" type="Node3D" unique_id=1506626699]
+process_mode = 3
+visible = false
+script = ExtResource("1_iqqgo")
+mouse_sensitivity = 0.001

@@ -1,0 +1,132 @@
+[remap]
+
+importer="scene"
+importer_version=1
+type="PackedScene"
+uid="uid://b602ttibxesgm"
+path="res://.godot/imported/terrain.glb-f61dd9449b8484d861a587963e3ed34f.scn"
+
+[deps]
+
+source_file="res://level/terrain.glb"
+dest_files=["res://.godot/imported/terrain.glb-f61dd9449b8484d861a587963e3ed34f.scn"]
+
+[params]
+
+nodes/root_type="Node3D"
+nodes/root_name="Scene Root"
+nodes/root_script=null
+mesh_library/use_node_names_as_mesh_names=false
+array_mesh/deduplicate_surfaces=true
+nodes/apply_root_scale=true
+nodes/root_scale=1.0
+nodes/import_as_skeleton_bones=false
+nodes/use_name_suffixes=true
+nodes/use_node_type_suffixes=true
+meshes/ensure_tangents=true
+meshes/generate_lods=true
+meshes/create_shadow_meshes=true
+meshes/light_baking=1
+meshes/lightmap_texel_size=0.2
+meshes/force_disable_compression=false
+skins/use_named_skins=true
+animation/import=true
+animation/fps=30
+animation/trimming=false
+animation/remove_immutable_tracks=true
+animation/import_rest_as_RESET=false
+import_script/path=""
+materials/extract=0
+materials/extract_format=0
+materials/extract_path=""
+_subresources={
+"materials": {
+"@MATERIAL:1": {
+"use_external/enabled": true,
+"use_external/path": "uid://con3572kpt8a3"
+},
+"@MATERIAL:2": {
+"use_external/enabled": true,
+"use_external/path": "uid://con3572kpt8a3"
+},
+"@MATERIAL:3": {
+"use_external/enabled": true,
+"use_external/path": "uid://con3572kpt8a3"
+},
+"@MATERIAL:4": {
+"use_external/enabled": true,
+"use_external/path": "uid://con3572kpt8a3"
+},
+"@MATERIAL:5": {
+"use_external/enabled": true,
+"use_external/path": "uid://con3572kpt8a3"
+},
+"@MATERIAL:6": {
+"use_external/enabled": true,
+"use_external/path": "uid://con3572kpt8a3"
+},
+"@MATERIAL:7": {
+"use_external/enabled": true,
+"use_external/path": "uid://con3572kpt8a3"
+},
+"@MATERIAL:8": {
+"use_external/enabled": true,
+"use_external/path": "uid://con3572kpt8a3"
+},
+"Material.001": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://environment/terrain/terrain_mat.tres",
+"use_external/path": "uid://c5trc4hy86utg"
+}
+},
+"nodes": {
+"PATH:large_trunk": {
+"generate/physics": true,
+"physics/layer": 3,
+"physics/mask": 3
+},
+"PATH:large_trunk_001": {
+"generate/physics": true,
+"physics/layer": 3,
+"physics/mask": 3
+},
+"PATH:large_trunk_002": {
+"generate/physics": true,
+"physics/layer": 3,
+"physics/mask": 3
+},
+"PATH:large_trunk_003": {
+"generate/physics": true,
+"physics/layer": 3,
+"physics/mask": 3
+},
+"PATH:large_trunk_004": {
+"generate/physics": true,
+"physics/layer": 3,
+"physics/mask": 3
+},
+"PATH:large_trunk_005": {
+"generate/physics": true,
+"physics/layer": 3,
+"physics/mask": 3
+},
+"PATH:large_trunk_006": {
+"generate/physics": true,
+"physics/layer": 3,
+"physics/mask": 3
+},
+"PATH:large_trunk_007": {
+"generate/physics": true,
+"physics/layer": 3,
+"physics/mask": 3
+},
+"PATH:terrain2": {
+"generate/physics": true,
+"physics/layer": 3,
+"physics/mask": 3
+}
+}
+}
+gltf/naming_version=0
+gltf/embedded_image_handling=3
+gltf/texture_map_mode=0

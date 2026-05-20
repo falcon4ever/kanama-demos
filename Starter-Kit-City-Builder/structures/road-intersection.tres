@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="Structure" load_steps=3 format=3 uid="uid://dveu4dnue0d54"]
+
+[ext_resource type="PackedScene" uid="uid://euxdh7lkq0oj" path="res://models/road-intersection.glb" id="1_pnjl2"]
+[ext_resource type="Script" uid="uid://gm5kfkn7c62i" path="res://kotlin-src/Structure.kt" id="2_3eq5k"]
+
+[resource]
+script = ExtResource("2_3eq5k")
+model = ExtResource("1_pnjl2")
+price = 25

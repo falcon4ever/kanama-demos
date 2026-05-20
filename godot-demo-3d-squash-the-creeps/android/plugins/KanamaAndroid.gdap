@@ -1,0 +1,8 @@
+[config]
+
+name="KanamaAndroid"
+binary_type="local"
+binary="KanamaAndroid.debug.aar"
+
+[dependencies]
+remote=["io.github.vova7878.panama:Core:v0.1.3"]

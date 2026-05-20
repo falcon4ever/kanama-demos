@@ -1,0 +1,35 @@
+# --- Godot per-project caches ---
+.godot/
+*.import.cache
+
+# --- Build outputs ---
+build/
+out/
+*.class
+*.jar
+*.aar
+*.apk
+*.aab
+**/android/.build_version
+!**/gradle/wrapper/gradle-wrapper.jar
+
+# --- Native libraries ---
+*.so
+*.dylib
+*.dll
+
+# --- Gradle ---
+.gradle/
+
+# --- Kotlin / KSP ---
+.kotlin/
+
+# --- IDE ---
+.idea/
+*.iml
+
+# --- macOS ---
+.DS_Store
+
+# --- JVM crash logs ---
+hs_err_pid*.log
