@@ -48,6 +48,18 @@ Performance learnings since the initial recorded benchmark:
   decoding can wrap directly as the requested Godot type, avoiding a temporary
   `GodotObject` wrapper for each element. This helps normal scene-tree code
   such as `Node.getChildren()`, which V2 exercises every frame.
+- **Supplemental V2 hot-path gains came from child-list decoding.**
+  `Node.getChildren()` now calls the typed node-list ptrcall helper directly,
+  and the bool-argument Array-return helper uses thread-local scratch storage.
+  V2 exercises that path every frame before updating child sprite positions, so
+  it benefits from avoiding both temporary `GodotObject` wrappers and repeated
+  tiny FFM allocations.
+- **Supplemental V3 gains came after the callback lookup path.** Dense
+  `ObjectRegistry` lookup makes the common ScriptInstance handle path cheaper,
+  while `getViewportRect()` uses scratch-backed `Rect2` return storage. A sample
+  run still showed most V3 cost at the Godot-to-JVM Panama upcall boundary, so
+  this row improved by reducing work after each callback rather than removing
+  the callback cost itself.
 - **Benchmark code should stay ordinary.** These improvements came from shared
   runtime paths and generated dispatch policy, not benchmark-specific rewrites.
   That keeps Bunnymark useful as a proxy for real Kanama game code.
