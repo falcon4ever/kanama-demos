@@ -3,6 +3,56 @@
 Desktop results for the Bunnymark demo. The benchmark adds bunnies until the
 scene stabilizes near 60 FPS, so higher numbers are better.
 
+## 2026-05-21 Godot 4.7 Beta 2 C# Comparison Pass
+
+- Hardware: Apple M1 Max, 64 GB RAM, Metal 4.0
+- Method: windowed runs, one pass per row, no dedicated warm-up pass
+- Kanama engine: Godot 4.7 beta 2
+  (`4.7.beta2.official.777579205`)
+- Kanama Java: OpenJDK 25.0.3
+- Kanama runtime:
+  `8b8cdef41adfeab90d248b7ffa7932f6cfcd5e9e`
+- Kanama demos:
+  `9ec135959ac3d52f25733d99cd70632cdc194377`
+- C# engine: Godot 4.7 beta 2 Mono
+  (`4.7.beta2.mono.official.777579205`)
+- C# .NET SDK: `10.0.300`
+- C# source: copied from the Godot/JVM Bunnymark harness at
+  `2392b6c97579105cba32c2d5b8ac1ca5a42a0dc7` into
+  `/private/tmp/kanama-bunnymark-cs-20260521`, then compatibility-patched for
+  Godot 4.7 C# APIs. The original Godot/JVM working tree was already dirty and
+  was not modified.
+
+This pass reruns the Kanama Bunnymark rows after the retained-resource wrapper
+lifetime fix and adds a directional C# comparison. GDScript and Kanama Kotlin
+use the Kanama Bunnymark project and the non-Mono Godot 4.7 beta 2 binary. C#
+uses Godot's Mono binary because C# requires it, so the C# column is comparable
+as same-machine Godot 4.7 data, but not a perfectly identical runtime
+environment.
+
+Current table:
+
+| Benchmark | Kanama GDScript | Kanama Kotlin | Godot C# |
+| --- | ---: | ---: | ---: |
+| V1 Sprites | 28,100 | 51,100 | 48,200 |
+| V1 DrawTexture | 47,100 | 182,266 | 151,354 |
+| V2 | 28,700 | 38,600 | 19,300 |
+| V3 | 24,200 | 32,400 | 8,500 |
+
+Notes:
+
+- The Kanama Kotlin rows are in the same range or slightly above the
+  2026-05-20 current table, so the retained-resource lifetime fix did not show
+  a Bunnymark regression in this pass.
+- The C# harness was old Godot 3-era code. The temporary compatibility patch
+  updated `_Process(float)` to `_Process(double)`, `Vector2.x/y` to
+  `Vector2.X/Y`, `Update()` to `QueueRedraw()`, and the V3 signal/texture API
+  usage for Godot 4.7 C#.
+- C# V1 Sprites wrote a valid result and then Godot Mono reported a
+  texture/resource leak and crashed during shutdown. The benchmark output was
+  already written, but that row should be treated as having an exit-time Mono
+  or harness caveat.
+
 ## 2026-05-20 Runtime Performance Pass
 
 - Hardware: Apple M1 Max, 64 GB RAM, Metal 4.0
