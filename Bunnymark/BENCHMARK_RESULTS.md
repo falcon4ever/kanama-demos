@@ -3,6 +3,68 @@
 Desktop results for the Bunnymark demo. The benchmark adds bunnies until the
 scene stabilizes near 60 FPS, so higher numbers are better.
 
+## Latest Cross-Runtime Snapshot
+
+This table lines up the latest Kanama-side numbers with the latest Godot/JVM
+same-binary numbers. The Godot/JVM columns come from one custom
+Godot/JVM+Mono 4.6.2 binary. The Kanama GDScript and Kanama Kotlin columns come
+from the Kanama Godot 4.7 beta 2 demo run; the Kanama-side C# column is the
+separate Godot 4.7 beta 2 Mono C# run because Kanama itself does not provide a
+C# runtime.
+
+| Benchmark | Kanama GDScript | Kanama Kotlin | Kanama-side C# | Godot/JVM GDScript | Godot/JVM Kotlin | Godot/JVM C# |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| V1 Sprites | 28,100 | 51,100 | 48,200 | 27,500 | 46,400 | 47,000 |
+| V1 DrawTexture | 47,100 | 182,266 | 151,354 | 47,100 | 93,900 | 149,867 |
+| V2 | 28,700 | 38,600 | 19,300 | 27,700 | 33,700 | 19,000 |
+| V3 | 24,200 | 32,400 | 8,500 | 23,500 | 28,600 | 8,500 |
+
+## 2026-05-21 Godot/JVM + Mono Same-Binary Comparison Pass
+
+- Hardware: Apple M1 Max, 64 GB RAM, Metal 4.0
+- Method: windowed runs, one pass per row, no dedicated warm-up pass
+- Engine: Godot 4.6.2 with Godot/JVM 0.16.0 and Mono enabled
+  (`4.6.2.stable.jvm.0.16.0.mono.custom_build.001aa128b`)
+- Godot source:
+  `001aa128b1cd80dc4e47e823c360bccf45ed6bad`
+- Godot/JVM module:
+  `2392b6c97579105cba32c2d5b8ac1ca5a42a0dc7`
+- Java: OpenJDK 21
+  (`/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home`)
+- .NET SDK: `10.0.300`
+- C# source: copied from the Godot/JVM Bunnymark harness into
+  `/private/tmp/kanama-bunnymark-godotjvm-20260521`, then
+  compatibility-patched for Godot 4 C# APIs and built against the local
+  `Godot.NET.Sdk/4.6.2` package produced from this engine build.
+
+This pass rebuilds a single macOS editor binary with both Godot/JVM and Mono
+support, then runs GDScript, Godot/JVM Kotlin, and C# through that same binary.
+It is the fairest cross-language comparison in this file because all three
+columns share the same engine executable and renderer.
+
+Current table:
+
+| Benchmark | GDScript | Godot/JVM Kotlin | C# |
+| --- | ---: | ---: | ---: |
+| V1 Sprites | 27,500 | 46,400 | 47,000 |
+| V1 DrawTexture | 47,100 | 93,900 | 149,867 |
+| V2 | 27,700 | 33,700 | 19,000 |
+| V3 | 23,500 | 28,600 | 8,500 |
+
+Notes:
+
+- This run required a custom local Godot/JVM+Mono build, Mono glue generation,
+  and C# assembly packaging into `bin/GodotSharp`.
+- Godot/JVM runtime required `JAVA_HOME` to point at the real JDK home, not the
+  Homebrew formula root.
+- The C# harness was old Godot 3-era code. The temporary compatibility patch
+  updated `_Process(float)` to `_Process(double)`, `Vector2.x/y` to
+  `Vector2.X/Y`, `Update()` to `QueueRedraw()`, the V3 texture/signal API
+  usage, and the project SDK/target framework for Godot 4.6.2.
+- C# V1 Sprites wrote a valid result and then crashed during shutdown/finalizer
+  cleanup with a leaked texture reference. All hybrid runs also printed
+  shutdown leak warnings after writing their benchmark output.
+
 ## 2026-05-21 Godot 4.7 Beta 2 C# Comparison Pass
 
 - Hardware: Apple M1 Max, 64 GB RAM, Metal 4.0
