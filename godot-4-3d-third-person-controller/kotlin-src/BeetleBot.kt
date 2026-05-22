@@ -20,6 +20,7 @@ import net.multigesture.kanama.api.RigidBody3D
 import net.multigesture.kanama.api.SignalConnection
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.SmokePuffNames
+import net.multigesture.kanama.generated.PlayerMethods
 import net.multigesture.kanama.types.Vector3
 import java.lang.foreign.MemorySegment
 import kotlinx.coroutines.launch
@@ -89,7 +90,7 @@ class BeetleBot(godotObject: MemorySegment) : KanamaScript<RigidBody3D>(godotObj
                         val collider3d = Node3D(collider.handle)
                         val impactPoint = self.globalPosition - collider3d.globalPosition
                         val force = (-impactPoint).withY(0.5) * 10.0
-                        collider.call("damage", impactPoint, force)
+                        PlayerMethods.damage(collider, impactPoint, force)
                         beetleSkin.attack()
                     }
                 } finally {

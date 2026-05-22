@@ -71,7 +71,7 @@ class Tile(godotObject: MemorySegment) : KanamaScript<Area2D>(godotObject, ::Are
     // Animations when tile is moving
     @RegisterFunction("move_to")
     fun moveTo(targetPosition: Vector2, playSound: Boolean = true) {
-        val tween = trackedTween() ?: return
+        val tween = trackedTween(if (playSound) ::onMoveFinished else null) ?: return
 
         tween.tweenProperty(self, "position", targetPosition, 0.3)?.let { tweener ->
             tweener.setTrans(Tween.TRANS_BACK)
@@ -83,12 +83,6 @@ class Tile(godotObject: MemorySegment) : KanamaScript<Area2D>(godotObject, ::Are
             tween.tweenProperty(sprite, "scale", Vector2.ONE, 0.3)?.let { tweener ->
                 tweener.setTrans(Tween.TRANS_ELASTIC)
                     .setEase(Tween.EASE_OUT)
-            }
-        }
-
-        if (playSound) {
-            tween.signal(Tween.Signals.finished).connect(self, argumentCount = 0) {
-                onMoveFinished()
             }
         }
     }
@@ -116,11 +110,12 @@ class Tile(godotObject: MemorySegment) : KanamaScript<Area2D>(godotObject, ::Are
     private fun sprite(): Sprite2D? =
         self.getAsOrNull("Sprite2D", ::Sprite2D)
 
-    private fun trackedTween(): Tween? {
+    private fun trackedTween(onFinished: (() -> Unit)? = null): Tween? {
         val tween = self.createTween()?.setParallel(true) ?: return null
         activeTweens += tween
         tween.signal(Tween.Signals.finished).connect(self, argumentCount = 0, flags = GodotObject.CONNECT_ONE_SHOT) {
             releaseTween(tween)
+            onFinished?.invoke()
         }
         return tween
     }

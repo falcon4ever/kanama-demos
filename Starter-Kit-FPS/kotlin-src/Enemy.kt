@@ -15,6 +15,7 @@ import net.multigesture.kanama.types.Vector3
 import java.lang.foreign.MemorySegment
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.kotlinScriptInstance
+import net.multigesture.kanama.generated.PlayerMethods
 
 @ScriptClass(attachTo = "Area3D")
 class Enemy(godotObject: MemorySegment) : KanamaScript<Area3D>(godotObject, ::Area3D) {
@@ -72,12 +73,11 @@ class Enemy(godotObject: MemorySegment) : KanamaScript<Area3D>(godotObject, ::Ar
 
         if (!raycast.isColliding()) return
         val collider = raycast.getCollider() ?: return
-        if (!collider.hasMethod("damage")) return
+        if (!PlayerMethods.damage(collider, 5.0)) return
 
         playMuzzleFlash(muzzleA)
         playMuzzleFlash(muzzleB)
         playAudio("sounds/enemy_attack.ogg")
-        collider.call("damage", 5.0)
     }
 
     private fun playMuzzleFlash(muzzle: AnimatedSprite3D) {

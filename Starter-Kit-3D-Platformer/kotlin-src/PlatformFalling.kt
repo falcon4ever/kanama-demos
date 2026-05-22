@@ -37,10 +37,14 @@ class PlatformFalling(godotObject: MemorySegment) : KanamaScript<Node3D>(godotOb
         }
     }
 
+    private fun playAudio(path: String) {
+        audio.call("play", path)
+    }
+
     @RegisterFunction("_on_body_entered")
     fun onBodyEntered(_body: Node) {
         if (!falling) {
-            audio.call("play", "res://sounds/fall.ogg")
+            playAudio("res://sounds/fall.ogg")
             self.scale = Vector3(1.25f, 1f, 1.25f)
         }
         falling = true

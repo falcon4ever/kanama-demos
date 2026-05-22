@@ -9,6 +9,7 @@ import net.multigesture.kanama.api.Node3D
 import java.lang.foreign.MemorySegment
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Area3D
+import net.multigesture.kanama.generated.PlayerMethods
 
 @ScriptClass(attachTo = "Area3D")
 class Coin(godotObject: MemorySegment) : KanamaScript<Area3D>(godotObject, ::Area3D) {
@@ -29,16 +30,18 @@ class Coin(godotObject: MemorySegment) : KanamaScript<Area3D>(godotObject, ::Are
     @RegisterFunction("_on_body_entered")
     fun onBodyEntered(body: Node) {
         if (grabbed) return
-        if (!body.hasMethod("collect_coin")) return
+        if (!PlayerMethods.collectCoin(body)) return
 
-        body.call("collect_coin")
-
-        audio.call("play", "res://sounds/coin.ogg")
+        playAudio("res://sounds/coin.ogg")
 
         mesh.queueFree()
         particles.setEmitting(false)
 
         grabbed = true
+    }
+
+    private fun playAudio(path: String) {
+        audio.call("play", path)
     }
 
     @OnProcess

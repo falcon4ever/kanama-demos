@@ -29,10 +29,18 @@ class Main(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
     var mobScene: PackedScene? = null
 
     private lateinit var retry: Control
+    private lateinit var mobSpawnLocation: PathFollow3D
+    private lateinit var player: Node3D
+    private lateinit var scoreLabel: Label
+    private lateinit var mobTimer: Timer
 
     @OnReady
     fun ready() {
         retry = self.requireAs("UserInterface/Retry", ::Control)
+        mobSpawnLocation = self.requireAs("SpawnPath/SpawnLocation", ::PathFollow3D)
+        player = self.requireAs("Player", ::Node3D)
+        scoreLabel = self.requireAs("UserInterface/ScoreLabel", ::Label)
+        mobTimer = self.requireAs("MobTimer", ::Timer)
 
         if (RenderingServer.getCurrentRenderingMethod() == "gl_compatibility") {
             // Use PCF13 shadow filtering to improve quality (Medium maps to PCF5 instead).
@@ -70,12 +78,11 @@ class Main(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
     fun onMobTimerTimeout() {
         // Create a new instance of the Mob scene.
         val mob = mobScene?.instantiate() ?: return
-        val mobSpawnLocation = self.requireAs("SpawnPath/SpawnLocation", ::PathFollow3D)
         // Choose a random location on the SpawnPath.
         mobSpawnLocation.progressRatio = GD.randf()
 
         // Communicate the spawn location and the player's location to the mob.
-        val playerPosition = self.requireAs("Player", ::Node3D).position
+        val playerPosition = player.position
         val mobScript = mob.kotlinScriptInstance<Mob>()
             ?: error("Instantiated mob scene is not backed by squash.Mob")
         mobScript.initialize(mobSpawnLocation.position, playerPosition)
@@ -83,14 +90,13 @@ class Main(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
         self.addChild(mob)
 
         // We connect the mob to the score label to update the score upon squashing a mob.
-        val scoreLabel = self.requireAs("UserInterface/ScoreLabel", ::Label)
         mob.signal(MobNames.Signals.squashed)
             .connect(scoreLabel, ScoreLabelNames.Methods.onMobSquashed)
     }
 
     @RegisterFunction("_on_player_hit")
     fun onPlayerHit() {
-        self.requireAs("MobTimer", ::Timer).stop()
+        mobTimer.stop()
         retry.show()
     }
 

@@ -14,6 +14,7 @@ import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.generated.PlayerSignals
+import net.multigesture.kanama.generated.MobMethods
 import net.multigesture.kanama.types.Basis
 import net.multigesture.kanama.types.Vector3
 import java.lang.foreign.MemorySegment
@@ -91,7 +92,7 @@ class Player(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(godotOb
                 val collider = collision.getCollider() ?: return@use
                 val colliderNode = Node(collider.handle)
                 if (colliderNode.isInGroup("mob") && Vector3.UP.dot(collision.getNormal()) > 0.1) {
-                    collider.call("squash")
+                    MobMethods.squash(collider)
                     self.velocity = self.velocity.withY(bounceImpulse)
                     bounced = true
                 }

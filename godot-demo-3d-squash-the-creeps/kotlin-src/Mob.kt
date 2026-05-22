@@ -16,6 +16,8 @@ import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "CharacterBody3D")
 class Mob(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
+    private val animationPlayer by lazy { self.requireAs("AnimationPlayer", ::AnimationPlayer) }
+
     /** Minimum speed of the mob in meters per second. */
     @ScriptProperty
     var minSpeed: Long = 10
@@ -49,7 +51,6 @@ class Mob(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(godotObjec
         // We then rotate the vector based on the mob's Y rotation to move in the direction it's looking.
         velocity = velocity.rotated(Vector3.UP, self.rotation.y.toDouble())
         self.velocity = velocity
-        val animationPlayer = self.requireAs("AnimationPlayer", ::AnimationPlayer)
         animationPlayer.setSpeedScale(randomSpeed / minSpeed.toDouble())
     }
 
