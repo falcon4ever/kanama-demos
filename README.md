@@ -4,7 +4,7 @@ Godot demo projects ported from GDScript to Kotlin with
 [Kanama](https://github.com/falcon4ever/kanama).
 
 <p>
-  <img alt="Godot 4.7 beta 2" src="https://img.shields.io/badge/Godot-4.7_beta_2-478cbf.svg">
+  <img alt="Godot 4.7 beta 3" src="https://img.shields.io/badge/Godot-4.7_beta_3-478cbf.svg">
   <img alt="Kanama 0.1.0" src="https://img.shields.io/badge/Kanama-0.1.0-6f42c1.svg">
   <img alt="JDK 25+" src="https://img.shields.io/badge/JDK-25%2B-f89820.svg">
   <img alt="Status: experimental" src="https://img.shields.io/badge/status-experimental-yellow.svg">
@@ -31,8 +31,8 @@ setup documented in `kanama/docs/getting-started/index.md`.
 
 ## Requirements
 
-- Godot 4.7 beta 2 from the
-  [Godot 4.7 beta 2 archive](https://godotengine.org/download/archive/4.7-beta2/)
+- Godot 4.7 beta 3 from the
+  [Godot 4.7 beta 3 archive](https://godotengine.org/download/archive/4.7-beta3/)
 - JDK 25+
 - CMake 3.22.1+ and a platform C toolchain for the Kanama source checkout's
   native bootstrap build; Godot source is not required
@@ -162,7 +162,7 @@ For headless desktop smoke validation across the current scripted demos, use:
 scripts/desktop_smoke_all.sh /path/to/godot
 ```
 
-Use the matching Godot 4.7 beta 2 binary for the platform under test. Windows
+Use the matching Godot 4.7 beta 3 binary for the platform under test. Windows
 smokes use the console binary with PowerShell Gradle commands and Git Bash
 marker checks. The desktop smoke script imports each project before running so
 fresh checkouts without `.godot/imported` caches validate the same way as a

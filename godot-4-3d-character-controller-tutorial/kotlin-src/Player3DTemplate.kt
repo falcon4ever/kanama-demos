@@ -126,7 +126,7 @@ class Player3DTemplate(godotObject: MemorySegment) : KanamaScript<CharacterBody3
         val motion = InputEventMouseMotion.from(event) ?: return
         if (Input.getMouseMode() != Input.MOUSE_MODE_CAPTURED) return
         val relative = motion.getRelative()
-        cameraInputDirection = Vector2(-relative.x.toDouble() * mouseSensitivity, -relative.y.toDouble() * mouseSensitivity)
+        cameraInputDirection = Vector2(-relative.x.toDouble() * mouseSensitivity, relative.y.toDouble() * mouseSensitivity)
     }
 
     @OnPhysicsProcess

@@ -24,129 +24,129 @@ import kotlinx.coroutines.launch
 
 @ScriptClass(attachTo = "RigidBody3D")
 class BeeBot(godotObject: MemorySegment) : KanamaScript<RigidBody3D>(godotObject, ::RigidBody3D), KanamaCoroutineOwner {
-    override val kanamaScope = KanamaScope()
+	override val kanamaScope = KanamaScope()
 
-    @ScriptProperty
-    var shootTimer: Double = 1.5
+	@ScriptProperty
+	var shootTimer: Double = 1.5
 
-    @ScriptProperty
-    var bulletSpeed: Double = 6.0
+	@ScriptProperty
+	var bulletSpeed: Double = 6.0
 
-    @ScriptProperty
-    var coinsCount: Long = 5
+	@ScriptProperty
+	var coinsCount: Long = 5
 
-    private lateinit var reactionAnimationPlayer: AnimationPlayer
-    private lateinit var flyingAnimationPlayer: AnimationPlayer
-    private lateinit var detectionArea: Area3D
-    private lateinit var deathMeshCollider: CollisionShape3D
-    private lateinit var beeRoot: BeeRoot
-    private lateinit var defeatSound: AudioStreamPlayer3D
+	private lateinit var reactionAnimationPlayer: AnimationPlayer
+	private lateinit var flyingAnimationPlayer: AnimationPlayer
+	private lateinit var detectionArea: Area3D
+	private lateinit var deathMeshCollider: CollisionShape3D
+	private lateinit var beeRoot: BeeRoot
+	private lateinit var defeatSound: AudioStreamPlayer3D
 
-    private var bodyEnteredConnection: SignalConnection? = null
-    private var bodyExitedConnection: SignalConnection? = null
-    private var shootCount = 0.0
-    private var target: Node3D? = null
-    private var alive = true
+	private var bodyEnteredConnection: SignalConnection? = null
+	private var bodyExitedConnection: SignalConnection? = null
+	private var shootCount = 0.0
+	private var target: Node3D? = null
+	private var alive = true
 
-    @OnReady
-    fun ready() {
-        reactionAnimationPlayer = self.requireAs("ReactionLabel/AnimationPlayer", ::AnimationPlayer)
-        flyingAnimationPlayer = self.requireAs("MeshRoot/AnimationPlayer", ::AnimationPlayer)
-        detectionArea = self.requireAs("PlayerDetectionArea", ::Area3D)
-        deathMeshCollider = self.requireAs("DeathMeshCollider", ::CollisionShape3D)
-        beeRoot = self.requireAs("MeshRoot/bee_root", ::Node3D).kotlinScriptInstance<BeeRoot>()
-            ?: error("MeshRoot/bee_root is missing BeeRoot script instance")
-        defeatSound = self.requireAs("DefeatSound", ::AudioStreamPlayer3D)
+	@OnReady
+	fun ready() {
+		reactionAnimationPlayer = self.requireAs("ReactionLabel/AnimationPlayer", ::AnimationPlayer)
+		flyingAnimationPlayer = self.requireAs("MeshRoot/AnimationPlayer", ::AnimationPlayer)
+		detectionArea = self.requireAs("PlayerDetectionArea", ::Area3D)
+		deathMeshCollider = self.requireAs("DeathMeshCollider", ::CollisionShape3D)
+		beeRoot = self.requireAs("MeshRoot/bee_root", ::Node3D).kotlinScriptInstance<BeeRoot>()
+			?: error("MeshRoot/bee_root is missing BeeRoot script instance")
+		defeatSound = self.requireAs("DefeatSound", ::AudioStreamPlayer3D)
 
-        bodyEnteredConnection = detectionArea.signal(Area3D.Signals.bodyEntered)
-            .connectObject(self) { body -> onBodyEntered(Node3D(body.handle)) }
-        bodyExitedConnection = detectionArea.signal(Area3D.Signals.bodyExited)
-            .connectObject(self) { body -> onBodyExited(Node3D(body.handle)) }
+		bodyEnteredConnection = detectionArea.signal(Area3D.Signals.bodyEntered)
+			.connectObject(self) { body -> onBodyEntered(Node3D(body.handle)) }
+		bodyExitedConnection = detectionArea.signal(Area3D.Signals.bodyExited)
+			.connectObject(self) { body -> onBodyExited(Node3D(body.handle)) }
 
-        beeRoot.playIdle()
-    }
+		beeRoot.playIdle()
+	}
 
-    @OnPhysicsProcess
-    fun physicsProcess(delta: Double) {
-        val currentTarget = target
-        if (currentTarget != null && alive) {
-            if (self.globalPosition.distanceSquaredTo(currentTarget.globalPosition) > LOOK_AT_EPSILON) {
-                val targetTransform = self.transform.lookingAt(currentTarget.globalPosition)
-                self.transform = self.transform.interpolateWith(targetTransform, 0.1)
-            }
+	@OnPhysicsProcess
+	fun physicsProcess(delta: Double) {
+		val currentTarget = target
+		if (currentTarget != null && alive) {
+			if (self.globalPosition.distanceSquaredTo(currentTarget.globalPosition) > LOOK_AT_EPSILON) {
+				val targetTransform = self.transform.lookingAt(currentTarget.globalPosition)
+				self.transform = self.transform.interpolateWith(targetTransform, 0.1)
+			}
 
-            shootCount += delta
-            if (shootCount > shootTimer) {
-                beeRoot.playSpitAttack()
-                shootCount -= shootTimer
+			shootCount += delta
+			if (shootCount > shootTimer) {
+				beeRoot.playSpitAttack()
+				shootCount -= shootTimer
 
-                val origin = self.globalPosition
-                val targetPosition = currentTarget.globalPosition + Vector3.UP
-                val aimDirection = (targetPosition - self.globalPosition).normalized()
-                DemoScenes.launchBullet(self.getParent(), self, origin, aimDirection * bulletSpeed, 14.0)
-            }
-        }
-    }
+				val origin = self.globalPosition
+				val targetPosition = currentTarget.globalPosition + Vector3.UP
+				val aimDirection = (targetPosition - self.globalPosition).normalized()
+				DemoScenes.launchBullet(self.getParent(), self, origin, aimDirection * bulletSpeed, 14.0)
+			}
+		}
+	}
 
-    @RegisterFunction
-    fun damage(impactPoint: Vector3, force: Vector3) {
-        self.applyImpulse(force.limitLength(3.0), impactPoint)
+	@RegisterFunction
+	fun damage(impactPoint: Vector3, force: Vector3) {
+		self.applyImpulse(force.limitLength(3.0), impactPoint)
 
-        if (!alive) {
-            return
-        }
+		if (!alive) {
+			return
+		}
 
-        defeatSound.play()
-        alive = false
+		defeatSound.play()
+		alive = false
 
-        flyingAnimationPlayer.stop()
-        flyingAnimationPlayer.seek(0.0, update = true)
-        bodyEnteredConnection?.close()
-        bodyExitedConnection?.close()
-        target = null
-        deathMeshCollider.setDeferred("disabled", false)
+		flyingAnimationPlayer.stop()
+		flyingAnimationPlayer.seek(0.0, update = true)
+		bodyEnteredConnection?.close()
+		bodyExitedConnection?.close()
+		target = null
+		deathMeshCollider.setDeferred("disabled", false)
 
-        self.gravityScale = 1.0
-        beeRoot.playPoweroff()
+		self.gravityScale = 1.0
+		beeRoot.playPoweroff()
 
-        kanamaScope.launch {
-            self.getTree().delaySeconds(2.0)
+		kanamaScope.launch {
+			self.getTree().delaySeconds(2.0)
 
-            val puff = DemoScenes.instantiate(DemoScenes.SMOKE_PUFF)
-            if (puff != null) {
-                self.getParent()?.addChild(puff)
-                Node3D(puff.handle).globalPosition = self.globalPosition
-                puff.signal(SmokePuffNames.Signals.full).await(self, argumentCount = 0)
-            }
+			val puff = DemoScenes.instantiate(DemoScenes.SMOKE_PUFF)
+			if (puff != null) {
+				self.getParent()?.addChild(puff)
+				Node3D(puff.handle).globalPosition = self.globalPosition
+				puff.signal(SmokePuffNames.Signals.full).await(self, argumentCount = 0)
+			}
 
-            repeat(coinsCount.toInt()) {
-                val coinNode = DemoScenes.instantiate(DemoScenes.COIN) ?: return@repeat
-                val coin = coinNode.kotlinScriptInstance<Coin>()
-                    ?: error("Coin scene is missing Coin script instance")
-                self.getParent()?.addChild(coinNode)
-                Node3D(coinNode.handle).globalPosition = self.globalPosition
-                coin.spawn()
-            }
-            self.queueFree()
-        }
-    }
+			repeat(coinsCount.toInt()) {
+				val coinNode = DemoScenes.instantiate(DemoScenes.COIN) ?: return@repeat
+				val coin = coinNode.kotlinScriptInstance<Coin>()
+					?: error("Coin scene is missing Coin script instance")
+				self.getParent()?.addChild(coinNode)
+				Node3D(coinNode.handle).globalPosition = self.globalPosition
+				coin.spawn()
+			}
+			self.queueFree()
+		}
+	}
 
-    private fun onBodyEntered(body: Node3D) {
-        if (!body.isPlayer()) return
-        shootCount = 0.0
-        target = body
-        reactionAnimationPlayer.play("found_player")
-    }
+	private fun onBodyEntered(body: Node3D) {
+		if (!body.isPlayer()) return
+		shootCount = 0.0
+		target = body
+		reactionAnimationPlayer.play("found_player")
+	}
 
-    private fun onBodyExited(body: Node3D) {
-        if (!body.isPlayer()) return
-        if (target?.handle?.address() == body.handle.address()) {
-            target = null
-            reactionAnimationPlayer.play("lost_player")
-        }
-    }
+	private fun onBodyExited(body: Node3D) {
+		if (!body.isPlayer()) return
+		if (target?.handle?.address() == body.handle.address()) {
+			target = null
+			reactionAnimationPlayer.play("lost_player")
+		}
+	}
 
-    companion object {
-        private const val LOOK_AT_EPSILON = 0.000001
-    }
+	companion object {
+		private const val LOOK_AT_EPSILON = 0.000001
+	}
 }
