@@ -3,11 +3,14 @@ extends EditorPlugin
 
 const MENU_BUILD_SYNC := "Kanama Tools: Build Scripts"
 const MENU_BUILD_JAR := "Kanama Tools: Build Runtime Jar"
+const MENU_OPEN_KOTLIN_SOURCES := "Kanama Tools: Open Kotlin Sources"
 const SETTING_REPO_DIR := "kanama/tools/repo_dir"
+const SETTING_KOTLIN_SOURCES_DIR := "kanama/tools/kotlin_sources_dir"
 const SETTING_AUTO_BUILD_ON_SAVE := "kanama/tools/auto_build_on_save"
 const SETTING_AUTO_BUILD_DEBOUNCE_MS := "kanama/tools/auto_build_debounce_ms"
 const SETTING_RELOAD_SCENE_AFTER_SYNC := "kanama/tools/reload_scene_after_sync"
 const SETTING_DEVELOPER_MODE := "kanama/tools/developer_mode"
+const SETTING_JAVA_PREFLIGHT_ENABLED := "kanama/tools/java_preflight_enabled"
 const SETTING_JDWP_ENABLED := "kanama/debug/jdwp_enabled"
 const SETTING_JDWP_PORT := "kanama/debug/jdwp_port"
 const DEFAULT_JDWP_PORT := 5005
@@ -20,6 +23,7 @@ const KotlinSyntaxHighlighter := preload("res://addons/kanama_tools/kotlin_synta
 
 var _toolbar_container: HBoxContainer
 var _sync_button: Button
+var _sources_button: Button
 var _jar_button: Button
 var _kotlin_syntax_highlighter: EditorSyntaxHighlighter
 var _scan_accum_sec := 0.0
@@ -28,12 +32,17 @@ var _pending_auto_sync := false
 var _last_change_msec := 0
 var _is_build_running := false
 var _jar_menu_added := false
+var _last_developer_mode_enabled := false
+var _java_preflight_dialog_shown := false
 
 
 func _enter_tree() -> void:
     _ensure_project_settings()
+    call_deferred("_run_java_preflight")
     add_tool_menu_item(MENU_BUILD_SYNC, _on_build_sync_pressed)
-    if _is_developer_mode_enabled():
+    add_tool_menu_item(MENU_OPEN_KOTLIN_SOURCES, _on_open_kotlin_sources_pressed)
+    _last_developer_mode_enabled = _is_developer_mode_enabled()
+    if _last_developer_mode_enabled:
         add_tool_menu_item(MENU_BUILD_JAR, _on_build_jar_pressed)
         _jar_menu_added = true
     call_deferred("_register_kotlin_syntax_highlighter")
@@ -45,6 +54,7 @@ func _enter_tree() -> void:
 func _exit_tree() -> void:
     set_process(false)
     remove_tool_menu_item(MENU_BUILD_SYNC)
+    remove_tool_menu_item(MENU_OPEN_KOTLIN_SOURCES)
     if _jar_menu_added:
         remove_tool_menu_item(MENU_BUILD_JAR)
         _jar_menu_added = false
@@ -59,7 +69,14 @@ func _on_build_sync_pressed() -> void:
 func _on_build_jar_pressed() -> void:
     _run_gradle_task("jar")
 
+
+func _on_open_kotlin_sources_pressed() -> void:
+    _open_kotlin_sources()
+
+
 func _process(delta: float) -> void:
+    _refresh_developer_mode_controls()
+
     _scan_accum_sec += delta
     if _scan_accum_sec < KT_SCAN_INTERVAL_SEC:
         return
@@ -95,6 +112,12 @@ func _install_toolbar_buttons() -> void:
     _sync_button.pressed.connect(_on_build_sync_pressed)
     _toolbar_container.add_child(_sync_button)
 
+    _sources_button = Button.new()
+    _sources_button.text = "Open Kotlin"
+    _sources_button.tooltip_text = "Open the configured Kotlin source folder"
+    _sources_button.pressed.connect(_on_open_kotlin_sources_pressed)
+    _toolbar_container.add_child(_sources_button)
+
     if _is_developer_mode_enabled():
         _jar_button = Button.new()
         _jar_button.text = JAR_BUTTON_IDLE_TEXT
@@ -112,7 +135,35 @@ func _remove_toolbar_buttons() -> void:
     _toolbar_container.queue_free()
     _toolbar_container = null
     _sync_button = null
+    _sources_button = null
     _jar_button = null
+
+
+func _refresh_developer_mode_controls() -> void:
+    var enabled := _is_developer_mode_enabled()
+    if enabled == _last_developer_mode_enabled:
+        return
+    _last_developer_mode_enabled = enabled
+
+    if enabled and not _jar_menu_added:
+        add_tool_menu_item(MENU_BUILD_JAR, _on_build_jar_pressed)
+        _jar_menu_added = true
+    elif not enabled and _jar_menu_added:
+        remove_tool_menu_item(MENU_BUILD_JAR)
+        _jar_menu_added = false
+
+    if _toolbar_container == null:
+        return
+    if enabled and _jar_button == null:
+        _jar_button = Button.new()
+        _jar_button.text = JAR_BUTTON_IDLE_TEXT
+        _jar_button.tooltip_text = "Build the Kanama runtime jar (Kanama developers only)"
+        _jar_button.pressed.connect(_on_build_jar_pressed)
+        _toolbar_container.add_child(_jar_button)
+    elif not enabled and _jar_button != null:
+        _toolbar_container.remove_child(_jar_button)
+        _jar_button.queue_free()
+        _jar_button = null
 
 
 func _register_kotlin_syntax_highlighter() -> void:
@@ -140,6 +191,8 @@ func _unregister_kotlin_syntax_highlighter() -> void:
 func _ensure_project_settings() -> void:
     if not ProjectSettings.has_setting(SETTING_REPO_DIR):
         ProjectSettings.set_setting(SETTING_REPO_DIR, "")
+    if not ProjectSettings.has_setting(SETTING_KOTLIN_SOURCES_DIR):
+        ProjectSettings.set_setting(SETTING_KOTLIN_SOURCES_DIR, "")
     if not ProjectSettings.has_setting(SETTING_AUTO_BUILD_ON_SAVE):
         ProjectSettings.set_setting(SETTING_AUTO_BUILD_ON_SAVE, false)
     if not ProjectSettings.has_setting(SETTING_AUTO_BUILD_DEBOUNCE_MS):
@@ -148,6 +201,8 @@ func _ensure_project_settings() -> void:
         ProjectSettings.set_setting(SETTING_RELOAD_SCENE_AFTER_SYNC, true)
     if not ProjectSettings.has_setting(SETTING_DEVELOPER_MODE):
         ProjectSettings.set_setting(SETTING_DEVELOPER_MODE, false)
+    if not ProjectSettings.has_setting(SETTING_JAVA_PREFLIGHT_ENABLED):
+        ProjectSettings.set_setting(SETTING_JAVA_PREFLIGHT_ENABLED, true)
     if not ProjectSettings.has_setting(SETTING_JDWP_ENABLED):
         ProjectSettings.set_setting(SETTING_JDWP_ENABLED, false)
     if not ProjectSettings.has_setting(SETTING_JDWP_PORT):
@@ -157,6 +212,11 @@ func _ensure_project_settings() -> void:
 
     ProjectSettings.add_property_info({
         "name": SETTING_REPO_DIR,
+        "type": TYPE_STRING,
+        "hint": PROPERTY_HINT_GLOBAL_DIR,
+    })
+    ProjectSettings.add_property_info({
+        "name": SETTING_KOTLIN_SOURCES_DIR,
         "type": TYPE_STRING,
         "hint": PROPERTY_HINT_GLOBAL_DIR,
     })
@@ -176,6 +236,10 @@ func _ensure_project_settings() -> void:
     })
     ProjectSettings.add_property_info({
         "name": SETTING_DEVELOPER_MODE,
+        "type": TYPE_BOOL,
+    })
+    ProjectSettings.add_property_info({
+        "name": SETTING_JAVA_PREFLIGHT_ENABLED,
         "type": TYPE_BOOL,
     })
     ProjectSettings.add_property_info({
@@ -259,6 +323,8 @@ func _run_gradle_task(task_name: String, extra_args: Array = [], repo_dir_overri
         push_warning("[kanama:tools] Build already running; skipping '%s'" % task_name)
         return
 
+    _run_java_preflight(true)
+
     var repo_dir := repo_dir_override if not repo_dir_override.is_empty() else _resolve_repo_dir()
     if repo_dir.is_empty():
         push_error("[kanama:tools] Could not find Kanama repo. Set '%s' in Project Settings." % SETTING_REPO_DIR)
@@ -326,8 +392,142 @@ func _project_dir_with_gradle_wrapper() -> String:
     return ""
 
 
+func _open_kotlin_sources() -> void:
+    var dir := _resolve_kotlin_sources_dir()
+    if dir.is_empty():
+        push_error("[kanama:tools] Could not resolve Kotlin source directory.")
+        return
+    if not DirAccess.dir_exists_absolute(dir):
+        push_error("[kanama:tools] Kotlin source directory does not exist: %s" % dir)
+        return
+    var error := OS.shell_open(dir)
+    if error != OK:
+        push_error("[kanama:tools] Could not open Kotlin source directory: %s (error=%d)" % [dir, error])
+
+
+func _resolve_kotlin_sources_dir() -> String:
+    if ProjectSettings.has_setting(SETTING_KOTLIN_SOURCES_DIR):
+        var configured := String(ProjectSettings.get_setting(SETTING_KOTLIN_SOURCES_DIR, "")).strip_edges()
+        if not configured.is_empty():
+            if configured.begins_with("res://"):
+                return ProjectSettings.globalize_path(configured)
+            return configured
+    return ProjectSettings.globalize_path("res://")
+
+
 func _is_script_build_task(task_name: String) -> bool:
     return task_name == "buildScripts" or task_name == "installAddonJar"
+
+
+func _run_java_preflight(force_dialog: bool = false) -> bool:
+    if not bool(ProjectSettings.get_setting(SETTING_JAVA_PREFLIGHT_ENABLED, true)):
+        return true
+    var result := _detect_desktop_jvm()
+    if bool(result.get("ok", false)):
+        print("[kanama:tools] Java runtime preflight ok: %s" % String(result.get("path", "")))
+        return true
+
+    var message := _java_preflight_message(result)
+    push_warning(message)
+    if force_dialog or not _java_preflight_dialog_shown:
+        _show_java_preflight_dialog(message)
+        _java_preflight_dialog_shown = true
+    return false
+
+
+func _detect_desktop_jvm() -> Dictionary:
+    var os_name := OS.get_name()
+    if os_name == "Android" or os_name == "Web":
+        return {"ok": true, "path": ""}
+
+    var checked_paths: Array[String] = []
+    var java_home := OS.get_environment("JAVA_HOME").strip_edges()
+    var relative_path := _desktop_jvm_relative_path()
+    if not java_home.is_empty():
+        var java_home_candidate := java_home.path_join(relative_path)
+        checked_paths.append(java_home_candidate)
+        if FileAccess.file_exists(java_home_candidate):
+            return {"ok": true, "path": java_home_candidate}
+
+    for candidate in _desktop_jvm_fallback_paths():
+        checked_paths.append(candidate)
+        if FileAccess.file_exists(candidate):
+            return {"ok": true, "path": candidate}
+
+    return {
+        "ok": false,
+        "java_home": java_home,
+        "relative_path": relative_path,
+        "checked_paths": checked_paths,
+    }
+
+
+func _desktop_jvm_relative_path() -> String:
+    match OS.get_name():
+        "Windows":
+            return "bin/server/jvm.dll"
+        "macOS":
+            return "lib/server/libjvm.dylib"
+        _:
+            return "lib/server/libjvm.so"
+
+
+func _desktop_jvm_fallback_paths() -> Array[String]:
+    match OS.get_name():
+        "Windows":
+            return [
+                "C:/Program Files/Eclipse Adoptium/jdk-25/bin/server/jvm.dll",
+            ]
+        "macOS":
+            return [
+                "/Library/Java/JavaVirtualMachines/temurin-25.jdk/Contents/Home/lib/server/libjvm.dylib",
+            ]
+        _:
+            return [
+                "/usr/lib/jvm/temurin-25-jdk-arm64/lib/server/libjvm.so",
+                "/usr/lib/jvm/temurin-25-jdk-amd64/lib/server/libjvm.so",
+                "/usr/lib/jvm/temurin-25-jdk/lib/server/libjvm.so",
+                "/usr/lib/jvm/java-25-openjdk-arm64/lib/server/libjvm.so",
+                "/usr/lib/jvm/java-25-openjdk-amd64/lib/server/libjvm.so",
+                "/usr/lib/jvm/java-25-openjdk/lib/server/libjvm.so",
+            ]
+
+
+func _java_preflight_message(result: Dictionary) -> String:
+    var java_home := String(result.get("java_home", ""))
+    var relative_path := String(result.get("relative_path", ""))
+    var lines: Array[String] = [
+        "Kanama could not find libjvm for the desktop JVM.",
+        "Install a JDK 25+ distribution that includes libjvm, then set JAVA_HOME to the JDK home directory.",
+        "Expected relative path: %s" % relative_path,
+    ]
+    if java_home.is_empty():
+        lines.append("JAVA_HOME is not set.")
+    else:
+        lines.append("JAVA_HOME is set to: %s" % java_home)
+    var checked_paths: Array = result.get("checked_paths", [])
+    if not checked_paths.is_empty():
+        lines.append("Checked paths:")
+        for path in checked_paths:
+            lines.append("- %s" % String(path))
+    return "\n".join(lines)
+
+
+func _show_java_preflight_dialog(message: String) -> void:
+    var editor := get_editor_interface()
+    if editor == null:
+        return
+    var base_control := editor.get_base_control()
+    if base_control == null:
+        return
+    var dialog := AcceptDialog.new()
+    dialog.title = "Kanama Java Runtime Not Found"
+    dialog.dialog_text = message
+    dialog.min_size = Vector2i(560, 220)
+    base_control.add_child(dialog)
+    dialog.confirmed.connect(dialog.queue_free)
+    dialog.close_requested.connect(dialog.queue_free)
+    dialog.popup_centered()
 
 
 func _current_project_install_args() -> Array:
