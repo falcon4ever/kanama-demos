@@ -74,6 +74,12 @@ Run the demo parity audit:
 ./gradlew demoParityAudit
 ```
 
+Run the runtime and replication guardrail audits:
+
+```sh
+./gradlew runtimeNodeLookupAudit replicatedScriptPropertiesAudit
+```
+
 Run or open one demo:
 
 ```sh
@@ -150,6 +156,8 @@ Aggregate tasks:
 ./gradlew buildReferenceDemoScripts
 ./gradlew buildAllScripts
 ./gradlew demoParityAudit
+./gradlew runtimeNodeLookupAudit
+./gradlew replicatedScriptPropertiesAudit
 ./gradlew androidSmokeAll
 ```
 

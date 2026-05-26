@@ -31,7 +31,7 @@ ACTIVE_TWEEN_SCHEDULE_CLOSE_RE = re.compile(
     re.DOTALL,
 )
 GAMEPLAY_RESOURCE_CLOSE_RE = re.compile(
-    r"\b\w*(?:tween|mesh|scene|stream|material|texture|animation|resource)\w*\??\s*\.close\s*\(",
+    r"\b(?P<name>\w*(?:tween|mesh|scene|stream|material|texture|animation|resource)\w*)\??\s*\.close\s*\(",
     re.IGNORECASE,
 )
 
@@ -67,6 +67,15 @@ ALLOWED_RAW_SIGNALS = {
 
 ALLOWED_STRING_CONNECTS = {
     ("Starter-Kit-Match3/kotlin-src/Main.kt", "center_grid_on_screen"),
+}
+
+ALLOWED_RESOURCE_CLOSES = {
+    # The Bunnymark harness owns these ResourceLoader-created texture wrappers
+    # for the benchmark scene lifetime and releases them on exit.
+    ("Bunnymark/kotlin-src/BunnymarkV1DrawTextureKanama.kt", "bunnyTexture"),
+    ("Bunnymark/kotlin-src/BunnymarkV1SpritesKanama.kt", "bunnyTexture"),
+    ("Bunnymark/kotlin-src/BunnymarkV2Kanama.kt", "bunnyTexture"),
+    ("Bunnymark/kotlin-src/BunnymarkV3Kanama.kt", "bunnyTexture"),
 }
 
 
@@ -182,6 +191,8 @@ def audit_file(path: Path, root: Path) -> list[Finding]:
 
     for match in GAMEPLAY_RESOURCE_CLOSE_RE.finditer(text):
         if smoke:
+            continue
+        if (rel, match.group("name")) in ALLOWED_RESOURCE_CLOSES:
             continue
         add_finding(
             findings,

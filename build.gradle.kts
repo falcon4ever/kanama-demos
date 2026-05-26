@@ -27,6 +27,11 @@ val demoBuilds = listOf(
     DemoBuild("godot-4-3d-third-person-controller", "godot-4-3d-third-person-controller", "thirdPerson", "GDQuest Third Person Controller"),
 )
 
+val kanamaRoot = providers.gradleProperty("kanamaRoot")
+    .map { file(it) }
+    .orElse(providers.environmentVariable("KANAMA_ROOT").map { file(it) })
+    .getOrElse(file("../kanama"))
+
 for (demo in demoBuilds) {
     tasks.register("${demo.taskPrefix}BuildScripts") {
         group = "kanama demos"
@@ -82,6 +87,29 @@ tasks.register<Exec>("demoParityAudit") {
     commandLine("python3", "scripts/demo_parity_audit.py", "--root", projectDir.absolutePath)
 }
 
+tasks.register<Exec>("runtimeNodeLookupAudit") {
+    group = "verification"
+    description = "Audit Kotlin demo scripts for risky runtime node lookups and raw string dispatch."
+    val kotlinRoots = demoBuilds
+        .map { file("${it.projectPath}/kotlin-src") }
+        .filter { it.isDirectory }
+        .map { it.absolutePath }
+    commandLine(
+        listOf("python3", kanamaRoot.resolve("scripts/audit_runtime_node_lookups.py").absolutePath) +
+            kotlinRoots,
+    )
+}
+
+tasks.register<Exec>("replicatedScriptPropertiesAudit") {
+    group = "verification"
+    description = "Audit demo scene replication paths against Kotlin script properties."
+    val projectRoots = demoBuilds.map { file(it.projectPath).absolutePath }
+    commandLine(
+        listOf("python3", kanamaRoot.resolve("scripts/audit_replicated_script_properties.py").absolutePath) +
+            projectRoots,
+    )
+}
+
 tasks.register<Exec>("androidSmokeAll") {
     group = "verification"
     description = "Run Android smoke validation for all Android-enabled demos."
@@ -113,7 +141,7 @@ tasks.register<Exec>("desktopSmokeAll") {
 tasks.register("check") {
     group = "verification"
     description = "Run kanama-demos repository checks."
-    dependsOn("demoParityAudit")
+    dependsOn("demoParityAudit", "runtimeNodeLookupAudit", "replicatedScriptPropertiesAudit")
 }
 
 tasks.register("buildStarterKitScripts") {
