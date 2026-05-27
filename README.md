@@ -17,7 +17,7 @@ Kotlin under `kotlin-src/`.
 
 ## Repository Layout
 
-Keep this checkout next to `kanama`:
+The default development layout keeps this checkout next to `kanama`:
 
 ```text
 dev/
@@ -25,18 +25,19 @@ dev/
   kanama-demos/
 ```
 
-The demos are normal external Kanama consumer projects. They build scripts
-through the Gradle wrapper from the sibling `kanama` checkout, matching the
-setup documented in `kanama/docs/getting-started/index.md`.
+The demos are normal external Kanama consumer projects. They can build through
+the Gradle wrapper from the sibling `kanama` checkout, or from an unzipped
+Kanama desktop kit with `-PkanamaKitDir=/path/to/kit`.
 
 ## Requirements
 
 - Godot 4.7 beta 3 from the
   [Godot 4.7 beta 3 archive](https://godotengine.org/download/archive/4.7-beta3/)
 - JDK 25+
-- CMake 3.22.1+ and a platform C toolchain for the Kanama source checkout's
-  native bootstrap build; Godot source is not required
-- A sibling `kanama` checkout next to this repository
+- CMake 3.22.1+ and a platform C toolchain when using a Kanama source checkout
+  to build the native bootstrap locally; Godot source is not required
+- A sibling `kanama` checkout, or an unzipped Kanama desktop kit for package
+  install validation
 - macOS arm64, Windows x64, Linux x64, or Linux ARM64 for the current
   editor/runtime smoke paths
 
@@ -67,6 +68,18 @@ Build all Kotlin demo scripts:
 ```sh
 ./gradlew buildAllScripts
 ```
+
+Build all Kotlin demo scripts from an unzipped Kanama desktop kit instead of a
+sibling source checkout:
+
+```sh
+./gradlew buildAllScripts -PkanamaKitDir=/absolute/path/to/kanama-starter
+```
+
+The packaged-kit mode copies `addons/kanama`, `addons/kanama_tools`, and the
+kit's local Maven repository into each demo, then compiles the demo's
+`kotlin-src` into `addons/kanama/kanama-scripts.jar`. Guardrail audits still
+use helper scripts from the Kanama source checkout.
 
 Run the demo parity audit:
 

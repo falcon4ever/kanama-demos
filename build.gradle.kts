@@ -32,6 +32,14 @@ val kanamaRoot = providers.gradleProperty("kanamaRoot")
     .map { file(it) }
     .orElse(providers.environmentVariable("KANAMA_ROOT").map { file(it) })
     .getOrElse(file("../kanama"))
+val forwardedKanamaKitDir = providers.gradleProperty("kanamaKitDir")
+    .orElse(providers.environmentVariable("KANAMA_KIT_DIR"))
+val forwardedKanamaVersion = providers.gradleProperty("kanamaVersion")
+
+fun forwardedDemoGradleArgs(): List<String> = buildList {
+    forwardedKanamaKitDir.orNull?.let { add("-PkanamaKitDir=$it") }
+    forwardedKanamaVersion.orNull?.let { add("-PkanamaVersion=$it") }
+}
 
 for (demo in demoBuilds) {
     tasks.register("${demo.taskPrefix}BuildScripts") {
@@ -195,7 +203,7 @@ fun runDemoTasksSequentially(demos: List<DemoBuild>, vararg tasks: String) {
         providers.exec {
             val demoDir = file(demo.projectPath)
             workingDir = demoDir
-            commandLine(gradleCommand(demoDir) + tasks.toList())
+            commandLine(gradleCommand(demoDir) + forwardedDemoGradleArgs() + tasks.toList())
         }.result.get().assertNormalExitValue()
     }
 }

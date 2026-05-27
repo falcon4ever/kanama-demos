@@ -11,15 +11,27 @@ abstract class ExecSupport @Inject constructor(
     val execOperations: ExecOperations,
 )
 
+val kanamaKitDir = providers.gradleProperty("kanamaKitDir")
+    .orElse(providers.environmentVariable("KANAMA_KIT_DIR"))
+    .map { file(it) }
+
 repositories {
-    mavenLocal()
+    val kitDir = kanamaKitDir.orNull
+    if (kitDir != null) {
+        maven {
+            url = uri(kitDir.resolve("addons/kanama/maven"))
+        }
+    } else {
+        mavenLocal()
+    }
     mavenCentral()
 }
 
 val kanamaRoot = providers.gradleProperty("kanamaRoot")
+    .orElse(providers.environmentVariable("KANAMA_ROOT"))
     .map { file(it) }
     .getOrElse(file("../../kanama"))
-val kanamaVersion = "0.2.1"
+val kanamaVersion = providers.gradleProperty("kanamaVersion").getOrElse("0.2.1")
 val defaultGodotBin = file("/Applications/Godot.app/Contents/MacOS/Godot")
     .takeIf { it.exists() }
     ?.absolutePath
@@ -48,19 +60,62 @@ dependencies {
     ksp("net.multigesture.kanama:processor:$kanamaVersion")
 }
 
-tasks.register<Exec>("buildScripts") {
-    group = "kanama"
-    description = "Compile kotlin-src and install kanama addon into this project."
-    dependsOn("compileKotlin")
-    workingDir = kanamaRoot
-    commandLine(
-        kanamaGradle,
-        ":project-scripts:jar",
-        "-PkanamaProjectScriptsDir=${file("kotlin-src").absolutePath}",
-        "installAddonJar",
-        "-PkanamaProjectDir=${projectDir.absolutePath}",
-        "-PkanamaProjectScriptsDir=${file("kotlin-src").absolutePath}",
-    )
+if (kanamaKitDir.isPresent) {
+    val installKanamaKitAddon by tasks.registering {
+        group = "kanama"
+        description = "Install Kanama addon files from a packaged desktop kit."
+        doLast {
+            val kitDir = kanamaKitDir.get()
+            copy {
+                from(kitDir.resolve("addons/kanama")) {
+                    exclude("kanama-scripts.jar")
+                }
+                into(layout.projectDirectory.dir("addons/kanama"))
+            }
+            copy {
+                from(kitDir.resolve("addons/kanama_tools"))
+                into(layout.projectDirectory.dir("addons/kanama_tools"))
+            }
+            val extensionList = projectDir.resolve(".godot/extension_list.cfg")
+            val extensionPath = "res://addons/kanama/kanama.gdextension"
+            extensionList.parentFile.mkdirs()
+            val existing = if (extensionList.isFile) extensionList.readLines() else emptyList()
+            if (extensionPath !in existing) {
+                extensionList.writeText((existing + extensionPath).joinToString(System.lineSeparator()) + System.lineSeparator())
+            }
+        }
+    }
+
+    val installScriptsJar by tasks.registering(Copy::class) {
+        group = "kanama"
+        description = "Install compiled Kotlin demo scripts into addons/kanama."
+        dependsOn(tasks.named("jar"))
+        from(tasks.named<Jar>("jar").flatMap { it.archiveFile }) {
+            rename { "kanama-scripts.jar" }
+        }
+        into(layout.projectDirectory.dir("addons/kanama"))
+    }
+
+    tasks.register("buildScripts") {
+        group = "kanama"
+        description = "Compile kotlin-src and install Kanama addon files from the packaged kit."
+        dependsOn("compileKotlin", installKanamaKitAddon, installScriptsJar)
+    }
+} else {
+    tasks.register<Exec>("buildScripts") {
+        group = "kanama"
+        description = "Compile kotlin-src and install Kanama addon files from a source checkout."
+        dependsOn("compileKotlin")
+        workingDir = kanamaRoot
+        commandLine(
+            kanamaGradle,
+            ":project-scripts:jar",
+            "-PkanamaProjectScriptsDir=${file("kotlin-src").absolutePath}",
+            "installAddonJar",
+            "-PkanamaProjectDir=${projectDir.absolutePath}",
+            "-PkanamaProjectScriptsDir=${file("kotlin-src").absolutePath}",
+        )
+    }
 }
 
 tasks.register<Exec>("runGodot") {
