@@ -9,9 +9,9 @@ This is a public Kanama/Kotlin port of Godot's TPS demo snapshot:
 - Import method: clean tracked-file snapshot; no upstream or private Git
   history is included
 
-The original `.gd` files are retained as upstream reference material. Scene and
-autoload references used by the running port point at Kotlin scripts in
-`kotlin-src/`.
+Ported gameplay `.gd` files were removed after their scene references were
+rewired to Kotlin scripts in `kotlin-src/`. The remaining `.gd` files are the
+Kanama Tools editor plugin scripts under `addons/kanama_tools/`.
 
 ## Validation
 
