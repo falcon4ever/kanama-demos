@@ -25,6 +25,7 @@ val demoBuilds = listOf(
     DemoBuild("godot-demo-3d-squash-the-creeps", "godot-demo-3d-squash-the-creeps", "squash", "Godot Squash the Creeps"),
     DemoBuild("godot-4-3d-character-controller-tutorial", "godot-4-3d-character-controller-tutorial", "characterController", "GDQuest Character Controller"),
     DemoBuild("godot-4-3d-third-person-controller", "godot-4-3d-third-person-controller", "thirdPerson", "GDQuest Third Person Controller"),
+    DemoBuild("tps-demo", "tps-demo-kanama", "tps", "Godot TPS Demo"),
 )
 
 val kanamaRoot = providers.gradleProperty("kanamaRoot")
@@ -158,6 +159,30 @@ tasks.register("buildReferenceDemoScripts") {
     doLast {
         buildScriptsSequentially(demoBuilds.drop(5))
     }
+}
+
+tasks.register("tpsBuildAndSmokeGodot") {
+    group = "kanama demos"
+    description = "Build Kotlin scripts, import assets, and run the checked Godot TPS smoke."
+    dependsOn(gradle.includedBuild("tps-demo").task(":buildAndSmokeGodot"))
+}
+
+tasks.register("tpsBuildAndRenderSmokeGodot") {
+    group = "kanama demos"
+    description = "Build Kotlin scripts, import assets, and run the checked Godot TPS render smoke."
+    dependsOn(gradle.includedBuild("tps-demo").task(":buildAndRenderSmokeGodot"))
+}
+
+tasks.register("tpsBuildAndBulletSmokeGodot") {
+    group = "kanama demos"
+    description = "Build Kotlin scripts, import assets, and run the checked Godot TPS real-bullet smoke."
+    dependsOn(gradle.includedBuild("tps-demo").task(":buildAndBulletSmokeGodot"))
+}
+
+tasks.register("tpsBuildAndReloadSmokeGodot") {
+    group = "kanama demos"
+    description = "Build Kotlin scripts, import assets, and run the checked Godot TPS reload smoke."
+    dependsOn(gradle.includedBuild("tps-demo").task(":buildAndReloadSmokeGodot"))
 }
 
 fun buildScriptsSequentially(demos: List<DemoBuild>) {

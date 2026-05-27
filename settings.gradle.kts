@@ -11,6 +11,7 @@ val demos = listOf(
     "godot-demo-3d-squash-the-creeps" to "godot-demo-3d-squash-the-creeps",
     "godot-4-3d-character-controller-tutorial" to "godot-4-3d-character-controller-tutorial",
     "godot-4-3d-third-person-controller" to "godot-4-3d-third-person-controller",
+    "tps-demo-kanama" to "tps-demo",
 )
 
 for ((path, buildName) in demos) {

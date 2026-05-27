@@ -251,6 +251,7 @@ comparison are recorded in `Bunnymark/BENCHMARK_RESULTS.md`.
 | City Builder | `Starter-Kit-City-Builder` | Kenney Starter Kit City Builder | Ported and smoke-tested |
 | Third Person Controller | `godot-4-3d-third-person-controller` | GDQuest 3D Third Person Controller | Ported and smoke-tested |
 | Character Controller Tutorial | `godot-4-3d-character-controller-tutorial` | GDQuest Character Controller Tutorial | Ported and smoke-tested |
+| TPS Demo | `tps-demo-kanama` | Godot Third Person Shooter Demo | Ported and smoke-tested |
 | Squash the Creeps | `godot-demo-3d-squash-the-creeps` | Godot demo projects, 3D | Ported and smoke-tested |
 | Dodge the Creeps | `godot-demo-2d-dodge-the-creeps` | Godot demo projects, 2D | Ported and smoke-tested |
 
@@ -265,6 +266,7 @@ comparison are recorded in `Bunnymark/BENCHMARK_RESULTS.md`.
 | `Starter-Kit-City-Builder` | Kenney `Starter-Kit-City-Builder` | MIT | https://github.com/KenneyNL/Starter-Kit-City-Builder |
 | `godot-4-3d-third-person-controller` | GDQuest `godot-4-3d-third-person-controller` | MIT | https://github.com/gdquest-demos/godot-4-3d-third-person-controller |
 | `godot-4-3d-character-controller-tutorial` | GDQuest `godot-4-3d-character-controller-tutorial` | Code MIT; assets CC BY 4.0; all else Copyright 2016-2026 GDQuest | https://github.com/gdquest-demos/godot-4-3d-character-controller-tutorial |
+| `tps-demo-kanama` | Godot `tps-demo` | Code MIT; assets and music CC BY 3.0; includes GameTextures.com material attribution | https://github.com/godotengine/tps-demo |
 | `godot-demo-3d-squash-the-creeps` | Godot demo projects `3d/squash_the_creeps` | Code MIT; `House In a Forest Loop.ogg` CC BY 3.0; Montserrat OFL 1.1 | https://github.com/godotengine/godot-demo-projects/tree/master/3d/squash_the_creeps |
 | `godot-demo-2d-dodge-the-creeps` | Godot demo projects `2d/dodge_the_creeps` | Code MIT; images CC0; `House In a Forest Loop.ogg` CC BY 3.0; Xolonium OFL 1.1 | https://github.com/godotengine/godot-demo-projects/tree/master/2d/dodge_the_creeps |
 | `Bunnymark` | Godot/JVM Bunnymark harness | MIT | https://github.com/utopia-rise/godot-kotlin-jvm/tree/master/harness/bunnymark |
@@ -295,7 +297,8 @@ launch.
 
 ## Adding A Demo
 
-Add the upstream project as a subtree:
+Import the upstream project as a clean snapshot or squashed subtree, and record
+the source repository and commit in the demo folder:
 
 ```sh
 git subtree add --prefix=<Folder-Name> <upstream-url> main --squash
@@ -318,6 +321,10 @@ Then:
   https://www.gdquest.com/
 - **Godot demo projects**: original demo code from the Godot project.
   https://github.com/godotengine/godot-demo-projects
+- **Godot TPS demo**: original Third Person Shooter demo by Juan Linietsky,
+  Fernando Miguel Calabro, Christian Fernando Perucchi, and Godot Engine
+  contributors.
+  https://github.com/godotengine/tps-demo
 
 Squash the Creeps and Dodge the Creeps include `House In a Forest Loop.ogg` by
 HorrorPen under CC BY 3.0. Squash includes Montserrat Medium under the SIL Open
