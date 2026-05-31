@@ -34,7 +34,7 @@ path used by robot death parts.
 - The Kotlin settings path keeps SSAO disabled when the UI/config says it is
   disabled.
 - Robot death parts no longer spawn the short `PartDisappear` puff or
-  queue-free each individual part after fading. Under Godot 4.7 beta 3 on
+  queue-free each individual part after fading. Under Godot 4.7 beta 4 on
   Metal, that faithful visual cleanup path produced native render/physics
   instability during repeated robot death checks. The port keeps the gameplay
   behavior and uses a more conservative cleanup path.

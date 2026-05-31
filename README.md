@@ -4,7 +4,7 @@ Godot demo projects ported from GDScript to Kotlin with
 [Kanama](https://github.com/falcon4ever/kanama).
 
 <p>
-  <img alt="Godot 4.7 beta 3" src="https://img.shields.io/badge/Godot-4.7_beta_3-478cbf.svg">
+  <img alt="Godot 4.7 beta 4" src="https://img.shields.io/badge/Godot-4.7_beta_4-478cbf.svg">
   <img alt="Kanama 0.2.1" src="https://img.shields.io/badge/Kanama-0.2.1-6f42c1.svg">
   <img alt="JDK 25+" src="https://img.shields.io/badge/JDK-25%2B-f89820.svg">
   <img alt="Status: experimental" src="https://img.shields.io/badge/status-experimental-yellow.svg">
@@ -31,8 +31,8 @@ Kanama desktop kit with `-PkanamaKitDir=/path/to/kit`.
 
 ## Requirements
 
-- Godot 4.7 beta 3 from the
-  [Godot 4.7 beta 3 archive](https://godotengine.org/download/archive/4.7-beta3/)
+- Godot 4.7 beta 4 from the
+  [Godot 4.7 beta 4 archive](https://godotengine.org/download/archive/4.7-beta4/)
 - JDK 25+
 - CMake 3.22.1+ and a platform C toolchain when using a Kanama source checkout
   to build the native bootstrap locally; Godot source is not required
@@ -140,6 +140,9 @@ task environment.
 The root Gradle workspace is the canonical way to work across the ports. Each
 demo also keeps its own Gradle wrapper so aggregate builds can run demos
 sequentially and each project can still be opened or built standalone.
+Most demo `build.gradle.kts` files are intentionally small and delegate the
+Kanama repositories, dependencies, and build/run tasks to
+`gradle/kanama-demo.gradle.kts`.
 
 ## Demo Tasks
 
@@ -183,7 +186,7 @@ For headless desktop smoke validation across the current scripted demos, use:
 scripts/desktop_smoke_all.sh /path/to/godot
 ```
 
-Use the matching Godot 4.7 beta 3 binary for the platform under test. Windows
+Use the matching Godot 4.7 beta 4 binary for the platform under test. Windows
 smokes use the console binary with PowerShell Gradle commands and Git Bash
 marker checks. The desktop smoke script imports each project before running so
 fresh checkouts without `.godot/imported` caches validate the same way as a
