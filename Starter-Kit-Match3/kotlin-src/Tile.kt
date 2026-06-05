@@ -115,7 +115,7 @@ class Tile(godotObject: MemorySegment) : KanamaScript<Area2D>(godotObject, ::Are
         activeTweens += tween
         tween.signal(Tween.Signals.finished).connect(self, argumentCount = 0, flags = GodotObject.CONNECT_ONE_SHOT) {
             releaseTween(tween)
-            onFinished?.invoke()
+            onFinished?.let { it() }
         }
         return tween
     }

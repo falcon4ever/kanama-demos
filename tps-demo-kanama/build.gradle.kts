@@ -3,8 +3,8 @@ import javax.inject.Inject
 import org.gradle.process.ExecOperations
 
 plugins {
-    kotlin("jvm") version "2.3.0"
-    id("com.google.devtools.ksp") version "2.3.0"
+    kotlin("jvm") version "2.3.21"
+    id("com.google.devtools.ksp") version "2.3.9"
 }
 
 abstract class ExecSupport @Inject constructor(
@@ -56,7 +56,7 @@ kotlin {
 dependencies {
     implementation("net.multigesture.kanama:kanama:$kanamaVersion")
     implementation("net.multigesture.kanama:annotations:$kanamaVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
     ksp("net.multigesture.kanama:processor:$kanamaVersion")
 }
 

@@ -110,5 +110,6 @@ toggle_freelook_camera={
 
 [rendering]
 
+renderer/rendering_method.mobile="gl_compatibility"
 anti_aliasing/quality/msaa_3d=2
 textures/vram_compression/import_etc2_astc=true

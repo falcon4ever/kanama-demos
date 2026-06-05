@@ -38,6 +38,9 @@ Kanama desktop kit with `-PkanamaKitDir=/path/to/kit`.
   to build the native bootstrap locally; Godot source is not required
 - A sibling `kanama` checkout, or an unzipped Kanama desktop kit for package
   install validation
+- Demo Gradle builds currently use Kotlin 2.3.21, KSP 2.3.9, and
+  kotlinx.coroutines 1.11.0, with Gradle build cache enabled for root and
+  standalone demo builds
 - macOS arm64, Windows x64, Linux x64, or Linux ARM64 for the current
   editor/runtime smoke paths
 
