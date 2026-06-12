@@ -3,7 +3,7 @@ extends Node3D
 @onready var mobile_controls: CanvasLayer = $MobileControls
 
 func _ready() -> void:
-	mobile_controls.visible = OS.has_feature("android")
+	mobile_controls.visible = OS.has_feature("android") or OS.has_feature("ios")
 
 	if RenderingServer.get_current_rendering_method() == "gl_compatibility":
 		# Reduce background and sun brightness when using the Compatibility renderer;

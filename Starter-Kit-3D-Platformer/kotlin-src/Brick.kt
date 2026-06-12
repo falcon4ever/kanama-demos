@@ -1,3 +1,5 @@
+package net.multigesture.kanama.demos.platformer3d
+
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass

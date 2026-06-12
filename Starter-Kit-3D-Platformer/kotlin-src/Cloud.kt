@@ -1,3 +1,5 @@
+package net.multigesture.kanama.demos.platformer3d
+
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.OnReady

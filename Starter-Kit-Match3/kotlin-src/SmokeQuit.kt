@@ -1,3 +1,5 @@
+package net.multigesture.kanama.demos.match3
+
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.KanamaCoroutineOwner

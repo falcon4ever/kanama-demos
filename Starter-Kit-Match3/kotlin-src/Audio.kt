@@ -1,3 +1,5 @@
+package net.multigesture.kanama.demos.match3
+
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.OnReady
