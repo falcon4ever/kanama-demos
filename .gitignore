@@ -17,6 +17,11 @@ out/
 *.so
 *.dylib
 *.dll
+*.a
+
+# --- Generated Kanama iOS addon (built on demand by installIosAddon, like the
+#     desktop/Android binaries above; do not commit the xcframework) ---
+**/addons/kanama/bin/
 
 # --- Gradle ---
 .gradle/

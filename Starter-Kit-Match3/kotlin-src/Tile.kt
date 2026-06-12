@@ -1,3 +1,5 @@
+package net.multigesture.kanama.demos.match3
+
 import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
@@ -25,6 +27,9 @@ class Tile(godotObject: MemorySegment) : KanamaScript<Area2D>(godotObject, ::Are
 
     @Signal
     fun tilePressed(pos: Vector2i) = Unit
+
+    @Signal
+    fun tileReleased(pos: Vector2i) = Unit
 
     // Highlight tile when hovering mouse
     @RegisterFunction("_on_mouse_entered")
@@ -65,6 +70,8 @@ class Tile(godotObject: MemorySegment) : KanamaScript<Area2D>(godotObject, ::Are
         val mouseButton = InputEventMouseButton.from(event) ?: return
         if (mouseButton.getButtonIndex() == InputEventMouseButton.MOUSE_BUTTON_LEFT && mouseButton.isPressed()) {
             TileSignals.tilePressed(this, gridPosition)
+        } else if (mouseButton.isReleased()) {
+            TileSignals.tileReleased(this, gridPosition)
         }
     }
 

@@ -60,6 +60,15 @@ The `BuildAndRunGodot` demo tasks build Kotlin scripts, run Kanama's
 install step copies `kanama.jar`, `kanama-scripts.jar`, the `.gdextension`
 file, and the host native bootstrap into the demo's `addons/kanama` directory.
 
+The addon binaries (desktop `.so`/`.dylib`/`.dll`, the Android `.aar`, and the iOS
+`.xcframework`) are **not committed** — they are rebuilt on demand by the install tasks
+(`installAddonJar`, `installAndroidPluginAar`, `installIosAddon`) and gitignored. Only the
+`.gdextension` descriptor is tracked.
+
+**iOS is experimental.** Match3 and the 3D Platformer run on a physical device via Kanama's
+Kotlin/Native backend; install with `installIosAddon` (see
+`docs/internals/ios-backend-roadmap.md` in the Kanama repo). It is not a supported export.
+
 List demo tasks:
 
 ```sh
