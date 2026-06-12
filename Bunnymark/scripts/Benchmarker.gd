@@ -22,7 +22,8 @@ var ping_pong_counter := 0
 var increasing := true
 
 var mobile_warmup_remaining := 0.0
-var mobile_warmup_seed := 100
+var mobile_warmup_seed := 50
+var mobile_max_bunny_batch := 200
 
 @export_enum("BunnymarkV1Sprites", "BunnymarkV1DrawTexture", "BunnymarkV2", "BunnymarkV3") var benchmark: String = "BunnymarkV2"
 @export_enum("gd", "kanama") var language: String = "kanama"
@@ -54,6 +55,10 @@ func _process(delta: float):
                 benchmark_node.call("add_bunny")
                 bunny_number += 1
         else:
+            if mobile_warmup_seed > 0:
+                bunnymark_update_elapsed_time = 0.0
+                increasing = true
+                mobile_warmup_seed = 0
             update_bunnymark(delta)
 
 func _is_mobile() -> bool:
@@ -71,6 +76,7 @@ func start_benchmark(benchmark_name: String, lang: String):
     benchmark_is_bunnymark = benchmark_name.begins_with("Bunnymark")
     if _is_mobile():
         mobile_warmup_remaining = 3.0
+        bunnymark_target = 30.0
     bunnymark_update_elapsed_time = bunnymark_update_interval
     var script = load(script_path)
     benchmark_node = Node2D.new()
@@ -122,15 +128,18 @@ func update_bunnymark(delta):
         var difference = fps - bunnymark_target
         var bunny_difference := 0
         var current_stability_target = bunnymark_target_error * ping_pong_counter
+        var min_batch = 1
+        var max_batch = mobile_max_bunny_batch if _is_mobile() else 2000
+        var batch_scale = max(1, bunny_number / 20) if !_is_mobile() else 1
         print("Tolerance: " + str(current_stability_target))
         if difference > current_stability_target:
-            bunny_difference = clamp(difference * max(100, bunny_number / 1000), 10, 2000)
+            bunny_difference = int(clamp(difference * batch_scale, min_batch, max_batch))
             if !increasing:
                 increasing = true
                 ping_pong_counter += 1
             print("New Bunnies: " + str(bunny_difference))
         elif difference < -current_stability_target:
-            bunny_difference = clamp(difference * max(100, bunny_number / 1000), -2000, -10)
+            bunny_difference = int(clamp(difference * batch_scale, -max_batch, -min_batch))
             if increasing:
                 increasing = false
                 ping_pong_counter += 1
