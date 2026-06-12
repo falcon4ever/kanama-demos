@@ -1,7 +1,7 @@
 [configuration]
 
 entry_symbol = "kanama_entry"
-compatibility_minimum = "4.3"
+compatibility_minimum = "4.7"
 android_aar_plugin = true
 
 [libraries]
@@ -15,6 +15,6 @@ linux.release.arm64 = "res://addons/kanama/libkanama_bootstrap.so"
 windows.debug.x86_64 = "res://addons/kanama/kanama_bootstrap.dll"
 windows.release.x86_64 = "res://addons/kanama/kanama_bootstrap.dll"
 android.debug.arm64 = "libkanama_bootstrap.so"
-android.debug.x86_64 = "libkanama_bootstrap.so"
 android.release.arm64 = "libkanama_bootstrap.so"
+android.debug.x86_64 = "libkanama_bootstrap.so"
 android.release.x86_64 = "libkanama_bootstrap.so"

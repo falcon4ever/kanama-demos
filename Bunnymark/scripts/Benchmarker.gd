@@ -21,6 +21,9 @@ var bunny_number := 0
 var ping_pong_counter := 0
 var increasing := true
 
+var mobile_warmup_remaining := 0.0
+var mobile_warmup_seed := 100
+
 @export_enum("BunnymarkV1Sprites", "BunnymarkV1DrawTexture", "BunnymarkV2", "BunnymarkV3") var benchmark: String = "BunnymarkV2"
 @export_enum("gd", "kanama") var language: String = "kanama"
 
@@ -44,7 +47,17 @@ func _process(delta: float):
         fps_label.text = "FPS: " + str(Engine.get_frames_per_second())
         elapsed_time = 0.0
     if benchmark_is_bunnymark:
-        update_bunnymark(delta)
+        if mobile_warmup_remaining > 0.0:
+            mobile_warmup_remaining -= delta
+            fps_label.text = "FPS: (warming up)"
+            while bunny_number < mobile_warmup_seed and benchmark_node.has_method("add_bunny"):
+                benchmark_node.call("add_bunny")
+                bunny_number += 1
+        else:
+            update_bunnymark(delta)
+
+func _is_mobile() -> bool:
+    return OS.has_feature("android") or OS.has_feature("ios")
 
 func get_script_path(benchmark_name: String, lang: String) -> String:
     if lang == "kanama":
@@ -56,6 +69,8 @@ func start_benchmark(benchmark_name: String, lang: String):
     print(lang)
     var script_path := get_script_path(benchmark_name, lang)
     benchmark_is_bunnymark = benchmark_name.begins_with("Bunnymark")
+    if _is_mobile():
+        mobile_warmup_remaining = 3.0
     bunnymark_update_elapsed_time = bunnymark_update_interval
     var script = load(script_path)
     benchmark_node = Node2D.new()
