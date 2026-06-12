@@ -6,7 +6,7 @@ guide to work on demos without scanning every project directory first.
 ## Current Baseline
 
 - Kanama version: `0.2.2`.
-- Godot baseline: Godot `4.7 beta 5`.
+- Godot baseline: Godot `4.7 rc 2`.
 - Desktop/runtime JDK: JDK `25+`.
 - Default layout keeps this checkout beside `kanama`:
 
@@ -133,7 +133,7 @@ Then run:
 ```sh
 ./gradlew buildAllScripts
 ./gradlew check
-scripts/desktop_smoke_all.sh /absolute/path/to/godot-4.7-beta5
+scripts/desktop_smoke_all.sh /absolute/path/to/godot-4.7-rc2
 ```
 
 ### Port Or Fix Gameplay
@@ -174,8 +174,8 @@ Before release-facing changes:
 ```sh
 ./gradlew buildAllScripts
 ./gradlew check
-./gradlew importAllGodot -Pkanama.godot.executable=/absolute/path/to/godot-4.7-beta5
-scripts/desktop_smoke_all.sh /absolute/path/to/godot-4.7-beta5
+./gradlew importAllGodot -Pkanama.godot.executable=/absolute/path/to/godot-4.7-rc2
+scripts/desktop_smoke_all.sh /absolute/path/to/godot-4.7-rc2
 ```
 
 Run Android validation only for Android export work or support-claim changes:
