@@ -49,6 +49,7 @@ demos=(
   "racing|Starter-Kit-Racing|net.multigesture.kanama.racing"
   "charactercontroller|godot-4-3d-character-controller-tutorial|net.multigesture.kanama.charactercontroller"
   "thirdperson|godot-4-3d-third-person-controller|net.multigesture.kanama.thirdperson"
+  "bunnymark|Bunnymark|net.multigesture.kanama.bunnymark"
 )
 
 for demo in "${demos[@]}"; do
