@@ -2,7 +2,7 @@ extends CanvasLayer
 
 
 func _ready() -> void:
-	visible = OS.has_feature("android")
+	visible = OS.has_feature("android") or OS.has_feature("ios")
 	for button in find_children("*", "Button", true, false):
 		var action_value := String(button.get_meta("action", ""))
 		if action_value.is_empty():

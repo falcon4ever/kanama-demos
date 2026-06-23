@@ -2,7 +2,7 @@ extends CanvasLayer
 
 
 func _ready() -> void:
-	visible = OS.has_feature("android")
+	visible = OS.has_feature("android") or OS.has_feature("ios")
 	if visible:
 		_remove_mouse_bindings(&"attack")
 		_remove_mouse_bindings(&"aim")
