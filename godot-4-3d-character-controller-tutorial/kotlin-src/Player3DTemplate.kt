@@ -140,11 +140,9 @@ class Player3DTemplate(godotObject: MemorySegment) : KanamaScript<CharacterBody3
         }
 
         val pivotRotation = cameraPivot.rotation
-        cameraPivot.rotation = pivotRotation.copy(
-            x = Mathf.clamp(pivotRotation.x.toDouble() + cameraInputDirection.y.toDouble() * delta, tiltLowerLimit, tiltUpperLimit)
-                .toFloat(),
-            y = (pivotRotation.y.toDouble() + cameraInputDirection.x.toDouble() * delta).toFloat(),
-        )
+        cameraPivot.rotation = pivotRotation
+            .withX(Mathf.clamp(pivotRotation.x.toDouble() + cameraInputDirection.y.toDouble() * delta, tiltLowerLimit, tiltUpperLimit))
+            .withY(pivotRotation.y.toDouble() + cameraInputDirection.x.toDouble() * delta)
         cameraInputDirection = Vector2.ZERO
 
         val rawInput = Input.getVector("move_left", "move_right", "move_up", "move_down", 0.4)

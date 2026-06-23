@@ -7,7 +7,6 @@ import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.MainThread
 import net.multigesture.kanama.api.Node
-import net.multigesture.kanama.api.SceneTree
 import java.lang.foreign.MemorySegment
 import kotlinx.coroutines.launch
 
@@ -22,9 +21,10 @@ class SmokeQuit(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::
             repeat(20) {
                 MainThread.awaitNextFrame()
             }
-            SceneTree.unloadCurrentScene()
+            val tree = self.getTree()
+            tree.unloadCurrentScene()
             MainThread.postAfterFrames(QUIT_AFTER_UNLOAD_FRAMES) {
-                SceneTree.quit()
+                tree.quit()
             }
         }
     }

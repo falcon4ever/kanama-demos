@@ -9,7 +9,6 @@ import net.multigesture.kanama.api.KanamaCoroutineOwner
 import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.MainThread
-import net.multigesture.kanama.api.SceneTree
 import net.multigesture.kanama.generated.EventsNames
 import java.lang.foreign.MemorySegment
 import kotlinx.coroutines.launch
@@ -30,9 +29,10 @@ class FlagReachedScreen(godotObject: MemorySegment) : KanamaScript<CanvasLayer>(
                 animationPlayer.play("fade_in")
                 animationPlayer.signal(AnimationMixer.Signals.animationFinished).await(self, argumentCount = 1)
                 MainThread.awaitNextFrame()
-                SceneTree.unloadCurrentScene()
+                val tree = self.getTree()
+                tree.unloadCurrentScene()
                 MainThread.postAfterFrames(QUIT_AFTER_UNLOAD_FRAMES) {
-                    SceneTree.quit()
+                    tree.quit()
                 }
             }
         }

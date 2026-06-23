@@ -79,11 +79,9 @@ class FreelookCamera3D(godotObject: MemorySegment) : KanamaScript<Camera3D>(godo
         if (Input.isKeyPressed(InputEventKey.KEY_E)) movement += Vector3.UP
 
         val rotation = self.rotation
-        self.rotation = rotation.copy(
-            x = Mathf.clamp(rotation.x.toDouble() - cameraInputDirection.y.toDouble(), -Mathf.PI / 2.0, Mathf.PI / 2.0)
-                .toFloat(),
-            y = (rotation.y.toDouble() - cameraInputDirection.x.toDouble()).toFloat(),
-        )
+        self.rotation = rotation
+            .withX(Mathf.clamp(rotation.x.toDouble() - cameraInputDirection.y.toDouble(), -Mathf.PI / 2.0, Mathf.PI / 2.0))
+            .withY(rotation.y.toDouble() - cameraInputDirection.x.toDouble())
 
         self.globalPosition = self.globalPosition + self.globalTransform.basis * movement * delta * movementSpeed
         cameraInputDirection = Vector2.ZERO
