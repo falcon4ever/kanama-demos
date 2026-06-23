@@ -8,7 +8,6 @@ import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.MainThread
 import net.multigesture.kanama.api.Node
-import net.multigesture.kanama.api.SceneTree
 import java.lang.foreign.MemorySegment
 import kotlinx.coroutines.launch
 
@@ -30,7 +29,8 @@ class SmokeQuit(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::
             if (System.getenv("KANAMA_SQUASH_SMOKE_MOVE") == "1") {
                 Input.actionRelease("move_right")
             }
-            SceneTree.quit()
+            val tree = self.getTree()
+            MainThread.post { tree.quit() }
         }
     }
 }
