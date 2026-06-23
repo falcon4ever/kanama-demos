@@ -59,13 +59,13 @@ class Player(godotObject: MemorySegment) : KanamaScript<Area2D>(godotObject, ::A
 
         self.position = (self.position + velocity * delta).clamp(Vector2.ZERO, screenSize)
 
-        if (velocity.x != 0f) {
+        if (velocity.x.toDouble() != 0.0) {
             animatedSprite.animation = "right"
             self.rotation = 0.0
             animatedSprite.flipV = false
             trail.rotation = 0.0
             animatedSprite.flipH = velocity.x < 0f
-        } else if (velocity.y != 0f) {
+        } else if (velocity.y.toDouble() != 0.0) {
             animatedSprite.animation = "up"
             self.rotation = if (velocity.y > 0f) Mathf.PI else 0.0
         }
