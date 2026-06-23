@@ -1,3 +1,5 @@
+package net.multigesture.kanama.demos.bunnymark
+
 import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
