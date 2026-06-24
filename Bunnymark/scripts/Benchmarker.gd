@@ -34,6 +34,7 @@ func _ready():
     set_process(false)
     fps_label = get_node("Panel/FPS")
     benchmark_container = get_node("BenchmarkContainer")
+    _apply_safe_area()
 
     var args = OS.get_cmdline_args() + OS.get_cmdline_user_args()
     for arg in args:
@@ -66,6 +67,25 @@ func _process(delta: float):
 func _is_mobile() -> bool:
     return OS.has_feature("android") or OS.has_feature("ios")
 
+# Shared top-left inset (safe-area origin + margin) applied to the on-screen
+# readouts on mobile. The benchmark's "Bunnies" Label (created in Kotlin) is
+# offset by this too, in start_benchmark.
+var safe_inset := Vector2.ZERO
+
+# Inset the top-left readouts past the device's rounded corner / notch.
+# Stretch mode is disabled, so GUI coords map 1:1 to the screen pixels that
+# DisplayServer.get_display_safe_area() reports. In landscape the safe-area top
+# inset is tiny, so add a fixed margin so the FPS line clears the corner.
+const SAFE_AREA_MARGIN := Vector2(24, 24)
+
+func _apply_safe_area() -> void:
+    if not _is_mobile():
+        return
+    var safe_area := DisplayServer.get_display_safe_area()
+    safe_inset = Vector2(safe_area.position) + SAFE_AREA_MARGIN
+    var panel := get_node("Panel") as Control
+    panel.position += safe_inset
+
 func get_script_path(benchmark_name: String, lang: String) -> String:
     if lang == "kanama":
         return "res://kotlin-src/" + benchmark_name + "Kanama.kt"
@@ -90,6 +110,11 @@ func start_benchmark(benchmark_name: String, lang: String):
     benchmark_node.add_user_signal("benchmark_finished", ["output"])
     benchmark_node.connect("benchmark_finished", Callable(self, "benchmark_finished"))
     benchmark_container.add_child(benchmark_node)
+    # The Kotlin benchmark (V2/V3) creates a "Bunnies" Label at (0, 20) in its
+    # _ready; nudge it past the rounded corner on mobile (no-op elsewhere).
+    if safe_inset != Vector2.ZERO:
+        for label in benchmark_node.find_children("*", "Label", true, false):
+            label.position += safe_inset
     bunny_number = 0
     ping_pong_counter = 0
     if benchmark_node.has_method("add_bunny"):
