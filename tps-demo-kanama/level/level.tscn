@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://b51qillnxp84r"]
+[gd_scene load_steps=16 format=3 uid="uid://b51qillnxp84r"]
 
 [ext_resource type="Script" path="res://kotlin-src/Level.kt" id="1"]
 [ext_resource type="PackedScene" uid="uid://bpihm2o3g658" path="res://level/geometry/scenes/props.tscn" id="2"]
@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" uid="uid://ddbnmy6um5fjg" path="res://level/geometry/scenes/core.tscn" id="14"]
 [ext_resource type="PackedScene" uid="uid://bh1lh032pmey2" path="res://level/geometry/scenes/structure.tscn" id="15"]
 [ext_resource type="Environment" uid="uid://cnn46umvf55rs" path="res://level/geometry/environment.tres" id="16"]
+[ext_resource type="PackedScene" uid="uid://c0tpsmob1ctrl" path="res://scripts/mobile_controls.tscn" id="20_mobile"]
 
 [sub_resource type="CapsuleShape3D" id="1"]
 radius = 39.01255
@@ -40,6 +41,8 @@ _data = {
 
 [node name="Level" type="Node3D"]
 script = ExtResource("1")
+
+[node name="MobileControls" parent="." instance=ExtResource("20_mobile")]
 
 [node name="SpawnedNodes" type="Node3D" parent="."]
 
