@@ -120,7 +120,7 @@ class GrenadeLauncher(godotObject: MemorySegment) : KanamaScript<Node3D>(godotOb
         raycast.targetPosition = globalCameraLookPosition - raycast.globalPosition
 
         var toTarget = raycast.targetPosition
-        if (raycast.getCollisionCount() != 0L) {
+        if (raycast.getCollisionCount() != 0) {
             val collider = raycast.getCollider(0)
             val hasTarget = collider != null && Node(collider.handle).isInGroup("targeteables")
             snapMesh.setVisible(hasTarget)

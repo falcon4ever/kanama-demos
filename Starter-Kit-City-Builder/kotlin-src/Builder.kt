@@ -143,8 +143,8 @@ class Builder(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::
 	private fun actionDemolish(gridmapPosition: Vector3i) {
 		if (Input.isActionJustPressed("demolish")) {
 			val grid = requireGridMap()
-			if (grid.getCellItem(gridmapPosition) != GridMap.INVALID_CELL_ITEM) {
-				grid.setCellItem(gridmapPosition, GridMap.INVALID_CELL_ITEM)
+			if (grid.getCellItem(gridmapPosition) != GridMap.INVALID_CELL_ITEM.toInt()) {
+				grid.setCellItem(gridmapPosition, GridMap.INVALID_CELL_ITEM.toInt())
 				playAudio("sounds/removal-a.ogg, sounds/removal-b.ogg, sounds/removal-c.ogg, sounds/removal-d.ogg", -20.0)
 			}
 		}
