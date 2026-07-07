@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://c74qi2ci4wf8i"
 path.s3tc="res://.godot/imported/scificar_emissive.png-2f5a21704c8a8fe55003de19662a74b5.s3tc.ctex"
+path.etc2="res://.godot/imported/scificar_emissive.png-2f5a21704c8a8fe55003de19662a74b5.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://level/textures/car/scificar_emissive.png"
-dest_files=["res://.godot/imported/scificar_emissive.png-2f5a21704c8a8fe55003de19662a74b5.s3tc.ctex"]
+dest_files=["res://.godot/imported/scificar_emissive.png-2f5a21704c8a8fe55003de19662a74b5.s3tc.ctex", "res://.godot/imported/scificar_emissive.png-2f5a21704c8a8fe55003de19662a74b5.etc2.ctex"]
 
 [params]
 

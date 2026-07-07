@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cpa3rnfri3u8i"
 path.s3tc="res://.godot/imported/trim_misc_1_orm.png-ee5721c2bc161b358616c6c15f6c0061.s3tc.ctex"
+path.etc2="res://.godot/imported/trim_misc_1_orm.png-ee5721c2bc161b358616c6c15f6c0061.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://level/textures/structure/trim_misc_1_orm.png"
-dest_files=["res://.godot/imported/trim_misc_1_orm.png-ee5721c2bc161b358616c6c15f6c0061.s3tc.ctex"]
+dest_files=["res://.godot/imported/trim_misc_1_orm.png-ee5721c2bc161b358616c6c15f6c0061.s3tc.ctex", "res://.godot/imported/trim_misc_1_orm.png-ee5721c2bc161b358616c6c15f6c0061.etc2.ctex"]
 
 [params]
 

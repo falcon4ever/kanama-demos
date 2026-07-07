@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bhtkq1wnlj0gm"
 path.s3tc="res://.godot/imported/door_albedo.png-b6182b7ae92d4e17abfbca4a44dd1578.s3tc.ctex"
+path.etc2="res://.godot/imported/door_albedo.png-b6182b7ae92d4e17abfbca4a44dd1578.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://door/textures/door_albedo.png"
-dest_files=["res://.godot/imported/door_albedo.png-b6182b7ae92d4e17abfbca4a44dd1578.s3tc.ctex"]
+dest_files=["res://.godot/imported/door_albedo.png-b6182b7ae92d4e17abfbca4a44dd1578.s3tc.ctex", "res://.godot/imported/door_albedo.png-b6182b7ae92d4e17abfbca4a44dd1578.etc2.ctex"]
 
 [params]
 

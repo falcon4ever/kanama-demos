@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://8w0roaw3owft"
 path.s3tc="res://.godot/imported/plasma.png-6d59facfec6f6a5fd1f7e9f2f6b90a8f.s3tc.ctex"
+path.etc2="res://.godot/imported/plasma.png-6d59facfec6f6a5fd1f7e9f2f6b90a8f.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://level/textures/plasma.png"
-dest_files=["res://.godot/imported/plasma.png-6d59facfec6f6a5fd1f7e9f2f6b90a8f.s3tc.ctex"]
+dest_files=["res://.godot/imported/plasma.png-6d59facfec6f6a5fd1f7e9f2f6b90a8f.s3tc.ctex", "res://.godot/imported/plasma.png-6d59facfec6f6a5fd1f7e9f2f6b90a8f.etc2.ctex"]
 
 [params]
 

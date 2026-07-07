@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cvhuv2ivvnuqo"
 path.s3tc="res://.godot/imported/tile_anti_slip_metal_orm.png-97c095021f78e0883629e18b8696da17.s3tc.ctex"
+path.etc2="res://.godot/imported/tile_anti_slip_metal_orm.png-97c095021f78e0883629e18b8696da17.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://level/textures/structure/tile_anti_slip_metal_orm.png"
-dest_files=["res://.godot/imported/tile_anti_slip_metal_orm.png-97c095021f78e0883629e18b8696da17.s3tc.ctex"]
+dest_files=["res://.godot/imported/tile_anti_slip_metal_orm.png-97c095021f78e0883629e18b8696da17.s3tc.ctex", "res://.godot/imported/tile_anti_slip_metal_orm.png-97c095021f78e0883629e18b8696da17.etc2.ctex"]
 
 [params]
 

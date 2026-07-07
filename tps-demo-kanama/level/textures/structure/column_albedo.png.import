@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cytco2ywnxs4d"
 path.s3tc="res://.godot/imported/column_albedo.png-92d600ad6594066215f66aadcbc24322.s3tc.ctex"
+path.etc2="res://.godot/imported/column_albedo.png-92d600ad6594066215f66aadcbc24322.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://level/textures/structure/column_albedo.png"
-dest_files=["res://.godot/imported/column_albedo.png-92d600ad6594066215f66aadcbc24322.s3tc.ctex"]
+dest_files=["res://.godot/imported/column_albedo.png-92d600ad6594066215f66aadcbc24322.s3tc.ctex", "res://.godot/imported/column_albedo.png-92d600ad6594066215f66aadcbc24322.etc2.ctex"]
 
 [params]
 

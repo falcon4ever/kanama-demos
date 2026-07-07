@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dnds7xlobxq44"
 path.s3tc="res://.godot/imported/reactor_cylinder_orm.png-66fbc6a99f69e4bcded6ff4c9a571bcf.s3tc.ctex"
+path.etc2="res://.godot/imported/reactor_cylinder_orm.png-66fbc6a99f69e4bcded6ff4c9a571bcf.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://level/textures/props/reactor_cylinder_orm.png"
-dest_files=["res://.godot/imported/reactor_cylinder_orm.png-66fbc6a99f69e4bcded6ff4c9a571bcf.s3tc.ctex"]
+dest_files=["res://.godot/imported/reactor_cylinder_orm.png-66fbc6a99f69e4bcded6ff4c9a571bcf.s3tc.ctex", "res://.godot/imported/reactor_cylinder_orm.png-66fbc6a99f69e4bcded6ff4c9a571bcf.etc2.ctex"]
 
 [params]
 

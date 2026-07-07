@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://e25tiap7vd16"
 path.s3tc="res://.godot/imported/player_robot_orm.png-e02b1e5fa1f39801d9d122d5a4483681.s3tc.ctex"
+path.etc2="res://.godot/imported/player_robot_orm.png-e02b1e5fa1f39801d9d122d5a4483681.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://player/textures/player_robot_orm.png"
-dest_files=["res://.godot/imported/player_robot_orm.png-e02b1e5fa1f39801d9d122d5a4483681.s3tc.ctex"]
+dest_files=["res://.godot/imported/player_robot_orm.png-e02b1e5fa1f39801d9d122d5a4483681.s3tc.ctex", "res://.godot/imported/player_robot_orm.png-e02b1e5fa1f39801d9d122d5a4483681.etc2.ctex"]
 
 [params]
 

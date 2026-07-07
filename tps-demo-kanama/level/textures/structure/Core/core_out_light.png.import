@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cya4tlbkeiulm"
 path.s3tc="res://.godot/imported/core_out_light.png-b289287c4925ebf2f3d3d8ee47b38a00.s3tc.ctex"
+path.etc2="res://.godot/imported/core_out_light.png-b289287c4925ebf2f3d3d8ee47b38a00.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://level/textures/structure/Core/core_out_light.png"
-dest_files=["res://.godot/imported/core_out_light.png-b289287c4925ebf2f3d3d8ee47b38a00.s3tc.ctex"]
+dest_files=["res://.godot/imported/core_out_light.png-b289287c4925ebf2f3d3d8ee47b38a00.s3tc.ctex", "res://.godot/imported/core_out_light.png-b289287c4925ebf2f3d3d8ee47b38a00.etc2.ctex"]
 
 [params]
 

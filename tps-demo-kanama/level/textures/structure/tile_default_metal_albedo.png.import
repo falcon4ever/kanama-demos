@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://yyss75p88ker"
 path.s3tc="res://.godot/imported/tile_default_metal_albedo.png-624ac4460101abe8b75d9f9c403f0771.s3tc.ctex"
+path.etc2="res://.godot/imported/tile_default_metal_albedo.png-624ac4460101abe8b75d9f9c403f0771.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://level/textures/structure/tile_default_metal_albedo.png"
-dest_files=["res://.godot/imported/tile_default_metal_albedo.png-624ac4460101abe8b75d9f9c403f0771.s3tc.ctex"]
+dest_files=["res://.godot/imported/tile_default_metal_albedo.png-624ac4460101abe8b75d9f9c403f0771.s3tc.ctex", "res://.godot/imported/tile_default_metal_albedo.png-624ac4460101abe8b75d9f9c403f0771.etc2.ctex"]
 
 [params]
 

@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dem3n48wg6rjh"
 path.s3tc="res://.godot/imported/tile_tech_panels_orm.png-b6075003349ca8fb541f734aa12eefe7.s3tc.ctex"
+path.etc2="res://.godot/imported/tile_tech_panels_orm.png-b6075003349ca8fb541f734aa12eefe7.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://level/textures/structure/tile_tech_panels_orm.png"
-dest_files=["res://.godot/imported/tile_tech_panels_orm.png-b6075003349ca8fb541f734aa12eefe7.s3tc.ctex"]
+dest_files=["res://.godot/imported/tile_tech_panels_orm.png-b6075003349ca8fb541f734aa12eefe7.s3tc.ctex", "res://.godot/imported/tile_tech_panels_orm.png-b6075003349ca8fb541f734aa12eefe7.etc2.ctex"]
 
 [params]
 

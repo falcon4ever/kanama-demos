@@ -77,6 +77,7 @@ object TpsSettings {
     }
 
     fun videoLong(key: String): Long = (configFile.getValue("video", key) as Number).toLong()
+    fun videoInt(key: String): Int = (configFile.getValue("video", key) as Number).toInt()
     fun renderLong(key: String): Long = (configFile.getValue("rendering", key) as Number).toLong()
     fun renderBool(key: String): Boolean = configFile.getValue("rendering", key) as Boolean
     fun videoDouble(key: String): Double = (configFile.getValue("video", key) as Number).toDouble()
@@ -86,7 +87,7 @@ object TpsSettings {
             window?.mode = videoLong("display_mode")
         }
         DisplayServer.windowSetVsyncMode(videoLong("vsync"))
-        Engine.maxFps = videoLong("max_fps")
+        Engine.maxFps = videoInt("max_fps")
         window?.scaling3dScale = videoDouble("resolution_scale")
         window?.scaling3dMode = videoLong("scale_filter")
 

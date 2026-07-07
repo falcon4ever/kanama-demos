@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://d14y7pucpqfdu"
 path.s3tc="res://.godot/imported/door_emission.png-882557a3d4517e570d1bba8e406a02e2.s3tc.ctex"
+path.etc2="res://.godot/imported/door_emission.png-882557a3d4517e570d1bba8e406a02e2.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://level/textures/props/door_emission.png"
-dest_files=["res://.godot/imported/door_emission.png-882557a3d4517e570d1bba8e406a02e2.s3tc.ctex"]
+dest_files=["res://.godot/imported/door_emission.png-882557a3d4517e570d1bba8e406a02e2.s3tc.ctex", "res://.godot/imported/door_emission.png-882557a3d4517e570d1bba8e406a02e2.etc2.ctex"]
 
 [params]
 

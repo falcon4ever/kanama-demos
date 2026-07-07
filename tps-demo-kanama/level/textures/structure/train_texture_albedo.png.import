@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://blnqy8n41020h"
 path.s3tc="res://.godot/imported/train_texture_albedo.png-794cc5ded8478ff387564f4a854493b3.s3tc.ctex"
+path.etc2="res://.godot/imported/train_texture_albedo.png-794cc5ded8478ff387564f4a854493b3.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://level/textures/structure/train_texture_albedo.png"
-dest_files=["res://.godot/imported/train_texture_albedo.png-794cc5ded8478ff387564f4a854493b3.s3tc.ctex"]
+dest_files=["res://.godot/imported/train_texture_albedo.png-794cc5ded8478ff387564f4a854493b3.s3tc.ctex", "res://.godot/imported/train_texture_albedo.png-794cc5ded8478ff387564f4a854493b3.etc2.ctex"]
 
 [params]
 

@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cyo2tbb5np35t"
 path.s3tc="res://.godot/imported/tile_rivet_panels_albedo.png-0fa712b0ef51c277ae13a10e43741c6e.s3tc.ctex"
+path.etc2="res://.godot/imported/tile_rivet_panels_albedo.png-0fa712b0ef51c277ae13a10e43741c6e.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://level/textures/structure/tile_rivet_panels_albedo.png"
-dest_files=["res://.godot/imported/tile_rivet_panels_albedo.png-0fa712b0ef51c277ae13a10e43741c6e.s3tc.ctex"]
+dest_files=["res://.godot/imported/tile_rivet_panels_albedo.png-0fa712b0ef51c277ae13a10e43741c6e.s3tc.ctex", "res://.godot/imported/tile_rivet_panels_albedo.png-0fa712b0ef51c277ae13a10e43741c6e.etc2.ctex"]
 
 [params]
 

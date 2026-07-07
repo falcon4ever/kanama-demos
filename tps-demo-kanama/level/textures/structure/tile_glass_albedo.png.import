@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://b5imyb7wi7mgs"
 path.s3tc="res://.godot/imported/tile_glass_albedo.png-8ca5841b8d7b9bcb28c35534d12ec592.s3tc.ctex"
+path.etc2="res://.godot/imported/tile_glass_albedo.png-8ca5841b8d7b9bcb28c35534d12ec592.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://level/textures/structure/tile_glass_albedo.png"
-dest_files=["res://.godot/imported/tile_glass_albedo.png-8ca5841b8d7b9bcb28c35534d12ec592.s3tc.ctex"]
+dest_files=["res://.godot/imported/tile_glass_albedo.png-8ca5841b8d7b9bcb28c35534d12ec592.s3tc.ctex", "res://.godot/imported/tile_glass_albedo.png-8ca5841b8d7b9bcb28c35534d12ec592.etc2.ctex"]
 
 [params]
 

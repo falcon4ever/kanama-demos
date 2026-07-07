@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://b8w456lyydinp"
 path.s3tc="res://.godot/imported/flying_forklift_albedo.png-0f57bc1bb4c9e5bc6c2997cd901ab087.s3tc.ctex"
+path.etc2="res://.godot/imported/flying_forklift_albedo.png-0f57bc1bb4c9e5bc6c2997cd901ab087.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://level/forklift/flying_forklift_albedo.png"
-dest_files=["res://.godot/imported/flying_forklift_albedo.png-0f57bc1bb4c9e5bc6c2997cd901ab087.s3tc.ctex"]
+dest_files=["res://.godot/imported/flying_forklift_albedo.png-0f57bc1bb4c9e5bc6c2997cd901ab087.s3tc.ctex", "res://.godot/imported/flying_forklift_albedo.png-0f57bc1bb4c9e5bc6c2997cd901ab087.etc2.ctex"]
 
 [params]
 

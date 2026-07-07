@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dmnbwrwscpwgt"
 path.s3tc="res://.godot/imported/tile_simple_floor_albedo.png-592124f26fac16cafe6fb3392d5db953.s3tc.ctex"
+path.etc2="res://.godot/imported/tile_simple_floor_albedo.png-592124f26fac16cafe6fb3392d5db953.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://level/textures/structure/tile_simple_floor_albedo.png"
-dest_files=["res://.godot/imported/tile_simple_floor_albedo.png-592124f26fac16cafe6fb3392d5db953.s3tc.ctex"]
+dest_files=["res://.godot/imported/tile_simple_floor_albedo.png-592124f26fac16cafe6fb3392d5db953.s3tc.ctex", "res://.godot/imported/tile_simple_floor_albedo.png-592124f26fac16cafe6fb3392d5db953.etc2.ctex"]
 
 [params]
 

@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cd1xtgs6oxgfo"
 path.s3tc="res://.godot/imported/tile_tech_panels_color_albedo.png-1194e0a891f066b2fd251f091d1ee023.s3tc.ctex"
+path.etc2="res://.godot/imported/tile_tech_panels_color_albedo.png-1194e0a891f066b2fd251f091d1ee023.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://level/textures/structure/tile_tech_panels_color_albedo.png"
-dest_files=["res://.godot/imported/tile_tech_panels_color_albedo.png-1194e0a891f066b2fd251f091d1ee023.s3tc.ctex"]
+dest_files=["res://.godot/imported/tile_tech_panels_color_albedo.png-1194e0a891f066b2fd251f091d1ee023.s3tc.ctex", "res://.godot/imported/tile_tech_panels_color_albedo.png-1194e0a891f066b2fd251f091d1ee023.etc2.ctex"]
 
 [params]
 

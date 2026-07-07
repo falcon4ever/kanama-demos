@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bb6a2c0n7pgsk"
 path.s3tc="res://.godot/imported/SmokePuff.png-af2021767790862f90e883c3b7e55925.s3tc.ctex"
+path.etc2="res://.godot/imported/SmokePuff.png-af2021767790862f90e883c3b7e55925.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://enemies/red_robot/laser/impact_effect/SmokePuff.png"
-dest_files=["res://.godot/imported/SmokePuff.png-af2021767790862f90e883c3b7e55925.s3tc.ctex"]
+dest_files=["res://.godot/imported/SmokePuff.png-af2021767790862f90e883c3b7e55925.s3tc.ctex", "res://.godot/imported/SmokePuff.png-af2021767790862f90e883c3b7e55925.etc2.ctex"]
 
 [params]
 

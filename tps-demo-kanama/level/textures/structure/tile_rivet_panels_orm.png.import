@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://d3kr811gcng7q"
 path.s3tc="res://.godot/imported/tile_rivet_panels_orm.png-29366803b45bfbde3a777a5a42035f12.s3tc.ctex"
+path.etc2="res://.godot/imported/tile_rivet_panels_orm.png-29366803b45bfbde3a777a5a42035f12.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://level/textures/structure/tile_rivet_panels_orm.png"
-dest_files=["res://.godot/imported/tile_rivet_panels_orm.png-29366803b45bfbde3a777a5a42035f12.s3tc.ctex"]
+dest_files=["res://.godot/imported/tile_rivet_panels_orm.png-29366803b45bfbde3a777a5a42035f12.s3tc.ctex", "res://.godot/imported/tile_rivet_panels_orm.png-29366803b45bfbde3a777a5a42035f12.etc2.ctex"]
 
 [params]
 

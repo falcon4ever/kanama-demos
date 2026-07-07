@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://l2anliueqj5b"
 path.s3tc="res://.godot/imported/tile_default_metal_normal.png-57ce0b3bd6db65c0383655ff414c88e9.s3tc.ctex"
+path.etc2="res://.godot/imported/tile_default_metal_normal.png-57ce0b3bd6db65c0383655ff414c88e9.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://level/textures/structure/tile_default_metal_normal.png"
-dest_files=["res://.godot/imported/tile_default_metal_normal.png-57ce0b3bd6db65c0383655ff414c88e9.s3tc.ctex"]
+dest_files=["res://.godot/imported/tile_default_metal_normal.png-57ce0b3bd6db65c0383655ff414c88e9.s3tc.ctex", "res://.godot/imported/tile_default_metal_normal.png-57ce0b3bd6db65c0383655ff414c88e9.etc2.ctex"]
 
 [params]
 

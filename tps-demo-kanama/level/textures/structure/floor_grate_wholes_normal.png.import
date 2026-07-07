@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://0qcfc1733hss"
 path.s3tc="res://.godot/imported/floor_grate_wholes_normal.png-7148d5522111aeaae4c49e4e9bdfb1d7.s3tc.ctex"
+path.etc2="res://.godot/imported/floor_grate_wholes_normal.png-7148d5522111aeaae4c49e4e9bdfb1d7.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://level/textures/structure/floor_grate_wholes_normal.png"
-dest_files=["res://.godot/imported/floor_grate_wholes_normal.png-7148d5522111aeaae4c49e4e9bdfb1d7.s3tc.ctex"]
+dest_files=["res://.godot/imported/floor_grate_wholes_normal.png-7148d5522111aeaae4c49e4e9bdfb1d7.s3tc.ctex", "res://.godot/imported/floor_grate_wholes_normal.png-7148d5522111aeaae4c49e4e9bdfb1d7.etc2.ctex"]
 
 [params]
 

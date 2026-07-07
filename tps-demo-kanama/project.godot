@@ -44,11 +44,6 @@ enabled=PackedStringArray("res://addons/kanama_tools/plugin.cfg")
 
 import/blender/enabled=false
 
-[kanama]
-
-tools/kotlin_sources_dir="res://kotlin-src"
-tools/reload_scene_after_sync=true
-
 [input]
 
 ui_accept={
@@ -188,6 +183,11 @@ toggle_debug={
 ]
 }
 
+[kanama]
+
+tools/kotlin_sources_dir="res://kotlin-src"
+tools/reload_scene_after_sync=true
+
 [layer_names]
 
 3d_physics/layer_1="Level"
@@ -201,6 +201,7 @@ common/physics_interpolation=true
 
 [rendering]
 
+textures/vram_compression/import_etc2_astc=true
 reflections/sky_reflections/texture_array_reflections=false
 textures/default_filters/anisotropic_filtering_level=4
 anti_aliasing/quality/use_debanding=true

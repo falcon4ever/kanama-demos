@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://gnsovrtic7g4"
 path.bptc="res://.godot/imported/experiment.hdr-b8c588f778b1bbe816e1780c3767a773.bptc.ctex"
+path.astc="res://.godot/imported/experiment.hdr-b8c588f778b1bbe816e1780c3767a773.astc.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://menu/experiment.hdr"
-dest_files=["res://.godot/imported/experiment.hdr-b8c588f778b1bbe816e1780c3767a773.bptc.ctex"]
+dest_files=["res://.godot/imported/experiment.hdr-b8c588f778b1bbe816e1780c3767a773.bptc.ctex", "res://.godot/imported/experiment.hdr-b8c588f778b1bbe816e1780c3767a773.astc.ctex"]
 
 [params]
 
