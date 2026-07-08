@@ -21,9 +21,15 @@ class DebugLabel(godotObject: MemorySegment) : KanamaScript<Label>(godotObject, 
         self.text = buildString {
             append("FPS: ").append(Engine.getFramesPerSecond())
             append("\nVSync: ").append(if (DisplayServer.windowGetVsyncMode() != DisplayServer.VSYNC_DISABLED) "Enabled" else "Disabled")
-            append("\nMemory: ").append("%.2f".format(OS.getStaticMemoryUsage() / 1048576.0)).append(" MiB")
+            append("\nMemory: ").append(twoDecimals(OS.getStaticMemoryUsage() / 1048576.0)).append(" MiB")
             append("\nOnline: ").append(if (online) "Yes" else "No")
             if (online) append("\nMultiplayer ID: ").append(self.getMultiplayer()?.getUniqueId() ?: 0)
         }
     }
+}
+
+// Portable 2-decimal formatting (replaces JVM-only "%.2f".format, which is absent on Kotlin/Native).
+private fun twoDecimals(value: Double): String {
+    val scaled = kotlin.math.round(value * 100.0).toLong()
+    return "${scaled / 100}.${(scaled % 100).toString().padStart(2, '0')}"
 }
