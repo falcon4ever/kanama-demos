@@ -207,7 +207,7 @@ class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
         lastLoggedProgressBucket = -1
         GD.print("TPS load request started: ${TpsScenes.LEVEL}")
         self.setProcess(true)
-        ResourceLoader.loadThreadedRequest(TpsScenes.LEVEL, "", true)
+        ResourceLoader.loadThreadedRequest(TpsScenes.LEVEL, "", false)
     }
 
     @RegisterFunction("_on_settings_pressed")
