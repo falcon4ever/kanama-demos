@@ -72,7 +72,7 @@ class PlayerInputSynchronizer(godotObject: MemorySegment) :
 
     @OnReady
     fun ready() {
-        if (self.getMultiplayerAuthority() == self.getMultiplayer()?.getUniqueId()?.toLong()) {
+        if (self.getMultiplayerAuthority().toLong() == self.getMultiplayer()?.getUniqueId()?.toLong()) {
             cameraCamera?.makeCurrent()
             if (net.multigesture.kanama.api.DisplayServer.getName() != "headless") {
                 Input.setMouseMode(Input.MOUSE_MODE_CAPTURED)
