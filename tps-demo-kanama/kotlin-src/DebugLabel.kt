@@ -1,6 +1,7 @@
 package tps
 
 import net.multigesture.kanama.annotations.OnProcess
+import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.DisplayServer
 import net.multigesture.kanama.api.Engine
@@ -12,6 +13,13 @@ import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Label")
 class DebugLabel(godotObject: MemorySegment) : KanamaScript<Label>(godotObject, ::Label) {
+    @OnReady
+    fun ready() {
+        // Keep the top-left debug readout out of the phone's rounded corner /
+        // camera cutout (task 26 safe-area work). No-op on desktop.
+        SafeArea.applyTopLeftInset(self)
+    }
+
     @OnProcess
     fun process(_delta: Double) {
         if (Input.isActionJustPressed("toggle_debug")) {
