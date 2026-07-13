@@ -14,6 +14,18 @@ fun gradleCommand(projectDir: File): List<String> {
     return listOf(bash, projectDir.resolve("gradlew").absolutePath)
 }
 
+// Windows commonly resolves `python3` to the Microsoft Store shim (exits 9009); prefer the
+// py launcher, then python. Non-Windows keeps python3.
+fun resolvePythonCommand(): String {
+    val isWindows = System.getProperty("os.name").lowercase().contains("windows")
+    if (!isWindows) return "python3"
+    val pathDirs = System.getenv("PATH").orEmpty().split(File.pathSeparator)
+    for (candidate in listOf("py", "python")) {
+        if (pathDirs.any { dir -> File(dir, "$candidate.exe").isFile }) return candidate
+    }
+    return "python"
+}
+
 val demoBuilds = listOf(
     DemoBuild("bunnymark", "Bunnymark", "bunnymark", "Bunnymark"),
     DemoBuild("starter-kit-3d-platformer", "Starter-Kit-3D-Platformer", "platformer", "Starter Kit 3D Platformer"),
@@ -35,10 +47,16 @@ val kanamaRoot = providers.gradleProperty("kanamaRoot")
 val forwardedKanamaKitDir = providers.gradleProperty("kanamaKitDir")
     .orElse(providers.environmentVariable("KANAMA_KIT_DIR"))
 val forwardedKanamaVersion = providers.gradleProperty("kanamaVersion")
+// Nested demo builds resolve the Godot binary themselves (kanama.godot.executable ->
+// godotBin -> KANAMA_GODOT env); forward the -P forms so root aggregate invocations like
+// `importAllGodot -Pkanama.godot.executable=...` reach them.
+val forwardedGodotExecutable = providers.gradleProperty("kanama.godot.executable")
+    .orElse(providers.gradleProperty("godotBin"))
 
 fun forwardedDemoGradleArgs(): List<String> = buildList {
     forwardedKanamaKitDir.orNull?.let { add("-PkanamaKitDir=$it") }
     forwardedKanamaVersion.orNull?.let { add("-PkanamaVersion=$it") }
+    forwardedGodotExecutable.orNull?.let { add("-Pkanama.godot.executable=$it") }
 }
 
 for (demo in demoBuilds) {
@@ -93,7 +111,7 @@ tasks.register("importAllGodot") {
 tasks.register<Exec>("demoParityAudit") {
     group = "kanama"
     description = "Audit ported Kotlin demo scripts for risky GDScript parity drift patterns."
-    commandLine("python3", "scripts/demo_parity_audit.py", "--root", projectDir.absolutePath)
+    commandLine(resolvePythonCommand(), "scripts/demo_parity_audit.py", "--root", projectDir.absolutePath)
 }
 
 tasks.register<Exec>("runtimeNodeLookupAudit") {
@@ -104,7 +122,7 @@ tasks.register<Exec>("runtimeNodeLookupAudit") {
         .filter { it.isDirectory }
         .map { it.absolutePath }
     commandLine(
-        listOf("python3", kanamaRoot.resolve("scripts/audit_runtime_node_lookups.py").absolutePath) +
+        listOf(resolvePythonCommand(), kanamaRoot.resolve("scripts/audit_runtime_node_lookups.py").absolutePath) +
             kotlinRoots,
     )
 }
@@ -114,7 +132,7 @@ tasks.register<Exec>("replicatedScriptPropertiesAudit") {
     description = "Audit demo scene replication paths against Kotlin script properties."
     val projectRoots = demoBuilds.map { file(it.projectPath).absolutePath }
     commandLine(
-        listOf("python3", kanamaRoot.resolve("scripts/audit_replicated_script_properties.py").absolutePath) +
+        listOf(resolvePythonCommand(), kanamaRoot.resolve("scripts/audit_replicated_script_properties.py").absolutePath) +
             projectRoots,
     )
 }

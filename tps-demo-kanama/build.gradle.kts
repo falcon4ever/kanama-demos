@@ -43,6 +43,18 @@ val godotBin = providers.gradleProperty("kanama.godot.executable")
 val kanamaGradle = kanamaRoot
     .resolve(if (System.getProperty("os.name").lowercase().contains("windows")) "gradlew.bat" else "gradlew")
     .absolutePath
+
+// Windows commonly resolves `python3` to the Microsoft Store shim (exits 9009); prefer the
+// py launcher, then python. Non-Windows keeps python3. Mirrors the root build's resolver.
+fun resolvePythonCommand(): String {
+    val isWindows = System.getProperty("os.name").lowercase().contains("windows")
+    if (!isWindows) return "python3"
+    val pathDirs = System.getenv("PATH").orEmpty().split(File.pathSeparator)
+    for (candidate in listOf("py", "python")) {
+        if (pathDirs.any { dir -> File(dir, "$candidate.exe").isFile }) return candidate
+    }
+    return "python"
+}
 val execSupport = objects.newInstance(ExecSupport::class.java)
 
 kotlin {
@@ -127,7 +139,10 @@ tasks.register<Exec>("runGodot") {
 tasks.register<Exec>("smokeGodot") {
     group = "kanama"
     description = "Run this project in Godot for a bounded headless smoke check."
-    commandLine(godotBin, "--headless", "--path", projectDir.absolutePath, "--quit-after", "120")
+    // --quit-after counts FRAMES; headless frames outpace the real-seconds loading timer,
+    // so 120 frames raced the Menu loadingDoneTimer and quit before the Level ever loaded.
+    // The smoke self-quits after the robot-death marker; this is only the safety net.
+    commandLine(godotBin, "--headless", "--path", projectDir.absolutePath, "--quit-after", "2000")
 }
 
 tasks.register("smokeGodotChecked") {
@@ -138,7 +153,8 @@ tasks.register("smokeGodotChecked") {
     doLast {
         val output = ByteArrayOutputStream()
         val result = execSupport.execOperations.exec {
-            commandLine(godotBin, "--headless", "--path", projectDir.absolutePath, "--quit-after", "120")
+            // Frame-count safety net; see smokeGodot above (120 raced the loading timer).
+            commandLine(godotBin, "--headless", "--path", projectDir.absolutePath, "--quit-after", "2000")
             environment("KANAMA_TPS_SMOKE_KILL_ROBOT", "1")
             isIgnoreExitValue = true
             standardOutput = output
@@ -440,13 +456,13 @@ tasks.register("smokeGodotReloadChecked") {
 tasks.register<Exec>("runtimeNodeLookupAudit") {
     group = "verification"
     description = "Audit TPS Kotlin scripts for required node lookups in runtime callbacks."
-    commandLine("python3", kanamaRoot.resolve("scripts/audit_runtime_node_lookups.py").absolutePath, "kotlin-src")
+    commandLine(resolvePythonCommand(), kanamaRoot.resolve("scripts/audit_runtime_node_lookups.py").absolutePath, "kotlin-src")
 }
 
 tasks.register<Exec>("replicatedScriptPropertiesAudit") {
     group = "verification"
     description = "Audit TPS scene replication paths against Kotlin script properties."
-    commandLine("python3", kanamaRoot.resolve("scripts/audit_replicated_script_properties.py").absolutePath, projectDir.absolutePath)
+    commandLine(resolvePythonCommand(), kanamaRoot.resolve("scripts/audit_replicated_script_properties.py").absolutePath, projectDir.absolutePath)
 }
 
 tasks.register<Exec>("openGodotEditor") {
