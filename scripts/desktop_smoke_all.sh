@@ -36,6 +36,10 @@ case "$HOST_UNAME" in
   Linux)
     export XDG_DATA_HOME="${XDG_DATA_HOME:-/tmp/kanama-godot-state-linux}"
     mkdir -p "$XDG_DATA_HOME"
+    # Isolate editor settings too: without this Godot writes (or fails to write)
+    # ~/.config/godot/editor_settings-*.tres in restricted/disposable environments.
+    export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-/tmp/kanama-godot-config-linux}"
+    mkdir -p "$XDG_CONFIG_HOME"
     ;;
 esac
 
@@ -64,6 +68,10 @@ run_smoke() {
   local log_slug="${folder//[^A-Za-z0-9._-]/_}"
   local log_file="$LOG_DIR/$log_slug.log"
   local import_log_file="$LOG_DIR/$log_slug.import.log"
+  # Godot's --log-file misses traces emitted straight to stderr (several Kanama runtime
+  # markers land there); capture the combined console stream per demo as well.
+  local console_log_file="$LOG_DIR/$log_slug.console.log"
+  local import_console_log_file="$LOG_DIR/$log_slug.import.console.log"
   local project_path_for_godot="$project_path"
   local log_file_for_godot="$log_file"
   local import_log_file_for_godot="$import_log_file"
@@ -84,11 +92,12 @@ run_smoke() {
       --log-file "$import_log_file_for_godot"
     )
     if command -v timeout >/dev/null 2>&1; then
-      timeout "$DEMO_TIMEOUT_SECONDS" "${import_command[@]}"
+      timeout "$DEMO_TIMEOUT_SECONDS" "${import_command[@]}" 2>&1 | tee "$import_console_log_file"
     else
-      "${import_command[@]}"
+      "${import_command[@]}" 2>&1 | tee "$import_console_log_file"
     fi
     assert_no_hard_log_errors "$folder" "import" "$import_log_file"
+    assert_no_hard_log_errors "$folder" "import (console)" "$import_console_log_file"
   fi
   local command=(
     "$GODOT_BIN"
@@ -100,11 +109,12 @@ run_smoke() {
     --verbose
   )
   if command -v timeout >/dev/null 2>&1; then
-    env "$@" timeout "$DEMO_TIMEOUT_SECONDS" "${command[@]}"
+    env "$@" timeout "$DEMO_TIMEOUT_SECONDS" "${command[@]}" 2>&1 | tee "$console_log_file"
   else
-    env "$@" "${command[@]}"
+    env "$@" "${command[@]}" 2>&1 | tee "$console_log_file"
   fi
   assert_no_hard_log_errors "$folder" "runtime" "$log_file"
+  assert_no_hard_log_errors "$folder" "runtime (console)" "$console_log_file"
   echo "[desktop_smoke_all] pass: $folder"
 }
 
