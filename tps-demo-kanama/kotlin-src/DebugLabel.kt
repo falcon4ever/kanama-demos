@@ -8,6 +8,7 @@ import net.multigesture.kanama.api.Engine
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Label
+import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.api.OS
 import java.lang.foreign.MemorySegment
 
@@ -38,6 +39,6 @@ class DebugLabel(godotObject: MemorySegment) : KanamaScript<Label>(godotObject, 
 
 // Portable 2-decimal formatting (replaces JVM-only "%.2f".format, which is absent on Kotlin/Native).
 private fun twoDecimals(value: Double): String {
-    val scaled = kotlin.math.round(value * 100.0).toLong()
+    val scaled = Mathf.roundToInt(value * 100.0)
     return "${scaled / 100}.${(scaled % 100).toString().padStart(2, '0')}"
 }
