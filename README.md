@@ -65,9 +65,17 @@ The addon binaries (desktop `.so`/`.dylib`/`.dll`, the Android `.aar`, and the i
 (`installAddonJar`, `installAndroidPluginAar`, `installIosAddon`) and gitignored. Only the
 `.gdextension` descriptor is tracked.
 
-**iOS is experimental.** Match3 and the 3D Platformer run on a physical device via Kanama's
-Kotlin/Native backend; install with `installIosAddon` (see
-`docs/internals/ios-backend-roadmap.md` in the Kanama repo). It is not a supported export.
+**iOS is experimental but broadly enabled.** Ten demo ports carry iOS export presets and run
+on Kanama's Kotlin/Native backend: Bunnymark, Match3, the 3D Platformer, FPS, Racing,
+Dodge the Creeps, Squash the Creeps, both 3D character controllers, and the heavy
+`tps-demo-kanama`. Kanama's ten-step device gate (`scripts/ios_device_gate.sh`: the
+fresh-project install path plus the nine-demo matrix) has passed end-to-end on an
+iPhone 12 (2026-06-25) and an iPhone 15 Pro (2026-07-10), both on Godot 4.7 stable iOS
+templates. Install with `installIosAddon`; run the local matrix with
+`scripts/ios_smoke_all.sh` (see the iOS export guide, `docs/exporting/ios.md` in the
+Kanama repo). iOS is still not a supported export — the remaining promotion gates (a
+user-facing export workflow, the FPS Audio autoload follow-up, a broader device matrix)
+are tracked in the Kanama repo.
 
 List demo tasks:
 
