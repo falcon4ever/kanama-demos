@@ -6,4 +6,4 @@ binary="KanamaAndroid.debug.aar"
 
 [dependencies]
 local=["KanamaAndroidScripts.debug.aar"]
-remote=["com.github.falcon4ever.PanamaPort:Core:0.1.3-kanama-r8.2"]
+remote=["com.github.falcon4ever.PanamaPort:Core:0.1.3-kanama-r8.3"]
