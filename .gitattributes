@@ -1,0 +1,7 @@
+# Normalize EOL for all files that Git considers text files.
+# Root-level coverage: Bunnymark, godot-demo-2d-dodge-the-creeps,
+# godot-demo-3d-squash-the-creeps, and repo-root files have no per-project
+# .gitattributes, so a Windows checkout with core.autocrlf=true rewrites
+# .tres/.tscn/.import text files to CRLF there (observed as churn + Godot
+# resource parse failures in the 2026-07-13 Windows validation pass).
+* text=auto eol=lf
