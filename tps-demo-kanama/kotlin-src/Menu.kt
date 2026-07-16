@@ -3,6 +3,8 @@ package tps
 import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.RegisterFunction
+import net.multigesture.kanama.annotations.Rpc
+import net.multigesture.kanama.annotations.RpcMode
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.Signal
 import net.multigesture.kanama.api.BaseButton
@@ -11,11 +13,15 @@ import net.multigesture.kanama.api.Control
 import net.multigesture.kanama.api.DisplayServer
 import net.multigesture.kanama.api.ENetMultiplayerPeer
 import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.IP
 import net.multigesture.kanama.api.KanamaScript
+import net.multigesture.kanama.api.Label
 import net.multigesture.kanama.api.LineEdit
 import net.multigesture.kanama.api.Mathf
+import net.multigesture.kanama.api.MultiplayerAPI
 import net.multigesture.kanama.api.MultiplayerPeer
 import net.multigesture.kanama.api.Node
+import net.multigesture.kanama.api.OS
 import net.multigesture.kanama.api.PackedScene
 import net.multigesture.kanama.api.ProgressBar
 import net.multigesture.kanama.api.RenderingServer
@@ -25,6 +31,7 @@ import net.multigesture.kanama.api.Timer
 import net.multigesture.kanama.api.Viewport
 import net.multigesture.kanama.api.Window
 import net.multigesture.kanama.api.WorldEnvironment
+import net.multigesture.kanama.generated.MenuRpcs
 import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Node")
@@ -38,6 +45,9 @@ class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
     private lateinit var online: Control
     private lateinit var onlinePort: SpinBox
     private lateinit var onlineAddress: LineEdit
+    private lateinit var onlineHost: Button
+    private lateinit var onlineConnect: Button
+    private lateinit var onlineStatus: Label
     private lateinit var settingsMenu: Control
     private lateinit var settingsActionCancel: Button
     private lateinit var loading: Control
@@ -48,6 +58,14 @@ class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
     private var levelSceneChangeStarted = false
     private var lastLoggedLoadStatus: Long? = null
     private var lastLoggedProgressBucket = -1
+    private var connectingAsClient = false
+    private var joinedLobby = false
+    private var hostingLobby = false
+    private var lobbyStarting = false
+    private var autoStartHostedGame = false
+    private var autoStartAfterPeer = false
+    private var loadedLevelScene: PackedScene? = null
+    private val readyPeers = mutableSetOf<Long>()
 
     @OnReady
     fun ready() {
@@ -57,6 +75,9 @@ class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
         online = self.requireAs("UI/Online", ::Control)
         onlinePort = self.requireAs("UI/Online/Port", ::SpinBox)
         onlineAddress = self.requireAs("UI/Online/Address", ::LineEdit)
+        onlineHost = self.requireAs("UI/Online/Host", ::Button)
+        onlineConnect = self.requireAs("UI/Online/Connect", ::Button)
+        onlineStatus = self.requireAs("UI/Online/Status", ::Label)
         settingsMenu = self.requireAs("UI/Settings", ::Control)
         settingsActionCancel = self.requireAs("UI/Settings/Actions/Cancel", ::Button)
         loading = self.requireAs("UI/Loading", ::Control)
@@ -65,11 +86,34 @@ class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
         loadingDoneTimer.signal(Timer.Signals.timeout).connect(self, argumentCount = 0) {
             onLoadingDoneTimerTimeout()
         }
+        self.getMultiplayer()?.signal(MultiplayerAPI.Signals.connectedToServer)
+            ?.connect(self, argumentCount = 0) { onConnectedToServer() }
+        self.getMultiplayer()?.signal(MultiplayerAPI.Signals.connectionFailed)
+            ?.connect(self, argumentCount = 0) { showConnectionFailure("Could not reach the host. Check the address, port, and Wi-Fi network.") }
+        self.getMultiplayer()?.signal(MultiplayerAPI.Signals.serverDisconnected)
+            ?.connect(self, argumentCount = 0) {
+                if (joinedLobby) showConnectionFailure("The host disconnected.")
+            }
+        self.getMultiplayer()?.signal(MultiplayerAPI.Signals.peerConnected)
+            ?.connect(self, argumentCount = 1) { args -> onLobbyPeerConnected((args.firstOrNull() as Number).toLong()) }
+        self.getMultiplayer()?.signal(MultiplayerAPI.Signals.peerDisconnected)
+            ?.connect(self, argumentCount = 1) { args -> onLobbyPeerDisconnected((args.firstOrNull() as Number).toLong()) }
 
         registerButtons()
+        SafeArea.applyInsets(self.requireAs("UI", ::Control))
+        if (isMobile() && onlineAddress.text == "127.0.0.1") {
+            onlineAddress.text = ""
+        }
         TpsSettings.applyGraphicsSettings(self.getWindow(), worldEnvironment.environment, self)
 
-        if (DisplayServer.getName() == "headless" || System.getenv("KANAMA_TPS_SMOKE_AUTOSTART") == "1") {
+        System.getenv("KANAMA_TPS_SMOKE_PORT")?.toDoubleOrNull()?.let { onlinePort.value = it }
+        val smokeJoinAddress = System.getenv("KANAMA_TPS_SMOKE_JOIN_ADDRESS")
+        if (!smokeJoinAddress.isNullOrBlank()) {
+            onlineAddress.text = smokeJoinAddress
+            self.callDeferred("_on_connect_pressed")
+        } else if (DisplayServer.getName() == "headless" || System.getenv("KANAMA_TPS_SMOKE_AUTOSTART") == "1") {
+            autoStartHostedGame = true
+            autoStartAfterPeer = System.getenv("KANAMA_TPS_SMOKE_WAIT_FOR_PEER") == "1"
             self.callDeferred("_on_host_pressed")
         }
 
@@ -183,8 +227,10 @@ class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
             GD.print("TPS scene change already started; ignoring duplicate loading timer")
             return
         }
-        levelSceneChangeStarted = true
-        self.getMultiplayer()?.multiplayerPeer = peer
+        if (loadedLevelScene != null) {
+            GD.print("TPS level already reported ready; ignoring duplicate loading timer")
+            return
+        }
         val scene = ResourceLoader.loadThreadedGetPackedScene(TpsScenes.LEVEL)
             ?: ResourceLoader.loadPackedScene(TpsScenes.LEVEL)
             ?: run {
@@ -193,8 +239,16 @@ class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
                 loading.hide()
                 return
             }
-        GD.print("TPS calling parent replace_main_scene for ${TpsScenes.LEVEL}")
-        self.getParent()?.callDeferred("replace_main_scene", scene)
+        loadedLevelScene = scene
+        if (!joinedLobby) {
+            enterLoadedLevel()
+        } else if (self.getMultiplayer()?.isServer() == true) {
+            readyPeers += 1L
+            enterLobbyWhenReady()
+        } else {
+            GD.print("TPS lobby client ready")
+            MenuRpcs.rpcIdReadyForGame(this, 1L)
+        }
     }
 
     @RegisterFunction("_on_play_pressed")
@@ -203,6 +257,7 @@ class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
         loading.show()
         loadingProgress.value = 0.0
         levelSceneChangeStarted = false
+        loadedLevelScene = null
         lastLoggedLoadStatus = null
         lastLoggedProgressBucket = -1
         GD.print("TPS load request started: ${TpsScenes.LEVEL}")
@@ -292,6 +347,7 @@ class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
 
     @RegisterFunction("_on_cancel_pressed")
     fun onCancelPressed() {
+        if (online.visible) resetOnlinePeer()
         main.show()
         playButton.grabFocus()
         settingsMenu.hide()
@@ -300,27 +356,207 @@ class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
 
     @RegisterFunction("_on_play_online_pressed")
     fun onPlayOnlinePressed() {
+        resetOnlinePeer()
+        setOnlineBusy(false)
+        onlineStatus.text = lobbyInstructions()
         online.show()
         main.hide()
     }
 
     @RegisterFunction("_on_host_pressed")
     fun onHostPressed() {
+        if (hostingLobby) {
+            if (!lobbyStarting) {
+                lobbyStarting = true
+                readyPeers.clear()
+                onlineHost.disabled = true
+                onlineStatus.text = "Starting when every player finishes loading..."
+                GD.print("TPS lobby start requested peers=${self.getMultiplayer()?.getPeers()?.size ?: 0}")
+                self.getMultiplayer()?.getPeers()?.forEach { MenuRpcs.rpcIdPrepareGame(this, it.toLong()) }
+                prepareGame()
+            }
+            return
+        }
         val nextPeer = TpsFactory.enetMultiplayerPeer()
-        nextPeer.createServer(onlinePort.value.toInt())
+        val port = onlinePort.value.toInt()
+        val error = nextPeer.createServer(port)
+        if (error != 0L) {
+            nextPeer.closeConnection()
+            onlineStatus.text = "Could not host on port $port (Error $error). Try another port."
+            return
+        }
         peer = nextPeer
-        onPlayPressed()
-        online.hide()
+        self.getMultiplayer()?.multiplayerPeer = peer
+        connectingAsClient = false
+        joinedLobby = true
+        hostingLobby = true
+        onlineConnect.disabled = true
+        onlineAddress.editable = false
+        onlineHost.text = "START GAME"
+        onlineStatus.text = "Hosting on ${preferredLanAddress() ?: "this device"}:$port. Waiting for players; tap Start Game when ready."
+        GD.print("TPS lobby hosting port=$port")
+        if (autoStartHostedGame && !autoStartAfterPeer) self.callDeferred("_on_host_pressed")
     }
 
     @RegisterFunction("_on_connect_pressed")
     fun onConnectPressed() {
+        val address = onlineAddress.text.trim()
+        val port = onlinePort.value.toInt()
+        if (address.isEmpty()) {
+            onlineStatus.text = "Enter the host device's LAN address first."
+            onlineAddress.grabFocus()
+            return
+        }
         val nextPeer: ENetMultiplayerPeer = TpsFactory.enetMultiplayerPeer()
-        nextPeer.createClient(onlineAddress.text, onlinePort.value.toInt())
+        val error = nextPeer.createClient(address, port)
+        if (error != 0L) {
+            nextPeer.closeConnection()
+            onlineStatus.text = "Could not start a connection to $address:$port (Error $error)."
+            return
+        }
         peer = nextPeer
-        onPlayPressed()
-        online.hide()
+        connectingAsClient = true
+        joinedLobby = true
+        setOnlineBusy(true)
+        onlineStatus.text = "Connecting to $address:$port..."
+        GD.print("TPS lobby connecting address=$address port=$port")
+        self.getMultiplayer()?.multiplayerPeer = peer
     }
+
+    private fun onConnectedToServer() {
+        if (!connectingAsClient) return
+        connectingAsClient = false
+        onlineStatus.text = "Connected. Waiting for the host to start the game..."
+        GD.print("TPS lobby connected")
+    }
+
+    private fun showConnectionFailure(message: String) {
+        if (!joinedLobby) return
+        GD.print("TPS lobby connection failed: $message")
+        resetOnlinePeer()
+        self.setProcess(false)
+        loadingDoneTimer.stop()
+        loading.hide()
+        online.show()
+        main.hide()
+        onlineStatus.text = message
+        setOnlineBusy(false)
+    }
+
+    private fun resetOnlinePeer() {
+        peer.closeConnection()
+        peer = TpsFactory.offlineMultiplayerPeer()
+        self.getMultiplayer()?.multiplayerPeer = peer
+        connectingAsClient = false
+        joinedLobby = false
+        hostingLobby = false
+        lobbyStarting = false
+        loadedLevelScene = null
+        readyPeers.clear()
+        onlineHost.text = "HOST GAME"
+        setOnlineBusy(false)
+    }
+
+    private fun onLobbyPeerConnected(id: Long) {
+        if (!hostingLobby) return
+        GD.print("TPS lobby peer connected id=$id")
+        if (autoStartHostedGame && autoStartAfterPeer && !lobbyStarting) {
+            self.callDeferred("_on_host_pressed")
+        }
+        if (lobbyStarting) {
+            MenuRpcs.rpcIdPrepareGame(this, id)
+        } else {
+            val players = (self.getMultiplayer()?.getPeers()?.size ?: 0) + 1
+            onlineStatus.text = "$players players connected. Share ${preferredLanAddress() ?: "this device"}:${onlinePort.value.toInt()}, or tap Start Game."
+        }
+    }
+
+    private fun onLobbyPeerDisconnected(id: Long) {
+        if (!hostingLobby) return
+        GD.print("TPS lobby peer disconnected id=$id")
+        readyPeers -= id
+        if (lobbyStarting) enterLobbyWhenReady()
+    }
+
+    @RegisterFunction("prepare_game")
+    @Rpc
+    fun prepareGame() {
+        joinedLobby = true
+        lobbyStarting = true
+        readyPeers.clear()
+        online.hide()
+        GD.print("TPS lobby preparing game")
+        onPlayPressed()
+    }
+
+    @RegisterFunction("ready_for_game")
+    @Rpc(mode = RpcMode.ANY_PEER)
+    fun readyForGame() {
+        if (!hostingLobby || !lobbyStarting) return
+        val sender = self.getMultiplayer()?.getRemoteSenderId()?.toLong() ?: 0L
+        if (sender <= 0L) return
+        readyPeers += sender
+        GD.print("TPS lobby peer ready id=$sender")
+        enterLobbyWhenReady()
+    }
+
+    private fun enterLobbyWhenReady() {
+        if (!hostingLobby || loadedLevelScene == null) return
+        val expected = buildSet {
+            add(1L)
+            self.getMultiplayer()?.getPeers()?.forEach { add(it.toLong()) }
+        }
+        if (!readyPeers.containsAll(expected)) {
+            GD.print("TPS lobby waiting ready=${readyPeers.size}/${expected.size}")
+            return
+        }
+        GD.print("TPS lobby all players ready count=${expected.size}")
+        self.getMultiplayer()?.getPeers()?.forEach { MenuRpcs.rpcIdEnterGame(this, it.toLong()) }
+        enterGame()
+    }
+
+    @RegisterFunction("enter_game")
+    @Rpc
+    fun enterGame() {
+        enterLoadedLevel()
+    }
+
+    private fun enterLoadedLevel() {
+        if (levelSceneChangeStarted) return
+        val scene = loadedLevelScene ?: return
+        levelSceneChangeStarted = true
+        self.getMultiplayer()?.multiplayerPeer = peer
+        GD.print("TPS calling parent replace_main_scene for ${TpsScenes.LEVEL}")
+        self.getParent()?.callDeferred("replace_main_scene", scene)
+    }
+
+    private fun setOnlineBusy(busy: Boolean) {
+        onlineHost.disabled = busy
+        onlineConnect.disabled = busy
+        onlineAddress.editable = !busy
+    }
+
+    private fun lobbyInstructions(): String {
+        val host = preferredLanAddress()
+        return buildString {
+            append("HOST: tap Host, then share ")
+            append(if (host != null) "$host:${onlinePort.value.toInt()}" else "this device's Wi-Fi address")
+            append(".\nJOIN: enter that address on a device using the same Wi-Fi network.")
+        }
+    }
+
+    private fun preferredLanAddress(): String? =
+        IP.getLocalAddresses().firstOrNull(::isPrivateIpv4Address)
+
+    private fun isPrivateIpv4Address(address: String): Boolean {
+        val octets = address.split('.').mapNotNull(String::toIntOrNull)
+        if (octets.size != 4 || octets.any { it !in 0..255 }) return false
+        return octets[0] == 10 ||
+            (octets[0] == 172 && octets[1] in 16..31) ||
+            (octets[0] == 192 && octets[1] == 168)
+    }
+
+    private fun isMobile(): Boolean = OS.getName() == "iOS" || OS.getName() == "Android"
 
     @Signal("replace_main_scene")
     fun replaceMainScene(scene: PackedScene) = Unit

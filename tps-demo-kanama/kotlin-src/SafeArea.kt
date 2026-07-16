@@ -14,6 +14,33 @@ import net.multigesture.kanama.types.Vector2
  * No-op on desktop and when the display reports no inset.
  */
 object SafeArea {
+    /** Shrink a full-rect UI root to the usable display rectangle. */
+    fun applyInsets(control: Control) {
+        val os = OS.getName()
+        if (os != "iOS" && os != "Android") return
+        val safe = DisplayServer.getDisplaySafeArea()
+        val window = DisplayServer.windowGetSize()
+        if (window.x <= 0 || window.y <= 0 || safe.size.x <= 0 || safe.size.y <= 0) return
+        val canvas = control.getViewport()?.getVisibleRect()?.size ?: return
+        val scaleX = canvas.x / window.x.toFloat()
+        val scaleY = canvas.y / window.y.toFloat()
+        val left = safe.position.x.toFloat() * scaleX
+        val top = safe.position.y.toFloat() * scaleY
+        val right = (window.x - safe.end.x).coerceAtLeast(0).toFloat() * scaleX
+        val bottom = (window.y - safe.end.y).coerceAtLeast(0).toFloat() * scaleY
+        if (left == 0.0f && top == 0.0f && right == 0.0f && bottom == 0.0f) return
+
+        val currentPosition = control.position
+        val currentSize = control.size
+        control.setPosition(currentPosition + Vector2(left, top))
+        control.setSize(
+            Vector2(
+                (currentSize.x - left - right).coerceAtLeast(0.0f),
+                (currentSize.y - top - bottom).coerceAtLeast(0.0f),
+            ),
+        )
+    }
+
     fun applyTopLeftInset(control: Control) {
         val os = OS.getName()
         if (os != "iOS" && os != "Android") return

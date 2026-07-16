@@ -73,6 +73,12 @@ Kotlin scripts and imports Godot assets before launching.
 
 - Preserve upstream scenes, assets, gameplay semantics, source attribution, and
   license notes unless the task explicitly changes them.
+- Treat the original demo source as the behavioral contract. If equivalent
+  ported logic works on one platform but crashes or misbehaves on another,
+  reproduce and fix the Kanama runtime or wrapper defect instead of adding a
+  platform-specific demo workaround. Change gameplay code only after a direct
+  upstream comparison identifies a concrete port mismatch, and record that
+  evidence in the demo's porting notes.
 - Put Kanama gameplay ports under each demo's `kotlin-src/`.
 - Keep smoke harness code in `Smoke.kt` or `SmokeQuit.kt`; do not mix smoke
   behavior into gameplay scripts.
@@ -151,6 +157,21 @@ Run the narrow demo first:
 ```
 
 Then run the aggregate checks if the change affects shared patterns.
+
+### Deploy Changed Kotlin To Android
+
+Android packages game scripts in a per-project scripts AAR. After changing a
+demo's Kotlin, `<prefix>BuildScripts` updates the desktop scripts JAR only; it
+does not refresh the scripts already packaged for Android. Before exporting a
+new APK, rebuild and install both Android AARs from the Kanama checkout:
+
+```sh
+./gradlew installAndroidPluginAar \
+  -PkanamaAndroidDemoDir=/absolute/path/to/kanama-demos/<demo>
+```
+
+Then export or run the Android smoke path. See
+`../kanama/docs/exporting/android.md` for the authoritative two-AAR workflow.
 
 ### Add A Demo
 

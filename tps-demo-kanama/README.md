@@ -71,6 +71,14 @@ From this folder directly:
 - <kbd>F11</kbd> or <kbd>Alt + Enter</kbd>: Toggle fullscreen
 - <kbd>F3</kbd>: Toggle debugging information (such as FPS counter)
 
+On Android and iOS, the on-screen joysticks and action buttons replace the
+keyboard/mouse controls. The **Play Online** screen is a LAN lobby: one device
+chooses **Host Game** and shares the displayed Wi-Fi address, while each other
+device enters that address and chooses **Join Game**. Once everyone has joined,
+the host chooses **Start Game**. All devices must be on the same local network;
+the default port is `4383`. The lobby keeps **Back / Cancel** available while
+joining, then waits until every peer has loaded the level before entering it.
+
 ## Useful links
 
 - [Main website](https://godotengine.org)

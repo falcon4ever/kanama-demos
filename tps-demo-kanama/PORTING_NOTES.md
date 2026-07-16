@@ -31,6 +31,18 @@ path used by robot death parts.
 
 - `TpsSettings.applyGraphicsSettings()` skips window-mode changes while running
   headless so validation does not exercise display mode transitions.
+- The online menu is a touch-sized LAN lobby on every platform. Clients wait
+  for `connected_to_server` before loading, report connection errors in-place,
+  and can cancel an in-flight join; hosts display a usable local IPv4 address.
+  The host starts the match explicitly, then an RPC readiness barrier holds the
+  scene switch until every peer has loaded, preventing early spawner packets
+  from racing slower mobile clients.
+- Gameplay and authority setup remain unchanged from the existing Kotlin port.
+  The lobby consumes the standard integer peer IDs emitted by Godot; the iOS
+  callable bridge defect that previously replaced those IDs with `null` is
+  fixed in Kanama rather than worked around here.
+- The menu UI root is reduced to the mobile display safe area so its lobby
+  fields and actions stay clear of notches, cutouts, and home indicators.
 - The Kotlin settings path keeps SSAO disabled when the UI/config says it is
   disabled.
 - Robot death parts no longer spawn the short `PartDisappear` puff or
