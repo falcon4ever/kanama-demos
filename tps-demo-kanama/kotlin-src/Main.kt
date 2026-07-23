@@ -29,7 +29,8 @@ class Main(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
     fun goToMainMenu() {
         val menu = TpsScenes.scene(TpsScenes.MENU) ?: return
         self.getMultiplayer()?.getMultiplayerPeer()?.closeConnection()
-        self.getMultiplayer()?.multiplayerPeer = TpsFactory.offlineMultiplayerPeer()
+        // close what you create (Kanama task 61): the engine keeps its own reference once assigned.
+        TpsFactory.offlineMultiplayerPeer().use { self.getMultiplayer()?.multiplayerPeer = it }
         changeSceneToPacked(menu)
     }
 

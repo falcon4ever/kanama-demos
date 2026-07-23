@@ -80,6 +80,9 @@ class Builder(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::
         clearStructurePreview()
         gridmap?.clear()
         gridmap?.setMeshLibrary(null)
+        // close what you create (Kanama task 61): MeshLibrary.create() returns an owned wrapper.
+        // The GridMap ref is dropped above; release ours so the library frees.
+        meshLibrary?.close()
         meshLibrary = null
     }
 

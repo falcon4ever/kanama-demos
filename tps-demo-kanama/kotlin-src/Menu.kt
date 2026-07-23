@@ -195,10 +195,12 @@ class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
     }
 
     private fun makeButtonGroup(commonParent: Node?) {
-        val group = TpsFactory.buttonGroup()
-        commonParent?.getChildren()?.forEach { child ->
-            if (child.isClass("BaseButton")) {
-                BaseButton(child.handle).buttonGroup = group
+        // close what you create (Kanama task 61): each button keeps its own reference to the group.
+        TpsFactory.buttonGroup().use { group ->
+            commonParent?.getChildren()?.forEach { child ->
+                if (child.isClass("BaseButton")) {
+                    BaseButton(child.handle).buttonGroup = group
+                }
             }
         }
     }
@@ -382,10 +384,11 @@ class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
         val error = nextPeer.createServer(port)
         if (error != 0L) {
             nextPeer.closeConnection()
+            nextPeer.close() // discard the created-but-unused peer (task 61)
             onlineStatus.text = "Could not host on port $port (Error $error). Try another port."
             return
         }
-        peer = nextPeer
+        replacePeer(nextPeer)
         self.getMultiplayer()?.multiplayerPeer = peer
         connectingAsClient = false
         joinedLobby = true
@@ -411,10 +414,11 @@ class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
         val error = nextPeer.createClient(address, port)
         if (error != 0L) {
             nextPeer.closeConnection()
+            nextPeer.close() // discard the created-but-unused peer (task 61)
             onlineStatus.text = "Could not start a connection to $address:$port (Error $error)."
             return
         }
-        peer = nextPeer
+        replacePeer(nextPeer)
         connectingAsClient = true
         joinedLobby = true
         setOnlineBusy(true)
@@ -443,9 +447,17 @@ class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
         setOnlineBusy(false)
     }
 
+    // close what you create (Kanama task 61): TpsFactory.*MultiplayerPeer() returns an owned
+    // wrapper. Release the previous peer's owning reference when swapping it out; the engine keeps
+    // its own reference via multiplayerPeer until that is reassigned, so this never frees a live peer.
+    private fun replacePeer(next: MultiplayerPeer) {
+        if (next !== peer) peer.close()
+        peer = next
+    }
+
     private fun resetOnlinePeer() {
         peer.closeConnection()
-        peer = TpsFactory.offlineMultiplayerPeer()
+        replacePeer(TpsFactory.offlineMultiplayerPeer())
         self.getMultiplayer()?.multiplayerPeer = peer
         connectingAsClient = false
         joinedLobby = false
