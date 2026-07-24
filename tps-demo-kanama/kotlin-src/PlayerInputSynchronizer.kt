@@ -190,7 +190,7 @@ class PlayerInputSynchronizer(godotObject: MemorySegment) :
             rayFrom + rayDir * 1000.0,
             0b11,
             parentBody?.let { listOf(it.getRid()) } ?: emptyList(),
-        )
+        )!! // create() is nullable (class_call_static) but never null for valid args
         val hit = self.getParent()?.let { Node3D(it.handle) }
             ?.getWorld3d()?.directSpaceState?.intersectRay(query)
             ?: emptyMap()

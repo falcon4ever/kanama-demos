@@ -160,7 +160,7 @@ class RedRobot(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(godot
 		val rayOrigin = rayFrom.globalTransform.origin
 		val rayDir = rayFrom.globalTransform.basis.y
 		var maxDist = 1000.0
-		val query = PhysicsRayQueryParameters3D.create(rayOrigin, rayOrigin + rayDir * maxDist, 0xffffffffL, listOf(self.getRid()))
+		val query = PhysicsRayQueryParameters3D.create(rayOrigin, rayOrigin + rayDir * maxDist, 0xffffffffL, listOf(self.getRid()))!!
 		val hit = self.getWorld3d()?.directSpaceState?.intersectRay(query) ?: emptyMap()
 		if (hit.isNotEmpty()) {
 			val position = hit["position"] as? Vector3
@@ -347,7 +347,7 @@ class RedRobot(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(godot
 	private fun hasLineOfSight(target: Node3D): Boolean {
 		val rayOrigin = rayFrom.globalTransform.origin
 		val rayTo = target.globalTransform.origin + Vector3.UP
-		val query = PhysicsRayQueryParameters3D.create(rayOrigin, rayTo, 0xffffffffL, listOf(self.getRid()))
+		val query = PhysicsRayQueryParameters3D.create(rayOrigin, rayTo, 0xffffffffL, listOf(self.getRid()))!!
 		val hit = self.getWorld3d()?.directSpaceState?.intersectRay(query) ?: return false
 		val collider = hit["collider"] as? GodotObject ?: return false
 		return collider.handle.address() == target.handle.address()
