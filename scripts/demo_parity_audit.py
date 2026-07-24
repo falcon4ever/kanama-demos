@@ -86,6 +86,11 @@ ALLOWED_RESOURCE_CLOSES = {
     # caller-owned ResourceLoader wrapper released on exit_tree) — this is the
     # legitimate "close what you create" interop case, not a gameplay leak.
     ("Bunnymark/web/kotlin-src/BunnymarkV1SpritesKanama.kt", "bunnyTexture"),
+    # City-Builder owns the MeshLibrary it creates via MeshLibrary.create() and
+    # hands to the GridMap; it releases that owning reference in exit_tree after
+    # clearing the GridMap's ref — the "close what you create" case (Kanama task 61
+    # / issue #91), not a gameplay leak. The GridMap keeps its own reference.
+    ("Starter-Kit-City-Builder/kotlin-src/Builder.kt", "meshLibrary"),
 }
 
 ALLOWED_SMOKE_ENV_FILES = {
