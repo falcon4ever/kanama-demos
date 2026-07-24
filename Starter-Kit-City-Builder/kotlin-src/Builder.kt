@@ -22,6 +22,7 @@ import net.multigesture.kanama.api.Resource
 import net.multigesture.kanama.api.ResourceLoader
 import net.multigesture.kanama.api.ResourceSaver
 import net.multigesture.kanama.api.kotlinScriptInstance
+import net.multigesture.kanama.api.newScriptInstance
 import net.multigesture.kanama.types.Plane
 import net.multigesture.kanama.types.Transform3D
 import net.multigesture.kanama.types.Vector2i
@@ -52,13 +53,16 @@ class Builder(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::
 	var cashDisplay: Label? = null
 
 	private lateinit var map: DataMap
+	// Owning reference for `map` when we created it via newScriptInstance() (null when `map` was
+	// loaded from the resource cache, which owns it). Released on reassign / exit_tree.
+	private var mapOwner: Resource? = null
 	private var meshLibrary: MeshLibrary? = null
 	private var index = 0
 	private val plane = Plane(Vector3.UP, Vector3.ZERO.y)
 
 	@OnReady
 	fun ready() {
-		map = newScriptResource("res://kotlin-src/DataMap.kt")
+		map = adoptFreshMap()
 		val library = MeshLibrary.create()
 
 		for ((structureIndex, structure) in structures.withIndex()) {
@@ -84,6 +88,10 @@ class Builder(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::
         // The GridMap ref is dropped above; release ours so the library frees.
         meshLibrary?.close()
         meshLibrary = null
+        // close what you create: release the DataMap resource if we own it (loaded maps are
+        // owned by the resource cache, so mapOwner is null for those).
+        mapOwner?.close()
+        mapOwner = null
     }
 
 	@Process
@@ -222,16 +230,21 @@ class Builder(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::
 		if (Input.isActionJustPressed("save")) {
 			GD.print("Saving map...")
 			val savedStructures = mutableListOf<DataStructure>()
+			val owned = mutableListOf<net.multigesture.kanama.api.OwnedScriptResource<DataStructure>>()
 			val grid = requireGridMap()
 			for (cell in grid.getUsedCells()) {
-				val dataStructure = newScriptResource<DataStructure>("res://kotlin-src/DataStructure.kt")
-				dataStructure.position = Vector2i(cell.x, cell.z)
-				dataStructure.orientation = grid.getCellItemOrientation(cell).toLong()
-				dataStructure.structure = grid.getCellItem(cell).toLong()
-				savedStructures += dataStructure
+				val handle = newScriptInstance<DataStructure>()
+				handle.instance.position = Vector2i(cell.x, cell.z)
+				handle.instance.orientation = grid.getCellItemOrientation(cell).toLong()
+				handle.instance.structure = grid.getCellItem(cell).toLong()
+				savedStructures += handle.instance
+				owned += handle
 			}
 			map.structures = savedStructures
 			Resource.fromObject(GodotObject(map.godotObject))?.let { ResourceSaver.save(it, "user://map.res") }
+			// close what you create: `map.structures` now holds engine references to each
+			// DataStructure, so release the creation references we took above.
+			owned.forEach { it.close() }
 		}
 	}
 
@@ -251,7 +264,9 @@ class Builder(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::
 
 	private fun loadMap(path: String) {
 		requireGridMap().clear()
-		map = ResourceLoader.load(path)?.asObject()?.kotlinScriptInstance<DataMap>() ?: newScriptResource("res://kotlin-src/DataMap.kt")
+		map = ResourceLoader.load(path)?.asObject()?.kotlinScriptInstance<DataMap>()
+			?.let { adoptLoadedMap(it) }
+			?: adoptFreshMap()
 		for (cell in map.structures) {
 			requireGridMap().setCellItem(Vector3i(cell.position.x, 0, cell.position.y), cell.structure.toInt(), cell.orientation.toInt())
 		}
@@ -263,10 +278,20 @@ class Builder(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::
 	private fun requireViewCamera(): Camera3D = viewCamera ?: error("Builder requires view_camera")
 	private fun requireGridMap(): GridMap = gridmap ?: error("Builder requires gridmap")
 
-	private inline fun <reified T> newScriptResource(path: String): T {
-		val script = ResourceLoader.load(path) ?: error("Unable to load script resource $path")
-		val owner = Resource.create()
-		owner.asObject().setScript(script)
-		return owner.asObject().kotlinScriptInstance<T>() ?: error("Script resource $path did not create ${T::class.simpleName}")
+	// Creates a fresh DataMap we own, releasing any map we previously owned. Records the owning
+	// reference in `mapOwner` so exit_tree / the next load can release it (close what you create).
+	private fun adoptFreshMap(): DataMap {
+		val owned = newScriptInstance<DataMap>()
+		mapOwner?.close()
+		mapOwner = owned.resource
+		return owned.instance
+	}
+
+	// Adopts a DataMap loaded from the resource cache (the cache owns it), releasing any map we
+	// previously owned ourselves.
+	private fun adoptLoadedMap(instance: DataMap): DataMap {
+		mapOwner?.close()
+		mapOwner = null
+		return instance
 	}
 }

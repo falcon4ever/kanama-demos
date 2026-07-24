@@ -1,5 +1,6 @@
 package tps
 
+import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.RegisterFunction
@@ -26,6 +27,13 @@ class CameraNoiseShakeEffect(godotObject: MemorySegment) : KanamaScript<Camera3D
         noise.fractalOctaves = 1
         noise.fractalLacunarity = 1.0
         startRotation = self.rotation
+    }
+
+    @OnExitTree
+    fun exitTree() {
+        // close what you create (Kanama task 61): FastNoiseLite.create() returns an owned wrapper
+        // used only Kotlin-side, so release it when the camera leaves the tree.
+        noise.close()
     }
 
     @OnProcess
