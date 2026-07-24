@@ -339,6 +339,8 @@ class Player(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(godotOb
 			val inputKey = InputEventKey.create()
 			inputKey.keycode = keycode
 			InputMap.actionAddEvent(action, inputKey)
+			// close what you create (Kanama task 61): InputMap keeps its own reference to the event.
+			inputKey.close()
 		}
 	}
 
