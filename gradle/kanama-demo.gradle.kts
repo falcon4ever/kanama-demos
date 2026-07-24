@@ -5,7 +5,7 @@ val kanamaRoot = providers.gradleProperty("kanamaRoot")
     .orElse(providers.environmentVariable("KANAMA_ROOT"))
     .map { file(it) }
     .getOrElse(file("../../kanama"))
-val kanamaVersion = providers.gradleProperty("kanamaVersion").getOrElse("0.3.0")
+val kanamaVersion = providers.gradleProperty("kanamaVersion").getOrElse("0.4.0")
 val defaultGodotBin = file("/Applications/Godot.app/Contents/MacOS/Godot")
     .takeIf { it.exists() }
     ?.absolutePath
