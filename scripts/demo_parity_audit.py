@@ -63,10 +63,16 @@ ALLOWED_RAW_SIGNALS = {
     ("Starter-Kit-Match3/kotlin-src/Audio.kt", "finished"),
     # Viewport.size_changed has no generated wrapper in this demo project yet.
     ("Starter-Kit-Match3/kotlin-src/Main.kt", "size_changed"),
+    # web/ mirrors of the accepted Match3 ports above (identical GDScript-derived
+    # code; the Web API has no generated wrapper for these signals either).
+    ("Starter-Kit-Match3/web/kotlin-src/Audio.kt", "finished"),
+    ("Starter-Kit-Match3/web/kotlin-src/Main.kt", "size_changed"),
 }
 
 ALLOWED_STRING_CONNECTS = {
     ("Starter-Kit-Match3/kotlin-src/Main.kt", "center_grid_on_screen"),
+    # web/ mirror of the accepted Match3 port above.
+    ("Starter-Kit-Match3/web/kotlin-src/Main.kt", "center_grid_on_screen"),
 }
 
 ALLOWED_RESOURCE_CLOSES = {
@@ -76,6 +82,10 @@ ALLOWED_RESOURCE_CLOSES = {
     ("Bunnymark/kotlin-src/BunnymarkV1SpritesKanama.kt", "bunnyTexture"),
     ("Bunnymark/kotlin-src/BunnymarkV2Kanama.kt", "bunnyTexture"),
     ("Bunnymark/kotlin-src/BunnymarkV3Kanama.kt", "bunnyTexture"),
+    # web/ mirror: the Bunnymark web port owns bunnyTexture the same way (a
+    # caller-owned ResourceLoader wrapper released on exit_tree) — this is the
+    # legitimate "close what you create" interop case, not a gameplay leak.
+    ("Bunnymark/web/kotlin-src/BunnymarkV1SpritesKanama.kt", "bunnyTexture"),
 }
 
 ALLOWED_SMOKE_ENV_FILES = {
