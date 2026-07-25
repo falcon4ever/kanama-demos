@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bqqgyqafm7xwp"]
 
 [ext_resource type="Environment" uid="uid://bqnqgflivjvue" path="res://scenes/main-environment.tres" id="1_ahusb"]
-[ext_resource type="Script" uid="uid://djpme521r3cxe" path="res://scripts/main.gd" id="1_jkv2x"]
+[ext_resource type="Script" uid="uid://djpme521r3cxe" path="res://kotlin-src/Main.kt" id="1_jkv2x"]
 [ext_resource type="PackedScene" uid="uid://dl2ed4gkybggf" path="res://objects/player.tscn" id="2_onms2"]
 [ext_resource type="Script" uid="uid://dom6gu2uymkr8" path="res://kotlin-src/View.kt" id="5_bg0fr"]
 [ext_resource type="PackedScene" uid="uid://cnymdajj1vsqm" path="res://objects/platform.tscn" id="6_sdmev"]
