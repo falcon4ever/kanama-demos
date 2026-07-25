@@ -2,6 +2,7 @@ package net.multigesture.kanama.demos.platformer3d
 
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
+import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.ScriptProperty
 import net.multigesture.kanama.annotations.Signal
@@ -13,15 +14,17 @@ import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Mathf
+import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
+import net.multigesture.kanama.generated.PlayerSignals
 import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector3
 
 /**
  * Web port of the platformer Player: camera-relative movement (Input.get_axis), double jump,
  * gravity + move_and_slide, facing lerp, squash-stretch, walk/idle/jump animation, trail particles,
- * and paced footstep audio. Deferred until their families land (documented, not faked): jump/land
- * one-shot audio (dynamic call into the GDScript Audio autoload) and cross-script coin scoring.
+ * paced footstep audio, jump/land one-shots through the native GDScript Audio autoload, and coin
+ * scoring emitted to the HUD via the coin_collected signal.
  * The current animation is tracked locally instead of reading AnimationPlayer.current_animation.
  */
 @ScriptClass(attachTo = "CharacterBody3D")
@@ -41,8 +44,10 @@ class Player(godotObject: GodotHandle) :
   private var jumpDouble = true
 
   private var currentAnimation = ""
+  private var coins: Long = 0L
 
   private var viewNode: Node3D? = null
+  private lateinit var audio: Node
   private lateinit var particlesTrail: GPUParticles3D
   private lateinit var soundFootsteps: AudioStreamPlayer
   private lateinit var model: Node3D
@@ -57,6 +62,8 @@ class Player(godotObject: GodotHandle) :
     soundFootsteps = self.requireAs("SoundFootsteps", ::AudioStreamPlayer)
     model = self.requireAs("Character", ::Node3D)
     animation = self.requireAs("Character/AnimationPlayer", ::AnimationPlayer)
+    audio = self.getNodeOrNull("/root/Audio")?.let { Node(it.handle) }
+      ?: error("Player requires the Audio autoload")
   }
 
   @OnPhysicsProcess
@@ -91,6 +98,7 @@ class Player(godotObject: GodotHandle) :
     // Landing pulse.
     if (self.isOnFloor() && gravity > 2.0 && !previouslyFloored) {
       model.scale = Vector3(1.25, 0.75, 1.25)
+      audio.call("play", "res://sounds/land.ogg")
     }
     previouslyFloored = self.isOnFloor()
   }
@@ -146,7 +154,14 @@ class Player(godotObject: GodotHandle) :
     }
   }
 
+  @RegisterFunction
+  fun collectCoin() {
+    coins += 1
+    PlayerSignals.coinCollected(this, coins)
+  }
+
   private fun jump() {
+    audio.call("play", "res://sounds/jump.ogg")
     gravity = -jumpStrength.toDouble()
     model.scale = Vector3(0.5, 1.5, 0.5)
 
