@@ -83,9 +83,10 @@ class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
           return
         }
     for (child in self.getChildren()) {
-      val childNode = Node(child.handle)
-      self.removeChild(childNode)
-      childNode.queueFree()
+      // Web adaptation: remove_child runs the child's _exit_tree synchronously, which tears its
+      // script instance down in the middle of this command batch — the queued free that follows
+      // could no longer resolve it. queue_free alone detaches and frees the old scene.
+      Node(child.handle).queueFree()
     }
     val sceneRoot = Node(node.handle)
     self.addChild(sceneRoot)

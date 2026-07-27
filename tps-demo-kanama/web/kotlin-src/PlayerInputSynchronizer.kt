@@ -46,6 +46,7 @@ class PlayerInputSynchronizer(godotObject: GodotHandle) :
   KanamaScript<MultiplayerSynchronizer>(godotObject, ::MultiplayerSynchronizer) {
 
   private var toggledAim = false
+  private var fallFadeAlpha = 0.0
   private var aimingTimer = 0.0
 
   @ScriptProperty var aiming = false
@@ -200,16 +201,17 @@ class PlayerInputSynchronizer(godotObject: GodotHandle) :
   private fun updateFallFade(delta: Double) {
     val rect = colorRect ?: return
     val y = self.getParent()?.let { Node3D(it.handle).globalTransform.origin.y } ?: return
-    val modulate = rect.modulate
-    rect.modulate =
+    // Web adaptation: the overlay's modulate is write-only here. Only its alpha ever changes
+    // (the scene authors it as white with alpha 0 over a black fill), so the port tracks the
+    // fade in Kotlin instead of reading the mirrored canvas snapshot back every frame.
+    fallFadeAlpha =
       if (y < -17.0) {
-        modulate.withAlpha(Mathf.min((-17.0 - y) / 15.0, 1.0))
+        Mathf.min((-17.0 - y) / 15.0, 1.0)
       } else {
-        modulate.withAlpha(Mathf.max(modulate.a.toDouble() * (1.0 - delta * 4.0), 0.0))
+        Mathf.max(fallFadeAlpha * (1.0 - delta * 4.0), 0.0)
       }
+    rect.modulate = Color(1.0f, 1.0f, 1.0f, fallFadeAlpha.toFloat())
   }
-
-  private fun Color.withAlpha(alpha: Double): Color = copy(a = alpha.toFloat())
 
   private companion object {
     const val CAMERA_CONTROLLER_ROTATION_SPEED = 3.0

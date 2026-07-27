@@ -76,6 +76,7 @@ class RedRobot(godotObject: GodotHandle) :
   private var aimCountdown = AIM_TIME
   private var player: Node3D? = null
   private var orientation = Transform3D.IDENTITY
+  private var exiting = false
 
   private lateinit var animationTree: AnimationTree
   private lateinit var shootAnimation: AnimationPlayer
@@ -342,6 +343,7 @@ class RedRobot(godotObject: GodotHandle) :
 
   @RegisterFunction("_on_area_body_entered")
   fun onAreaBodyEntered(body: GodotObject) {
+    if (exiting || !GD.isInstanceValid(body)) return
     val node = Node3D(body.handle)
     if (node.kotlinScriptInstance<Player>() != null || node.getName() == "Target") {
       player = node
@@ -350,6 +352,12 @@ class RedRobot(godotObject: GodotHandle) :
 
   @RegisterFunction("_on_area_body_exited")
   fun onAreaBodyExited(body: GodotObject) {
+    // Teardown lore: the detection area's body_exited fires while the level is being freed,
+    // by which point the body's script is already gone. Nothing to track then.
+    if (exiting || !GD.isInstanceValid(body)) {
+      player = null
+      return
+    }
     val node = Node3D(body.handle)
     if (player?.handle?.value == node.handle.value) {
       player = null
@@ -360,6 +368,7 @@ class RedRobot(godotObject: GodotHandle) :
 
   @OnExitTree
   fun exitTree() {
+    exiting = true
     kanamaScope.cancel()
     self.setPhysicsProcess(false)
     disableCollision()

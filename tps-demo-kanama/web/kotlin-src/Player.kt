@@ -1,7 +1,6 @@
 package tps
 
 import net.multigesture.kanama.annotations.GlobalClass
-import net.multigesture.kanama.annotations.OnEnterTree
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.RegisterFunction
@@ -75,14 +74,13 @@ class Player(godotObject: GodotHandle) :
 
   @ScriptProperty(name = "current_animation") var currentAnimation = AnimationState.WALK.id
 
-  @OnEnterTree
-  fun enterTree() {
-    inputSynchronizer = self.requireAs("InputSynchronizer", ::MultiplayerSynchronizer)
-    inputSynchronizer.setMultiplayerAuthority(playerId.toInt())
-  }
-
   @OnReady
   fun ready() {
+    // Web adaptation: the backend dispatches lifecycle from _ready (there is no _enter_tree
+    // crossing), and with the single-player facade there is no authority to claim early, so the
+    // desktop _enter_tree body runs here.
+    inputSynchronizer = self.requireAs("InputSynchronizer", ::MultiplayerSynchronizer)
+    inputSynchronizer.setMultiplayerAuthority(playerId.toInt())
     playerInput =
       Node(inputSynchronizer.handle).kotlinScriptInstance<PlayerInputSynchronizer>()
         ?: error("InputSynchronizer is missing PlayerInputSynchronizer")
@@ -106,6 +104,10 @@ class Player(godotObject: GodotHandle) :
 
   @OnPhysicsProcess
   fun physicsProcess(delta: Double) {
+    // Web ordering: a script instance is created as soon as another script resolves the node
+    // (the level looks the player up while spawning it), so a physics tick can arrive before
+    // _ready has wired the child references. The demo already tracks that with [ready].
+    if (!ready) return
     if (self.getMultiplayer()?.isServer() == true) {
       applyInput(delta)
     } else {
