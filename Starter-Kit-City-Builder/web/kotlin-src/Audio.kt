@@ -1,5 +1,6 @@
 package citybuilder
 
+import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.Process
 import net.multigesture.kanama.annotations.RegisterFunction
@@ -19,6 +20,9 @@ class Audio(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) 
   // GDScript `available = []`: pooled players ready to play the next sound.
   private val available = ArrayDeque<AudioStreamPlayer>()
 
+  // Web adaptation: every constructed player, so teardown can stop them all.
+  private val players = mutableListOf<AudioStreamPlayer>()
+
   // GDScript `queue = []` of dictionaries; Kotlin uses a typed data class.
   private val queue = ArrayDeque<QueuedSound>()
 
@@ -33,6 +37,20 @@ class Audio(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) 
       player.signal("finished").connect(self, argumentCount = 0) { onStreamFinished(player) }
       player.setBus(bus)
       available.addLast(player)
+      players.add(player)
+    }
+  }
+
+  @OnExitTree
+  fun exitTree() {
+    stopAll()
+  }
+
+  fun stopAll() {
+    queue.clear()
+    available.clear()
+    for (player in players) {
+      player.stop()
     }
   }
 
