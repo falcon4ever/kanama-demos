@@ -1,5 +1,6 @@
 package thirdperson
 
+import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.RegisterFunction
@@ -9,6 +10,8 @@ import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.CollisionShape3D
+import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaCoroutineOwner
 import net.multigesture.kanama.api.KanamaScope
@@ -47,6 +50,7 @@ class BeeBot(godotObject: GodotHandle) :
   private var shootCount = 0.0
   private var target: Node3D? = null
   private var alive = true
+  private var tearingDown = false
 
   @OnReady
   fun ready() {
@@ -69,6 +73,17 @@ class BeeBot(godotObject: GodotHandle) :
       }
 
     beeRoot.playIdle()
+  }
+
+  @OnExitTree
+  fun exitTree() {
+    // Teardown can still deliver in-flight area signals after this point; the flag makes
+    // the callbacks inert (their sub-node handles are already released).
+    tearingDown = true
+    runCatching { bodyEnteredConnection?.close() }
+    runCatching { bodyExitedConnection?.close() }
+    bodyEnteredConnection = null
+    bodyExitedConnection = null
   }
 
   @OnPhysicsProcess
@@ -146,6 +161,7 @@ class BeeBot(godotObject: GodotHandle) :
   }
 
   private fun onBodyEntered(body: Node3D) {
+    if (tearingDown) return
     if (!body.isPlayer()) return
     shootCount = 0.0
     target = body
@@ -153,9 +169,11 @@ class BeeBot(godotObject: GodotHandle) :
   }
 
   private fun onBodyExited(body: Node3D) {
-    if (!body.isPlayer()) return
-    if (target?.handle?.value == body.handle.value) {
+    if (tearingDown) return
+    val currentTarget = target ?: return
+    if (currentTarget.handle.value == body.handle.value) {
       target = null
+      if (!GD.isInstanceValid(GodotObject(reactionAnimationPlayer.handle))) return
       reactionAnimationPlayer.play("lost_player")
     }
   }

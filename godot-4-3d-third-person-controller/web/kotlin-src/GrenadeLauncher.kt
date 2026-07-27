@@ -14,6 +14,7 @@ import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.ShapeCast3D
 import net.multigesture.kanama.api.addCollisionExceptionWith
+import net.multigesture.kanama.api.isVisible
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.api.lookAt
 import net.multigesture.kanama.types.Vector3
@@ -52,6 +53,10 @@ class GrenadeLauncher(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObje
 
   @OnPhysicsProcess
   fun physicsProcess(delta: Double) {
+    if (!self.isVisible()) {
+      wasVisible = false
+      return
+    }
     if (!wasVisible) {
       wasVisible = true
     }
@@ -60,6 +65,7 @@ class GrenadeLauncher(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObje
 
   @RegisterFunction("throw_grenade")
   fun throwGrenade(): Boolean {
+    if (!self.isVisible()) return false
     val parent = self.getParent() ?: return false
     val grenade = DemoScenes.instantiate(DemoScenes.GRENADE) ?: return false
 

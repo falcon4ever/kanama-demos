@@ -1,5 +1,6 @@
 package thirdperson
 
+import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.RegisterFunction
@@ -10,6 +11,8 @@ import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.BodyAxis
 import net.multigesture.kanama.api.CollisionShape3D
+import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaCoroutineOwner
 import net.multigesture.kanama.api.KanamaScope
@@ -48,6 +51,7 @@ class BeetleBot(godotObject: GodotHandle) :
   private var bodyExitedConnection: SignalConnection? = null
   private var target: Node3D? = null
   private var alive = true
+  private var tearingDown = false
 
   @OnReady
   fun ready() {
@@ -70,6 +74,17 @@ class BeetleBot(godotObject: GodotHandle) :
       }
 
     beetleSkin.idle()
+  }
+
+  @OnExitTree
+  fun exitTree() {
+    // Teardown can still deliver in-flight area signals after this point; the flag makes
+    // the callbacks inert (their sub-node handles are already released).
+    tearingDown = true
+    runCatching { bodyEnteredConnection?.close() }
+    runCatching { bodyExitedConnection?.close() }
+    bodyEnteredConnection = null
+    bodyExitedConnection = null
   }
 
   @OnPhysicsProcess
@@ -154,14 +169,21 @@ class BeetleBot(godotObject: GodotHandle) :
   }
 
   private fun onBodyEntered(body: Node3D) {
+    if (tearingDown) return
     if (!body.isPlayer()) return
     target = body
     reactionAnimationPlayer.play("found_player")
   }
 
   private fun onBodyExited(body: Node3D) {
-    if (target?.handle?.value != body.handle.value) return
+    if (tearingDown) return
+    // Null target must bail (the desktop null-comparison quirk proceeds into engine calls
+    // on nodes that are mid-free during scene teardown).
+    val currentTarget = target ?: return
+    if (currentTarget.handle.value != body.handle.value) return
     target = null
+    // Teardown fires this exit while the bot's sub-nodes are already released.
+    if (!GD.isInstanceValid(GodotObject(reactionAnimationPlayer.handle))) return
     reactionAnimationPlayer.play("lost_player")
     beetleSkin.idle()
   }

@@ -1,0 +1,26 @@
+package thirdperson
+
+import net.multigesture.kanama.annotations.OnProcess
+import net.multigesture.kanama.annotations.OnReady
+import net.multigesture.kanama.annotations.ScriptClass
+import net.multigesture.kanama.api.AnimationPlayer
+import net.multigesture.kanama.api.GodotHandle
+import net.multigesture.kanama.api.KanamaScript
+import net.multigesture.kanama.api.Node3D
+import net.multigesture.kanama.api.rotateObjectLocal
+import net.multigesture.kanama.types.Vector3
+
+@ScriptClass(attachTo = "Node3D")
+class GrenadeVisual(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
+  private val rotationAxis = Vector3(1.0, 0.0, 0.0).normalized()
+
+  @OnReady
+  fun ready() {
+    self.requireAs("AnimationPlayer", ::AnimationPlayer).play("wave")
+  }
+
+  @OnProcess
+  fun process(delta: Double) {
+    self.rotateObjectLocal(rotationAxis, 10.0 * delta)
+  }
+}
