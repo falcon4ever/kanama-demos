@@ -6,14 +6,14 @@ import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.types.Vector3
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Node3D")
 @GlobalClass
-class VehicleMotorcycle(godotObject: MemorySegment) : Vehicle(godotObject) {
+class VehicleMotorcycle(godotObject: GodotHandle) : Vehicle(godotObject) {
     private lateinit var motorcycle: Node3D
     private lateinit var fork: Node3D
     private lateinit var wheelFront: Node3D

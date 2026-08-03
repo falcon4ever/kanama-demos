@@ -6,19 +6,18 @@ import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.ManualGodotLifetimeApi
 import net.multigesture.kanama.api.Node2D
 import net.multigesture.kanama.api.ResourceLoader
 import net.multigesture.kanama.api.Sprite2D
 import net.multigesture.kanama.api.Texture2D
-import net.multigesture.kanama.binding.runtime.ObjectCalls
 import net.multigesture.kanama.types.Vector2
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Node2D")
 @OptIn(ManualGodotLifetimeApi::class)
-class BunnymarkV1SpritesKanama(godotObject: MemorySegment) : KanamaScript<Node2D>(godotObject, ::Node2D) {
+class BunnymarkV1SpritesKanama(godotObject: GodotHandle) : KanamaScript<Node2D>(godotObject, ::Node2D) {
     private data class Bunny(val sprite: Sprite2D, var speed: Vector2)
 
     private val gravity = 500.0
@@ -80,7 +79,7 @@ class BunnymarkV1SpritesKanama(godotObject: MemorySegment) : KanamaScript<Node2D
 
     @RegisterFunction("add_bunny")
     fun addBunny() {
-        val sprite = Sprite2D(ObjectCalls.constructObject("Sprite2D"))
+        val sprite = Sprite2D.create()
         sprite.setTexture(bunnyTexture)
         self.addChild(sprite)
         sprite.position = Vector2(screenSize.x / 2.0, screenSize.y / 2.0)
