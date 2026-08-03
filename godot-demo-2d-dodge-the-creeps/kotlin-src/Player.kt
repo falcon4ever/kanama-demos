@@ -10,16 +10,16 @@ import net.multigesture.kanama.api.AnimatedSprite2D
 import net.multigesture.kanama.api.Area2D
 import net.multigesture.kanama.api.CollisionShape2D
 import net.multigesture.kanama.api.GPUParticles2D
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.api.Node2D
 import net.multigesture.kanama.generated.PlayerSignals
 import net.multigesture.kanama.types.Vector2
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Area2D")
-class Player(godotObject: MemorySegment) : KanamaScript<Area2D>(godotObject, ::Area2D) {
+class Player(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area2D) {
     /** How fast the player will move, in pixels per second. */
     @ScriptProperty
     var speed: Long = 400

@@ -5,17 +5,17 @@ import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.Signal
 import net.multigesture.kanama.api.Button
 import net.multigesture.kanama.api.CanvasLayer
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaCoroutineOwner
 import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Label
 import net.multigesture.kanama.api.Timer
 import net.multigesture.kanama.generated.HUDSignals
-import java.lang.foreign.MemorySegment
 import kotlinx.coroutines.launch
 
 @ScriptClass(attachTo = "CanvasLayer")
-class HUD(godotObject: MemorySegment) : KanamaScript<CanvasLayer>(godotObject, ::CanvasLayer), KanamaCoroutineOwner {
+class HUD(godotObject: GodotHandle) : KanamaScript<CanvasLayer>(godotObject, ::CanvasLayer), KanamaCoroutineOwner {
     override val kanamaScope = KanamaScope()
 
     /** Emitted when the player presses the start button. */

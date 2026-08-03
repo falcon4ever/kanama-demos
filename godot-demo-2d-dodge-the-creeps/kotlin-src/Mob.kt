@@ -5,12 +5,12 @@ import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.AnimatedSprite2D
 import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.RigidBody2D
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "RigidBody2D")
-class Mob(godotObject: MemorySegment) : KanamaScript<RigidBody2D>(godotObject, ::RigidBody2D) {
+class Mob(godotObject: GodotHandle) : KanamaScript<RigidBody2D>(godotObject, ::RigidBody2D) {
 
     @OnReady
     fun ready() {
