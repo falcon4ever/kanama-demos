@@ -6,6 +6,7 @@ import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.ScriptProperty
 import net.multigesture.kanama.api.AudioStreamPlayer
 import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Marker2D
 import net.multigesture.kanama.api.Mathf
@@ -17,10 +18,9 @@ import net.multigesture.kanama.api.RigidBody2D
 import net.multigesture.kanama.api.Timer
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.types.Vector2
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Node")
-class Main(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node) {
+class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
     @ScriptProperty
     var mobScene: PackedScene? = null
 
@@ -95,7 +95,7 @@ class Main(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
         mob.linearVelocity = velocity.rotated(direction)
 
         // Spawn the mob by adding it to the Main scene.
-        self.addChild(mobNode)
+        self.addChild(mob)
     }
 
     @RegisterFunction("_on_ScoreTimer_timeout")
