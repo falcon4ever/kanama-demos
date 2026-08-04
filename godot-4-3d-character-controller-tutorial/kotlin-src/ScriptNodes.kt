@@ -2,9 +2,6 @@ package charactercontroller
 
 import net.multigesture.kanama.api.Node
 
+/** The Events autoload resolves by absolute path — portable on both platforms. */
 fun Node.eventsNode(): Node =
-    getTreeRootNode().getAsOrNull("Events", ::Node)
-        ?: error("Events autoload is missing")
-
-private fun Node.getTreeRootNode(): Node =
-    Node(getTree().getRoot())
+  getNodeOrNull("/root/Events")?.let { Node(it.handle) } ?: error("Events autoload is missing")

@@ -2,16 +2,15 @@ package charactercontroller
 
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.Signal
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.PhysicsBody3D
-import java.lang.foreign.MemorySegment
 
+/** Autoload event bus: kill-plane touches and flag wins fan out from here. */
 @ScriptClass(attachTo = "Node")
-class Events(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node) {
-    @Signal
-    fun killPlaneTouched(body: PhysicsBody3D) = Unit
+class Events(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
+  @Signal fun killPlaneTouched(body: PhysicsBody3D) = Unit
 
-    @Signal
-    fun flagReached() = Unit
+  @Signal fun flagReached() = Unit
 }
