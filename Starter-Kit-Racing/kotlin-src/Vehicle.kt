@@ -8,6 +8,7 @@ import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.GPUParticles3D
 import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Input
@@ -18,11 +19,10 @@ import net.multigesture.kanama.api.RigidBody3D
 import net.multigesture.kanama.types.Basis
 import net.multigesture.kanama.types.Transform3D
 import net.multigesture.kanama.types.Vector3
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Node3D")
 @GlobalClass
-open class Vehicle(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::Node3D) {
+open class Vehicle(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
 
     protected lateinit var sphere: RigidBody3D
     protected lateinit var raycast: RayCast3D
@@ -123,11 +123,14 @@ open class Vehicle(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObjec
             delta,
         )
 
-        vehicleModel.position = sphere.position - Vector3(0f, 0.65f, 0f)
-        raycast.position = sphere.position
+        // Portable spelling: the sphere is physics-driven, so position reads must ride the
+        // global-position immediates on Web (local snapshots lag physics). Identical on
+        // desktop: the vehicle roots carry pure Y-rotations, which keep the vertical offset.
+        vehicleModel.globalPosition = sphere.globalPosition - Vector3(0.0, 0.65, 0.0)
+        raycast.globalPosition = sphere.globalPosition
 
-        linearVelocity = (vehicleModel.position - prevPosition) / delta
-        prevPosition = vehicleModel.position
+        linearVelocity = (vehicleModel.globalPosition - prevPosition) / delta
+        prevPosition = vehicleModel.globalPosition
 
         effectEngine(delta)
         effectBody(delta)
