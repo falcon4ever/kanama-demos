@@ -6,16 +6,16 @@ import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.ScriptProperty
 import net.multigesture.kanama.api.Camera3D
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.types.NodePath
 import net.multigesture.kanama.types.Vector3
-import java.lang.foreign.MemorySegment
 import net.multigesture.kanama.api.KanamaScript
 
 @ScriptClass(attachTo = "Node3D")
-class View(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::Node3D) {
+class View(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
 
 	@ExportGroup("Properties")
 	@ScriptProperty
