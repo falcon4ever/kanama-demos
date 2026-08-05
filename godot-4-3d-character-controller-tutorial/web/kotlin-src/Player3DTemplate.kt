@@ -47,9 +47,11 @@ class Player3DTemplate(godotObject: GodotHandle) :
 
   @ScriptProperty var controllerCameraSensitivity = 2.5
 
-  @ScriptProperty var tiltUpperLimit = Mathf.PI / 3.0
+  // Spelled literals (Mathf.PI / 3.0 and -Mathf.PI / 8.0): expression defaults are not
+  // portable to the Web proxy, which needs a plain literal it can re-emit.
+  @ScriptProperty var tiltUpperLimit = 1.0471975511965976
 
-  @ScriptProperty var tiltLowerLimit = -Mathf.PI / 8.0
+  @ScriptProperty var tiltLowerLimit = -0.39269908169872414
 
   private var gravity = -30.0
   private var wasOnFloorLastFrame = true

@@ -66,11 +66,14 @@ class RedRobot(godotObject: GodotHandle) :
 
   @ScriptProperty var health = 5L
 
-  @ScriptProperty var state = State.APPROACH.id
+  // Spelled literal (State.APPROACH.id): expression defaults are not portable to the
+  // Web proxy, which needs a plain literal it can re-emit.
+  @ScriptProperty var state = 0L
 
   @ScriptProperty var dead = false
 
-  @ScriptProperty(name = "aim_preparing") var aimPreparing = AIM_PREPARE_TIME
+  // Spelled literal (AIM_PREPARE_TIME): same Web-proxy literal-default requirement.
+  @ScriptProperty(name = "aim_preparing") var aimPreparing = 0.5
 
   private var shootCountdown = SHOOT_WAIT
   private var aimCountdown = AIM_TIME
