@@ -35,11 +35,13 @@ class CameraController(godotObject: MemorySegment) : KanamaScript<Node3D>(godotO
     @ScriptProperty(hint = PropertyHint.RANGE, hintString = "0.0,8.0,0.01")
     var joystickSensitivity = 2.0
 
+    // Spelled literals (GD.degToRad(-60.0) and GD.degToRad(60.0)): expression defaults are not
+    // portable to the Web proxy, which needs a plain literal it can re-emit.
     @ScriptProperty
-    var tiltUpperLimit = GD.degToRad(-60.0)
+    var tiltUpperLimit = -1.0471975511965976
 
     @ScriptProperty
-    var tiltLowerLimit = GD.degToRad(60.0)
+    var tiltLowerLimit = 1.0471975511965976
 
     private lateinit var camera: Camera3D
     private lateinit var overShoulderPivot: Node3D

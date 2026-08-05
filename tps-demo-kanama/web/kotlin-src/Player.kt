@@ -72,7 +72,9 @@ class Player(godotObject: GodotHandle) :
       }
     }
 
-  @ScriptProperty(name = "current_animation") var currentAnimation = AnimationState.WALK.id
+  // Spelled literal (AnimationState.WALK.id): expression defaults are not portable to the
+  // Web proxy, which needs a plain literal it can re-emit.
+  @ScriptProperty(name = "current_animation") var currentAnimation = 3L
 
   @OnReady
   fun ready() {
