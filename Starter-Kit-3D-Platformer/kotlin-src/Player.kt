@@ -11,6 +11,7 @@ import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.AudioStreamPlayer
 import net.multigesture.kanama.api.CharacterBody3D
 import net.multigesture.kanama.api.GPUParticles3D
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.api.Node
@@ -19,11 +20,10 @@ import net.multigesture.kanama.types.NodePath
 import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector3
 import net.multigesture.kanama.generated.PlayerSignals
-import java.lang.foreign.MemorySegment
 import net.multigesture.kanama.api.KanamaScript
 
 @ScriptClass(attachTo = "CharacterBody3D")
-class Player(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
+class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
 
 	@ExportSubgroup("Components")
 	@ScriptProperty
@@ -64,7 +64,8 @@ class Player(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(godotOb
 		soundFootsteps = self.requireAs("SoundFootsteps", ::AudioStreamPlayer)
 		model = self.requireAs("Character", ::Node3D)
 		animation = self.requireAs("Character/AnimationPlayer", ::AnimationPlayer)
-		audio = self.getNodeOrNull("/root/Audio") ?: error("Player requires the Audio autoload")
+		audio = self.getNodeOrNull("/root/Audio")?.let { Node(it.handle) }
+			?: error("Player requires the Audio autoload")
 	}
 
 	@OnPhysicsProcess
@@ -88,9 +89,12 @@ class Player(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(godotOb
 		val rot = self.rotation
 		self.rotation = rot.withY(Mathf.lerpAngle(rot.y.toDouble(), rotationDirection, delta * 10.0))
 
-		// Falling/respawning
-		if (self.position.y < -10f) {
+		// Falling/respawning. The early return after the scene-reload request is a Web bridge
+		// safety (the freed proxy must not receive further calls this frame) and is harmless
+		// on desktop.
+		if (self.position.y < -10.0) {
 			self.getTree().reloadCurrentScene()
+			return
 		}
 
 		// Squash-stretch model relax
