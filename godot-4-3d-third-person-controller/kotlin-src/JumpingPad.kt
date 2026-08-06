@@ -5,15 +5,15 @@ import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.ScriptProperty
 import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.CharacterBody3D
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.Tween
 import net.multigesture.kanama.types.Vector3
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Area3D")
-class JumpingPad(godotObject: MemorySegment) : KanamaScript<Area3D>(godotObject, ::Area3D) {
+class JumpingPad(godotObject: GodotHandle) : KanamaScript<Area3D>(godotObject, ::Area3D) {
 
     @ScriptProperty
     var impulseStrength: Double = 10.0

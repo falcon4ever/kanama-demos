@@ -5,13 +5,13 @@ import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.CollisionShape3D
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Area3D")
-class MeleeAttackArea(godotObject: MemorySegment) : KanamaScript<Area3D>(godotObject, ::Area3D) {
+class MeleeAttackArea(godotObject: GodotHandle) : KanamaScript<Area3D>(godotObject, ::Area3D) {
 
     private lateinit var collisionShape: CollisionShape3D
 

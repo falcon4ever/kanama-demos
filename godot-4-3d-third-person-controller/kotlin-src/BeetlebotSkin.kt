@@ -9,14 +9,14 @@ import net.multigesture.kanama.api.AnimationMixer
 import net.multigesture.kanama.api.AnimationNodeStateMachinePlayback
 import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.Timer
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Node3D")
-class BeetlebotSkin(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::Node3D) {
+class BeetlebotSkin(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
 
     @Export(name = "_force_loop")
     var forceLoop: List<String> = emptyList()
