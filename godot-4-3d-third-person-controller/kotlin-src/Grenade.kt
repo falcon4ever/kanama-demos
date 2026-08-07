@@ -8,6 +8,7 @@ import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.CharacterBody3D
 import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaCoroutineOwner
 import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.KanamaScript
@@ -16,11 +17,10 @@ import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.ProjectSettings
 import net.multigesture.kanama.api.Timer
 import net.multigesture.kanama.types.Vector3
-import java.lang.foreign.MemorySegment
 import kotlinx.coroutines.launch
 
 @ScriptClass(attachTo = "CharacterBody3D")
-class Grenade(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(
+class Grenade(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(
     godotObject,
     ::CharacterBody3D,
 ),

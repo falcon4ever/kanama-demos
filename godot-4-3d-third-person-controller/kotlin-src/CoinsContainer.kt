@@ -4,14 +4,14 @@ import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.Control
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Label
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Timer
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Control")
-class CoinsContainer(godotObject: MemorySegment) : KanamaScript<Control>(godotObject, ::Control) {
+class CoinsContainer(godotObject: GodotHandle) : KanamaScript<Control>(godotObject, ::Control) {
 
     private lateinit var displayTimer: Timer
     private lateinit var coinsLabel: Label
