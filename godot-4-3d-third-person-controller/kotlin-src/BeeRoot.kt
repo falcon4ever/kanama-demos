@@ -6,14 +6,14 @@ import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.AnimationMixer
 import net.multigesture.kanama.api.AnimationNodeStateMachinePlayback
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.MeshInstance3D
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Node3D")
-class BeeRoot(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::Node3D) {
+class BeeRoot(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
 
     private lateinit var stateMachine: AnimationNodeStateMachinePlayback
 
