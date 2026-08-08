@@ -62,7 +62,7 @@ demos=(
   "platformer3d|Starter-Kit-3D-Platformer|net.multigesture.kanama.platformer3d|KanamaPlatformer3d|--kanama-platformer3d-probe"
   "dodge|godot-demo-2d-dodge-the-creeps|net.multigesture.kanama.dodge|KanamaDodge|--kanama-dodge-probe"
   "squash|godot-demo-3d-squash-the-creeps|net.multigesture.kanama.squash3d|KanamaSquash|--kanama-squash-probe"
-  # "fps|Starter-Kit-FPS|net.multigesture.kanama.fps|KanamaFPS|--kanama-fps-probe"  # Blocked: missing iOS wrapper types (AnimatedSprite3D, RayCast3D, OS, etc.)
+  "fps|Starter-Kit-FPS|net.multigesture.kanama.fps|KanamaFPS|--kanama-fps-probe"
   "racing|Starter-Kit-Racing|net.multigesture.kanama.racing|KanamaRacing|--kanama-racing-probe"
   "character|godot-4-3d-character-controller-tutorial|net.multigesture.kanama.charactercontroller|KanamaCharacterController|--kanama-character-probe"
   "thirdperson|godot-4-3d-third-person-controller|net.multigesture.kanama.thirdperson|KanamaThirdPerson|--kanama-thirdperson-probe"
