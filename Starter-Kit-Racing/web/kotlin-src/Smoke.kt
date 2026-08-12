@@ -8,9 +8,12 @@ import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 
 /**
- * Web variant of the smoke node: the desktop Smoke drives an env-gated in-editor check; the
- * browser harness drives gameplay from outside and calls [smokeTeardown] (method#1) to free
- * the scene root so live handles drain to zero.
+ * Web variant of the smoke node. The desktop Smoke is an env-gated QUIT PROBE (three physics
+ * frames, one angularVelocity readability check, quit — it asserts nothing about gameplay),
+ * so there is no desktop self-test to mirror here; gameplay coverage on Web comes from the
+ * browser harness driving the run from outside (kanama scripts/web/drivers/demos/racing.mjs).
+ * This override only provides [smokeTeardown] (method#1), which frees the scene root so live
+ * handles drain to zero.
  */
 @ScriptClass(attachTo = "Node3D")
 class Smoke(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
