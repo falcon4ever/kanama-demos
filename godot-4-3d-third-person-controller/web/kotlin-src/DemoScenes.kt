@@ -36,6 +36,19 @@ object DemoScenes {
 
   fun instantiate(path: String): Node? = scene(path)?.instantiate()?.let { Node(it.handle) }
 
+  /**
+   * Pre-load a scene into the cache under the CALLER's handle ownership. The cache is global
+   * but Web resource handles are billed to the script that acquired them (the kanama #125
+   * routing/lifetime rule), so a cache entry first loaded by a script that later dies leaves a
+   * DEAD handle behind -- releaseWarmUp's close then faults, and a second instantiate through
+   * the stale entry would too. MEASURED (task 81 fix #3): the smoke's damaged BeeBot cached
+   * SMOKE_PUFF from its own death coroutine and smoke_teardown faulted with "No Kanama Web
+   * proxy owns handle". A long-lived script (SmokeQuit) warms the entry first instead.
+   */
+  fun warmUp(path: String) {
+    scene(path)
+  }
+
   fun launchBullet(
     parent: Node?,
     shooter: Node,

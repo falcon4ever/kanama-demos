@@ -59,6 +59,10 @@ class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::No
     // the dispatch.
     val root = self.getParent() ?: error("SmokeQuit has no parent to run smoke_combat on")
     val rootNode = Node(root.handle)
+    // Warm the death-puff scene into the cache under THIS long-lived script's ownership
+    // first: a dying bot would otherwise be the cache entry's owner and its death sweep
+    // would leave a dead resource handle for releaseWarmUp to close (see DemoScenes.warmUp).
+    DemoScenes.warmUp(DemoScenes.SMOKE_PUFF)
     damageFoe(rootNode, "Foes/FlyingEnemy2") { it.kotlinScriptInstance<BeeBot>()?.coinsCount = 0 }
     damageFoe(rootNode, "Foes/GroundEnemy") { it.kotlinScriptInstance<BeetleBot>()?.coinsCount = 0 }
   }
