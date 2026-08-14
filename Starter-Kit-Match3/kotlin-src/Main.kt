@@ -60,9 +60,50 @@ class Main(godotObject: GodotHandle) :
   private val activeTweens = mutableSetOf<Tween>()
 
   // Functions
+  /**
+   * Task 80 slice 6: a deterministic dump of this script's HYDRATED state.
+   *
+   * The same Kotlin compiles for desktop and Web, so identical output is expected and
+   * any difference is by definition a bug. It deliberately samples the three hydration
+   * paths the task-88 audit found bugs in: plain scalar exports (the literal path),
+   * an exported ARRAY of objects (the path where a null element used to mint a live
+   * handle), and object references (the path where a property-pushed script handle used
+   * to be pinned forever).
+   *
+   * Object fields report presence, not identity: a handle number legitimately differs
+   * between platforms, so comparing it would report a difference that is not a defect.
+   */
+  @RegisterFunction("differential_probe")
+  fun differentialProbe(): String =
+    listOf(
+        "width=$width",
+        "height=$height",
+        "offset=$offset",
+        "textures=${textures.size}",
+        "tileScene=${if (tileScene != null) 1 else 0}",
+        "sparklesScene=${if (sparklesScene != null) 1 else 0}",
+        "openHandCursor=${if (openHandCursor != null) 1 else 0}",
+        "closedHandCursor=${if (closedHandCursor != null) 1 else 0}",
+      )
+      .joinToString(";")
+
   @OnReady
   fun ready() {
     container = self.requireAs("Board", ::Node2D)
+    // Desktop reads the probe from stdout (its smoke captures the log); Web reads it by
+    // CALLING differential_probe through the bridge. Gated on the same smoke env var
+    // SmokeQuit uses so this cannot ride a player's default path -- the exact accident
+    // shape task 88 found in the emitter's `47` echo probe.
+    if (System.getenv("KANAMA_DEMO_SMOKE_QUIT") == "1") {
+      // Sample AFTER the board settles, not at _ready. The Web driver calls the probe
+      // once the board is playable, and comparing a _ready sample against a settled one
+      // reports a timing difference as if it were a platform difference -- which it did
+      // on the first run here (textures/cursors read empty at _ready, populated later).
+      kanamaScope.launch {
+        SceneTree.delaySeconds(0.1)
+        GD.print("KANAMA-DIFF match3.Main ${differentialProbe()}")
+      }
+    }
 
     setCursor(openHandCursor)
 
