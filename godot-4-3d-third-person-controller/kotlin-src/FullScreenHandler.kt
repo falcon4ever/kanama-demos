@@ -16,7 +16,11 @@ import java.lang.foreign.MemorySegment
 @ScriptClass(attachTo = "Node")
 class FullScreenHandler(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node) {
 
-    
+    // Upstream sets this in _init() unconditionally (full_screen_handler.gd), so the handler
+    // keeps processing while the tree is paused -- which is the whole point: F11 / alt-enter
+    // must still toggle fullscreen from a pause menu. The port moved it to _ready and lost
+    // the annotation, so it has never run.
+    @OnReady
     fun ready() {
         self.setProcessMode(Node.PROCESS_MODE_ALWAYS)
     }
