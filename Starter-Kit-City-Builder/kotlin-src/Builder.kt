@@ -274,7 +274,7 @@ class Builder(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::No
   private fun actionLoadResources() {
     if (Input.isActionJustPressed("load_resources")) {
       GD.print("Loading map...")
-      loadMap("res://sample map/map.res")
+      loadMap("res://sample map/map.tres")
     }
   }
 
