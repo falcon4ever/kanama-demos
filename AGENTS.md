@@ -5,7 +5,7 @@ guide to work on demos without scanning every project directory first.
 
 ## Current Baseline
 
-- Kanama version: `0.3.0`.
+- Kanama version: `0.4.0`.
 - Godot baseline: Godot `4.7 stable`.
 - Desktop/runtime JDK: JDK `25+`.
 - Default layout keeps this checkout beside `kanama`:
@@ -67,7 +67,8 @@ Per-demo task patterns are:
 ```
 
 Use `<prefix>BuildAndRunGodot` for normal edit/run work because it builds
-Kotlin scripts and imports Godot assets before launching.
+Kotlin scripts before launching. It does not import assets; run
+`<prefix>ImportGodot` once on a fresh checkout.
 
 ## Repository Rules
 

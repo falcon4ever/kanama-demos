@@ -5,7 +5,7 @@ Godot demo projects ported from GDScript to Kotlin with
 
 <p>
   <img alt="Godot 4.7 stable" src="https://img.shields.io/badge/Godot-4.7_stable-478cbf.svg">
-  <img alt="Kanama 0.3.0" src="https://img.shields.io/badge/Kanama-0.3.0-6f42c1.svg">
+  <img alt="Kanama 0.4.0" src="https://img.shields.io/badge/Kanama-0.4.0-6f42c1.svg">
   <img alt="JDK 25+" src="https://img.shields.io/badge/JDK-25%2B-f89820.svg">
   <img alt="Status: experimental" src="https://img.shields.io/badge/status-experimental-yellow.svg">
   <img alt="Demo code: MIT" src="https://img.shields.io/badge/Kotlin%20ports-MIT-blue.svg">
@@ -56,16 +56,17 @@ dev/
 ```
 
 The `BuildAndRunGodot` demo tasks build Kotlin scripts, run Kanama's
-`installAddonJar` task, import Godot assets, and then launch the demo. The
+`installAddonJar` task, and then launch the demo. On a fresh checkout, run
+`<demo>ImportGodot` once first so the `.godot/imported` cache exists. The
 install step copies `kanama.jar`, `kanama-scripts.jar`, the `.gdextension`
 file, and the host native bootstrap into the demo's `addons/kanama` directory.
 
-The addon binaries (desktop `.so`/`.dylib`/`.dll`, the Android `.aar`, and the iOS
-`.xcframework`) are **not committed** — they are rebuilt on demand by the install tasks
+The addon binaries (desktop `.so`/`.dylib`/`.dll`, the Android `.aar`, the iOS
+`.xcframework`, and the `kanama.jar` / `kanama-scripts.jar` files) are **not committed** — they are rebuilt on demand by the install tasks
 (`installAddonJar`, `installAndroidPluginAar`, `installIosAddon`) and gitignored. Only the
 `.gdextension` descriptor is tracked.
 
-**iOS is experimental but broadly enabled.** Ten demo ports carry iOS export presets and run
+**iOS is Supported (4.7 stable).** Ten demo ports carry iOS export presets and run
 on Kanama's Kotlin/Native backend: Bunnymark, Match3, the 3D Platformer, FPS, Racing,
 Dodge the Creeps, Squash the Creeps, both 3D character controllers, and the heavy
 `tps-demo-kanama`. Kanama's ten-step device gate (`scripts/ios_device_gate.sh`: the
@@ -73,9 +74,9 @@ fresh-project install path plus the nine-demo matrix) has passed end-to-end on a
 iPhone 12 (2026-06-25) and an iPhone 15 Pro (2026-07-10), both on Godot 4.7 stable iOS
 templates. Install with `installIosAddon`; run the local matrix with
 `scripts/ios_smoke_all.sh` (see the iOS export guide, `docs/exporting/ios.md` in the
-Kanama repo). iOS is still not a supported export — the remaining promotion gates (a
-user-facing export workflow, the FPS Audio autoload follow-up, a broader device matrix)
-are tracked in the Kanama repo.
+Kanama repo). The carried caveats are the Kanama repo's: the packaged `.xcframework`
+addon is runtime-only (compiling project scripts needs the Kanama checkout), there is
+no mobile hot reload, and the FPS Audio autoload follow-up is tracked as non-blocking.
 
 List demo tasks:
 
@@ -122,7 +123,8 @@ Run or open one demo:
 ```
 
 Use `<demo>BuildAndRunGodot` for the usual edit-run loop because it runs
-`<demo>BuildScripts` and `<demo>ImportGodot` before launching Godot. If you use
+`<demo>BuildScripts` before launching Godot; it does not import assets, so run
+`<demo>ImportGodot` once on a fresh checkout. If you use
 `<demo>RunGodot`, `<demo>OpenGodotEditor`, or open a demo directly in Godot,
 run `<demo>BuildScripts` first so the demo's `addons/kanama` directory is
 current.
@@ -194,16 +196,20 @@ Aggregate tasks:
 ./gradlew demoParityAudit
 ./gradlew runtimeNodeLookupAudit
 ./gradlew replicatedScriptPropertiesAudit
+./gradlew desktopSmokeAll
 ./gradlew androidSmokeAll
 ```
 
 The aggregate build tasks run demos sequentially because each demo currently
 uses Kanama's shared `project-scripts` build to generate registrars.
 
-For headless desktop smoke validation across the current scripted demos, use:
+For headless desktop smoke validation across the current scripted demos, use
+the script directly or the `desktopSmokeAll` task, which forwards the same Godot
+executable settings as the other Gradle tasks:
 
 ```sh
 scripts/desktop_smoke_all.sh /path/to/godot
+./gradlew desktopSmokeAll -Pkanama.godot.executable=/path/to/godot
 ```
 
 Use the matching Godot 4.7 stable binary for the platform under test. Windows
@@ -216,8 +222,9 @@ previously opened project. Linux smokes should run with `JAVA_HOME` set to JDK
 ## Running In Godot
 
 `runGodot` and `buildAndRunGodot` run the demo's configured main scene
-directly. `buildAndRunGodot` imports assets first so fresh checkouts have the
-`.godot/imported` cache Godot needs before game launch. By default, Gradle uses
+directly; neither imports assets. Run `importGodot` once on a fresh checkout so
+the `.godot/imported` cache Godot needs before game launch exists
+(`scripts/desktop_smoke_all.sh` does this itself). By default, Gradle uses
 `/Applications/Godot.app/Contents/MacOS/Godot` when it exists, then falls back
 to `godot` from `PATH`.
 
@@ -227,8 +234,9 @@ pressing Play.
 
 ## Android Exports
 
-Experimental Android export presets and smoke coverage are checked in for
-eight demos:
+Android export presets are checked in for ten demos. The automated smoke
+(`androidSmokeAll`) covers nine of them: `Bunnymark` plus these eight, while
+`tps-demo-kanama` carries a preset but sits outside the automated matrix:
 
 - `godot-demo-2d-dodge-the-creeps`
 - `Starter-Kit-3D-Platformer`
