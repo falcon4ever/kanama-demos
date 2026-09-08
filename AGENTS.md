@@ -67,7 +67,8 @@ Per-demo task patterns are:
 ```
 
 Use `<prefix>BuildAndRunGodot` for normal edit/run work because it builds
-Kotlin scripts and imports Godot assets before launching.
+Kotlin scripts before launching. It does not import assets; run
+`<prefix>ImportGodot` once on a fresh checkout.
 
 ## Repository Rules
 
