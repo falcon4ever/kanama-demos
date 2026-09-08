@@ -56,8 +56,7 @@ dev/
 ```
 
 The `BuildAndRunGodot` demo tasks build Kotlin scripts, run Kanama's
-`installAddonJar` task, and then launch the demo. On a fresh checkout, run
-`<demo>ImportGodot` once first so the `.godot/imported` cache exists. The
+`installAddonJar` task, import Godot assets, and then launch the demo. The
 install step copies `kanama.jar`, `kanama-scripts.jar`, the `.gdextension`
 file, and the host native bootstrap into the demo's `addons/kanama` directory.
 
@@ -123,8 +122,7 @@ Run or open one demo:
 ```
 
 Use `<demo>BuildAndRunGodot` for the usual edit-run loop because it runs
-`<demo>BuildScripts` before launching Godot; it does not import assets, so run
-`<demo>ImportGodot` once on a fresh checkout. If you use
+`<demo>BuildScripts` and `<demo>ImportGodot` before launching Godot. If you use
 `<demo>RunGodot`, `<demo>OpenGodotEditor`, or open a demo directly in Godot,
 run `<demo>BuildScripts` first so the demo's `addons/kanama` directory is
 current.
@@ -222,9 +220,8 @@ previously opened project. Linux smokes should run with `JAVA_HOME` set to JDK
 ## Running In Godot
 
 `runGodot` and `buildAndRunGodot` run the demo's configured main scene
-directly; neither imports assets. Run `importGodot` once on a fresh checkout so
-the `.godot/imported` cache Godot needs before game launch exists
-(`scripts/desktop_smoke_all.sh` does this itself). By default, Gradle uses
+directly. `buildAndRunGodot` imports assets first so fresh checkouts have the
+`.godot/imported` cache Godot needs before game launch. By default, Gradle uses
 `/Applications/Godot.app/Contents/MacOS/Godot` when it exists, then falls back
 to `godot` from `PATH`.
 
