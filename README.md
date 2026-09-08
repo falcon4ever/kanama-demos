@@ -5,7 +5,7 @@ Godot demo projects ported from GDScript to Kotlin with
 
 <p>
   <img alt="Godot 4.7 stable" src="https://img.shields.io/badge/Godot-4.7_stable-478cbf.svg">
-  <img alt="Kanama 0.3.0" src="https://img.shields.io/badge/Kanama-0.3.0-6f42c1.svg">
+  <img alt="Kanama 0.4.0" src="https://img.shields.io/badge/Kanama-0.4.0-6f42c1.svg">
   <img alt="JDK 25+" src="https://img.shields.io/badge/JDK-25%2B-f89820.svg">
   <img alt="Status: experimental" src="https://img.shields.io/badge/status-experimental-yellow.svg">
   <img alt="Demo code: MIT" src="https://img.shields.io/badge/Kotlin%20ports-MIT-blue.svg">
@@ -65,7 +65,7 @@ The addon binaries (desktop `.so`/`.dylib`/`.dll`, the Android `.aar`, and the i
 (`installAddonJar`, `installAndroidPluginAar`, `installIosAddon`) and gitignored. Only the
 `.gdextension` descriptor is tracked.
 
-**iOS is experimental but broadly enabled.** Ten demo ports carry iOS export presets and run
+**iOS is Supported (4.7 stable).** Ten demo ports carry iOS export presets and run
 on Kanama's Kotlin/Native backend: Bunnymark, Match3, the 3D Platformer, FPS, Racing,
 Dodge the Creeps, Squash the Creeps, both 3D character controllers, and the heavy
 `tps-demo-kanama`. Kanama's ten-step device gate (`scripts/ios_device_gate.sh`: the
@@ -73,9 +73,9 @@ fresh-project install path plus the nine-demo matrix) has passed end-to-end on a
 iPhone 12 (2026-06-25) and an iPhone 15 Pro (2026-07-10), both on Godot 4.7 stable iOS
 templates. Install with `installIosAddon`; run the local matrix with
 `scripts/ios_smoke_all.sh` (see the iOS export guide, `docs/exporting/ios.md` in the
-Kanama repo). iOS is still not a supported export — the remaining promotion gates (a
-user-facing export workflow, the FPS Audio autoload follow-up, a broader device matrix)
-are tracked in the Kanama repo.
+Kanama repo). The carried caveats are the Kanama repo's: the packaged `.xcframework`
+addon is runtime-only (compiling project scripts needs the Kanama checkout), there is
+no mobile hot reload, and the FPS Audio autoload follow-up is tracked as non-blocking.
 
 List demo tasks:
 
@@ -227,7 +227,7 @@ pressing Play.
 
 ## Android Exports
 
-Experimental Android export presets and smoke coverage are checked in for
+Android export presets and smoke coverage are checked in for
 eight demos:
 
 - `godot-demo-2d-dodge-the-creeps`
