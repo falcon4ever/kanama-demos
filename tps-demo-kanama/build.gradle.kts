@@ -479,9 +479,10 @@ tasks.register<Exec>("importGodot") {
 
 tasks.register("buildAndRunGodot") {
     group = "kanama"
-    description = "buildScripts, then runGodot."
-    dependsOn("buildScripts", "runGodot")
-    tasks.named("runGodot").get().mustRunAfter("buildScripts")
+    description = "buildScripts, then importGodot, then runGodot."
+    dependsOn("buildScripts", "importGodot", "runGodot")
+    tasks.named("importGodot").get().mustRunAfter("buildScripts")
+    tasks.named("runGodot").get().mustRunAfter("buildScripts", "importGodot")
 }
 
 tasks.register("buildAndSmokeGodot") {
