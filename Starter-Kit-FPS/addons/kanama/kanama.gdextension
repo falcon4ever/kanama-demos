@@ -16,7 +16,6 @@ windows.debug.x86_64 = "res://addons/kanama/kanama_bootstrap.dll"
 windows.release.x86_64 = "res://addons/kanama/kanama_bootstrap.dll"
 ios.debug.arm64 = "res://addons/kanama/bin/ios/kanama_ios.debug.xcframework"
 ios.release.arm64 = "res://addons/kanama/bin/ios/kanama_ios.release.xcframework"
-
 android.debug.arm64 = "libkanama_bootstrap.so"
 android.release.arm64 = "libkanama_bootstrap.so"
 android.debug.x86_64 = "libkanama_bootstrap.so"
