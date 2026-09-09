@@ -61,6 +61,68 @@ assert_no_hard_log_errors() {
   fi
 }
 
+# Per-tick leak gate (Kanama task 97). With --verbose (passed below) Godot prints one
+# "Leaked instance: <Class>:<id>[ - Resource path: ...] - Reference count: <n>" line per
+# object still alive at ObjectDB cleanup. Measured 2026-09-09 on Godot 4.7.2: every demo in
+# this matrix still leaks a handful of shutdown-order instances (5 to 324 lines — audio
+# playbacks alive at quit, cached PackedScenes and their sub-resources), all with a reference
+# count of 15 or less, so a blanket grep for "Leaked instance" would fail 9/9 today. What this
+# gate rejects is the *signature of a per-frame leak* instead:
+#   - any KinematicCollision2D/3D instance: only moveAndCollide()/getSlideCollision() mint
+#     these and gameplay must close each one (tps Bullet.kt leaked one per physics tick);
+#   - any instance with "Reference count" >= KANAMA_DESKTOP_SMOKE_LEAK_RC_LIMIT (100): the
+#     same object re-read through an owned getter every frame and never closed (the tps
+#     smoke measured getMultiplayer() at 6867 before it was routed through a helper).
+# The per-class histogram is printed for every demo so the corpus state stays visible; the
+# rule itself is docs/game-dev/godot-api.md "Resource Ownership" in the Kanama repository.
+LEAK_RC_LIMIT="${KANAMA_DESKTOP_SMOKE_LEAK_RC_LIMIT:-100}"
+
+assert_no_per_tick_leaks() {
+  local folder="$1"
+  local log_file="$2"
+
+  if [ ! -f "$log_file" ]; then
+    return
+  fi
+  local leaks
+  leaks="$(grep -F 'Leaked instance: ' "$log_file" || true)"
+  if [ -z "$leaks" ]; then
+    return
+  fi
+
+  echo "[desktop_smoke_all] leaked instances at exit for $folder (shutdown-order leaks tolerated, per-tick signatures fail):"
+  printf '%s\n' "$leaks" | awk '
+    {
+      line = $0
+      sub(/^.*Leaked instance: /, "", line)
+      cls = line; sub(/:.*$/, "", cls)
+      rc = 0
+      if (match(line, /Reference count: [0-9]+/)) { rc = substr(line, RSTART + 17, RLENGTH - 17) + 0 }
+      key = cls " rc=" rc
+      count[key]++
+    }
+    END { for (k in count) printf "%7d %s\n", count[k], k }
+  ' | sort -rn | head -12 | sed 's/^/    /'
+
+  local per_tick
+  per_tick="$(printf '%s\n' "$leaks" | awk -v limit="$LEAK_RC_LIMIT" '
+    {
+      line = $0
+      sub(/^.*Leaked instance: /, "", line)
+      cls = line; sub(/:.*$/, "", cls)
+      rc = 0
+      if (match(line, /Reference count: [0-9]+/)) { rc = substr(line, RSTART + 17, RLENGTH - 17) + 0 }
+      if (cls ~ /^KinematicCollision[23]D$/ || rc >= limit) print
+    }
+  ')"
+  if [ -n "$per_tick" ]; then
+    echo "[desktop_smoke_all] per-tick leak signature in $folder: an owned RefCounted return is read every frame and never closed" >&2
+    printf '%s\n' "$per_tick" | head -20 >&2
+    echo "[desktop_smoke_all] log: $log_file" >&2
+    exit 1
+  fi
+}
+
 run_smoke() {
   local folder="$1"
   shift
@@ -115,6 +177,7 @@ run_smoke() {
   fi
   assert_no_hard_log_errors "$folder" "runtime" "$log_file"
   assert_no_hard_log_errors "$folder" "runtime (console)" "$console_log_file"
+  assert_no_per_tick_leaks "$folder" "$console_log_file"
   echo "[desktop_smoke_all] pass: $folder"
 }
 

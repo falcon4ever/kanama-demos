@@ -57,6 +57,46 @@ fun resolvePythonCommand(): String {
 }
 val execSupport = objects.newInstance(ExecSupport::class.java)
 
+// Per-tick leak gate (Kanama task 97) — the same rule as scripts/desktop_smoke_all.sh, see the
+// comment there. Every smoke below runs Godot with --verbose, which is what makes it print one
+// "Leaked instance: <Class>:<id> ... - Reference count: <n>" line per object alive at exit.
+// Measured 2026-09-09 on 4.7.2 the headless smoke still leaks ~1,400 shutdown-order instances
+// (the level's meshes/textures/animations, all rc <= 5), so a blanket "Leaked instance" check
+// would fail today; what fails here is the per-frame signature: any KinematicCollision2D/3D
+// (only moveAndCollide()/getSlideCollision() mint them — Bullet.kt leaked one per physics tick),
+// or any instance with a reference count >= kanama.smoke.leakRcLimit (100; getMultiplayer()
+// reached 6867 before every read went through TpsScenes.withMultiplayer). The per-class
+// histogram is printed so the corpus state stays visible.
+val leakRcLimit = providers.gradleProperty("kanama.smoke.leakRcLimit").getOrElse("100").toInt()
+
+fun auditPerTickLeaks(log: String, logFile: File, label: String) {
+    val leaks = log.lineSequence()
+        .filter { "Leaked instance: " in it }
+        .map { line ->
+            val body = line.substringAfter("Leaked instance: ")
+            val cls = body.substringBefore(":")
+            val rc = Regex("Reference count: (\\d+)").find(body)?.groupValues?.get(1)?.toIntOrNull() ?: 0
+            cls to rc
+        }
+        .toList()
+    if (leaks.isEmpty()) return
+    logger.lifecycle("TPS $label: ${leaks.size} leaked instances at exit (shutdown-order leaks tolerated, per-tick signatures fail):")
+    leaks.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.take(12).forEach { (key, n) ->
+        logger.lifecycle("    $n ${key.first} rc=${key.second}")
+    }
+    val perTick = leaks.filter { (cls, rc) -> cls == "KinematicCollision3D" || cls == "KinematicCollision2D" || rc >= leakRcLimit }
+    if (perTick.isNotEmpty()) {
+        throw GradleException(
+            buildString {
+                append("Godot TPS $label: per-tick leak signature — an owned RefCounted return is read every frame and never closed; see ${logFile.absolutePath}")
+                perTick.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.forEach { (key, n) ->
+                    append("\n  $n x Leaked instance: ${key.first} rc=${key.second}")
+                }
+            },
+        )
+    }
+}
+
 kotlin {
     jvmToolchain(25)
     sourceSets.named("main") {
@@ -154,7 +194,7 @@ tasks.register("smokeGodotChecked") {
         val output = ByteArrayOutputStream()
         val result = execSupport.execOperations.exec {
             // Frame-count safety net; see smokeGodot above (120 raced the loading timer).
-            commandLine(godotBin, "--headless", "--path", projectDir.absolutePath, "--quit-after", "2000")
+            commandLine(godotBin, "--headless", "--path", projectDir.absolutePath, "--quit-after", "2000", "--verbose")
             environment("KANAMA_TPS_SMOKE_KILL_ROBOT", "1")
             isIgnoreExitValue = true
             standardOutput = output
@@ -202,6 +242,7 @@ tasks.register("smokeGodotChecked") {
                 },
             )
         }
+        auditPerTickLeaks(log, logFile, "smoke")
     }
 }
 
@@ -231,6 +272,7 @@ tasks.register("smokeGodotRenderChecked") {
                 "60",
                 "--quit-after",
                 "3600",
+                "--verbose",
             )
             environment("KANAMA_TPS_SMOKE_KILL_ROBOT", "1")
             environment("KANAMA_TPS_SMOKE_KILL_ROBOTS", "2")
@@ -286,6 +328,7 @@ tasks.register("smokeGodotRenderChecked") {
                 },
             )
         }
+        auditPerTickLeaks(log, logFile, "render smoke")
     }
 }
 
@@ -313,6 +356,7 @@ tasks.register("smokeGodotBulletChecked") {
                 "60",
                 "--quit-after",
                 "3600",
+                "--verbose",
             )
             environment("KANAMA_TPS_SMOKE_KILL_ROBOT", "1")
             environment("KANAMA_TPS_SMOKE_KILL_ROBOTS", "1")
@@ -367,6 +411,7 @@ tasks.register("smokeGodotBulletChecked") {
                 },
             )
         }
+        auditPerTickLeaks(log, logFile, "bullet smoke")
     }
 }
 
@@ -396,6 +441,7 @@ tasks.register("smokeGodotReloadChecked") {
                 "60",
                 "--quit-after",
                 "3600",
+                "--verbose",
             )
             environment("KANAMA_TPS_SMOKE_KILL_ROBOT", "1")
             environment("KANAMA_TPS_SMOKE_KILL_ROBOTS", "1")
@@ -450,6 +496,7 @@ tasks.register("smokeGodotReloadChecked") {
                 },
             )
         }
+        auditPerTickLeaks(log, logFile, "reload smoke")
     }
 }
 
