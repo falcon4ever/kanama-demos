@@ -64,10 +64,13 @@ val execSupport = objects.newInstance(ExecSupport::class.java)
 // (the level's meshes/textures/animations, all rc <= 5), so a blanket "Leaked instance" check
 // would fail today; what fails here is the per-frame signature: any KinematicCollision2D/3D
 // (only moveAndCollide()/getSlideCollision() mint them — Bullet.kt leaked one per physics tick),
-// or any instance with a reference count >= kanama.smoke.leakRcLimit (100; getMultiplayer()
-// reached 6867 before every read went through TpsScenes.withMultiplayer). The per-class
-// histogram is printed so the corpus state stays visible.
-val leakRcLimit = providers.gradleProperty("kanama.smoke.leakRcLimit").getOrElse("100").toInt()
+// or any instance with a reference count >= kanama.smoke.leakRcLimit. The limit is 500 here,
+// not the matrix's 100: the level that leaks wholesale at exit includes shared sub-resources
+// with many live holders (one BoxShape3D sits at 154 in every run, the next-highest class at
+// 82), while a genuine per-frame read over the shortest checked smoke measured 1862
+// (getMultiplayerPeer) and 6867 (getMultiplayer) before every read went through
+// TpsScenes.withMultiplayer. The per-class histogram is printed so the corpus state stays visible.
+val leakRcLimit = providers.gradleProperty("kanama.smoke.leakRcLimit").getOrElse("500").toInt()
 
 fun auditPerTickLeaks(log: String, logFile: File, label: String) {
     val leaks = log.lineSequence()
