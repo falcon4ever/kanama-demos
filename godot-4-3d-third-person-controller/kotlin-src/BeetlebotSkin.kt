@@ -9,6 +9,7 @@ import net.multigesture.kanama.api.AnimationMixer
 import net.multigesture.kanama.api.AnimationNodeStateMachinePlayback
 import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.getStateMachinePlayback
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node

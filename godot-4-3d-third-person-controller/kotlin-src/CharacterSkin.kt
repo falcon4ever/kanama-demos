@@ -9,9 +9,11 @@ import net.multigesture.kanama.annotations.Signal
 import net.multigesture.kanama.api.AnimationMixer
 import net.multigesture.kanama.api.AnimationNodeStateMachinePlayback
 import net.multigesture.kanama.api.AnimationPlayer
+import net.multigesture.kanama.api.getStateMachinePlayback
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
+import net.multigesture.kanama.api.setParameter
 import net.multigesture.kanama.generated.CharacterSkinSignals
 import java.lang.foreign.MemorySegment
 

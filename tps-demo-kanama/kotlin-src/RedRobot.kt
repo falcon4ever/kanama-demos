@@ -12,13 +12,16 @@ import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.AnimationTree
 import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.BoneAttachment3D
-import net.multigesture.kanama.api.CPUParticles3D
 import net.multigesture.kanama.api.CharacterBody3D
 import net.multigesture.kanama.api.CollisionShape3D
+import net.multigesture.kanama.api.CPUParticles3D
+import net.multigesture.kanama.api.create
 import net.multigesture.kanama.api.GodotObject
+import net.multigesture.kanama.api.intersectRay
 import net.multigesture.kanama.api.KanamaCoroutineOwner
 import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.KanamaScript
+import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.api.MeshInstance3D
 import net.multigesture.kanama.api.Node3D
@@ -27,7 +30,6 @@ import net.multigesture.kanama.api.PhysicsRayQueryParameters3D
 import net.multigesture.kanama.api.RayCast3D
 import net.multigesture.kanama.api.RigidBody3D
 import net.multigesture.kanama.api.Timer
-import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.types.Basis
 import net.multigesture.kanama.types.Transform3D
 import net.multigesture.kanama.types.Vector2

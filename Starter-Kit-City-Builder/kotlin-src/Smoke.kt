@@ -2,11 +2,12 @@ package citybuilder
 
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
+import net.multigesture.kanama.api.getUsedCells
 import net.multigesture.kanama.api.GridMap
 import net.multigesture.kanama.api.KanamaScript
+import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
-import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.types.Vector3i
 import java.lang.foreign.MemorySegment
 
