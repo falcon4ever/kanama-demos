@@ -4,6 +4,10 @@
 This is intentionally conservative: it fails on new risky patterns, but
 allowlists places where the original demos are genuinely dynamic, such as
 Godot-style damage/squash duck typing and smoke-only probes.
+
+`./gradlew check` runs this audit (with the two Kanama guardrail audits) on every
+push and pull request through `.github/workflows/check.yml`; nothing here needs
+Godot or compiled scripts.
 """
 
 from __future__ import annotations

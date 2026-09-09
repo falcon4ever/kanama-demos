@@ -40,10 +40,16 @@ class Coin(godotObject: GodotHandle) : KanamaScript<Area3D>(godotObject, ::Area3
     val player = body.kotlinScriptInstance<Player>() ?: return
     player.collectCoin()
 
-    audio.call("play", "res://sounds/coin.ogg")
+    playAudio("res://sounds/coin.ogg")
     mesh.queueFree()
     particles.setEmitting(false)
     grabbed = true
+  }
+
+  // The Audio autoload is the original demo's GDScript, so it has no typed wrapper; the
+  // dynamic call stays out of the signal callback body itself, as in the sibling scripts.
+  private fun playAudio(path: String) {
+    audio.call("play", path)
   }
 
   @OnProcess

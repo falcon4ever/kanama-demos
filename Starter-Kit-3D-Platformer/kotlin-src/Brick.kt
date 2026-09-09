@@ -15,6 +15,7 @@ import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.SceneTree
 import net.multigesture.kanama.api.StaticBody3D
+import net.multigesture.kanama.generated.BrickNames
 
 /**
  * Web port of a breakable brick: hitting it from below (BottomDetector body_entered, connected
@@ -43,7 +44,7 @@ class Brick(godotObject: GodotHandle) :
     audio = self.getNodeOrNull("/root/Audio")?.let { Node(it.handle) }
       ?: error("Brick requires the Audio autoload")
 
-    bottomDetector.signal("body_entered").connect(self, "_on_bottom_hit")
+    bottomDetector.signal(Area3D.Signals.bodyEntered).connect(self, BrickNames.Methods.onBottomHit)
   }
 
   @RegisterFunction("_on_bottom_hit")

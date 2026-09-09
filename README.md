@@ -113,6 +113,15 @@ Run the runtime and replication guardrail audits:
 ./gradlew runtimeNodeLookupAudit replicatedScriptPropertiesAudit
 ```
 
+`./gradlew check` runs those three audits together and nothing else. They are
+Python scans over `kotlin-src/` and the scenes: they need the sibling Kanama
+checkout (or `-PkanamaRoot=`) for the two guardrail scripts, but no Godot, no
+Kanama build, and no compiled demo scripts. `.github/workflows/check.yml` runs
+`check` on every push and pull request against the Kanama commit pinned in its
+`KANAMA_REF`. The headless smokes are not part of `check`: the desktop, Android,
+and iOS smokes run locally, and the Web matrix runs in Kanama's `web.yml`
+against the demos commit pinned there.
+
 Run or open one demo:
 
 ```sh
@@ -194,6 +203,7 @@ Aggregate tasks:
 ./gradlew demoParityAudit
 ./gradlew runtimeNodeLookupAudit
 ./gradlew replicatedScriptPropertiesAudit
+./gradlew check
 ./gradlew desktopSmokeAll
 ./gradlew androidSmokeAll
 ```

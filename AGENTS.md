@@ -24,6 +24,8 @@ wording.
 - Repo status, requirements, task names, demo list, licenses, and Android
   notes: `README.md`.
 - Root aggregate tasks and demo prefixes: `build.gradle.kts`.
+- CI: `.github/workflows/check.yml` runs `./gradlew check` on every push and
+  pull request.
 - Shared per-demo Kanama Gradle wiring: `gradle/kanama-demo.gradle.kts`.
 - GDScript porting and gameplay rules:
   `../kanama/docs/contributing/demo-porting-rules.md`,
@@ -132,6 +134,10 @@ Update these together:
 - Any special demo Gradle defaults, especially
   `tps-demo-kanama/build.gradle.kts`.
 - Porting notes that name the previous Godot or Kanama baseline.
+- `KANAMA_REF` in `.github/workflows/check.yml` when Kanama's
+  `scripts/audit_runtime_node_lookups.py` or
+  `scripts/audit_replicated_script_properties.py` changed; the CI audits run
+  against that Kanama commit's `scripts/`.
 - Smoke results or support wording only after the matching smoke path passes.
 
 Then run:
@@ -189,6 +195,14 @@ Run the narrowest useful check while iterating:
 ./gradlew demoParityAudit
 ./gradlew runtimeNodeLookupAudit replicatedScriptPropertiesAudit
 ```
+
+`./gradlew check` is those three audits and nothing more: static Python scans
+that need the Kanama checkout's `scripts/` (sibling or `-PkanamaRoot=`) but no
+Godot, Kanama build, or compiled scripts. `.github/workflows/check.yml` runs it
+on every push and pull request against the Kanama commit pinned in `KANAMA_REF`,
+so a red `check` on a pull request is a real finding, not a stale gate. Run it
+with `--continue` locally too, so one red audit does not hide the others. The
+import and smoke steps below are not covered by CI; run them locally.
 
 Before release-facing changes:
 

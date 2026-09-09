@@ -1,0 +1,72 @@
+name: check
+
+# Task 92: `./gradlew check` is this repository's static gate -- the demo parity
+# audit plus Kanama's two guardrail audits (runtime node lookups, replicated
+# script properties). All three are Python scans of `kotlin-src/` and the scenes:
+# no Godot, no Kanama build and no compiled demo scripts are needed, so it runs on
+# every push and pull request on a plain Ubuntu runner.
+#
+# What is NOT here: the desktop/Android/iOS/Web smokes. They need Godot, a Kanama
+# build and mostly real devices; run them locally (README "Smoke Scripts") or through
+# Kanama's web.yml, which pins this repository at DEMOS_REF.
+on:
+  pull_request:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The Kanama commit whose scripts/audit_runtime_node_lookups.py and
+  # scripts/audit_replicated_script_properties.py the guardrail audits run. Pinned
+  # for the same reason Kanama's web.yml pins DEMOS_REF: an unpinned checkout lets an
+  # unrelated Kanama commit redden every demos PR. Bump it deliberately when either
+  # guardrail script changes (see AGENTS.md, "Update For A New Kanama Release").
+  KANAMA_REF: 0f9866f532f5d134065451ab630d7938c4ca1479
+
+jobs:
+  check:
+    name: gradlew check (parity + guardrail audits)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      # Sibling layout, exactly as the README documents it: kanama/ beside
+      # kanama-demos/, so the Gradle default `../kanama` resolves without flags and
+      # the parity audit's `**/kotlin-src` glob can never see Kanama's own tree.
+      - name: Checkout kanama-demos
+        uses: actions/checkout@v6
+        with:
+          path: kanama-demos
+
+      - name: Checkout Kanama scripts (pinned)
+        uses: actions/checkout@v6
+        with:
+          repository: falcon4ever/kanama
+          ref: ${{ env.KANAMA_REF }}
+          path: kanama
+          # Only scripts/ is read; the audits never build Kanama.
+          sparse-checkout: scripts
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: gradle
+
+      - name: Run the repository checks
+        shell: bash
+        working-directory: kanama-demos
+        run: |
+          # Gradle only configures the eleven included demo builds here (Kotlin/KSP
+          # plugins from the plugin portal); no demo is compiled. --continue: run all
+          # three audits even when the first is red, so one failing audit cannot hide
+          # another (task 92 found a runtimeNodeLookupAudit finding that way).
+          ./gradlew check --continue --no-daemon -Pkotlin.compiler.execution.strategy=in-process \
+            -PkanamaRoot="$GITHUB_WORKSPACE/kanama"
