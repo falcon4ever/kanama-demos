@@ -134,6 +134,14 @@ class CameraController(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObj
     setupAnchor(anchorBody, anchor.kotlinScriptInstance<Player>())
   }
 
+  /**
+   * Desktop's Kotlin-to-Kotlin overload, called by the shared Player as `setup(this)`. Web's
+   * KanamaScript keeps `self` protected, so the body is re-typed through `selfAs`.
+   */
+  fun setup(player: Player) {
+    setupAnchor(player.selfAs(::CharacterBody3D), player)
+  }
+
   /** Kotlin-side setup entry: the player passes its own body (self is protected). */
   internal fun setupAnchor(anchorBody: CharacterBody3D, anchorPlayer: Player?) {
     this.anchor = anchorBody

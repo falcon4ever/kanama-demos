@@ -12,6 +12,7 @@ import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.CanvasItem
 import net.multigesture.kanama.api.CharacterBody3D
 import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.InputEventKey
 import net.multigesture.kanama.api.InputEventMouseButton
@@ -26,11 +27,10 @@ import net.multigesture.kanama.generated.CharacterSkinNames
 import net.multigesture.kanama.generated.PlayerSignals
 import net.multigesture.kanama.types.Basis
 import net.multigesture.kanama.types.Vector3
-import java.lang.foreign.MemorySegment
 
 @GlobalClass
 @ScriptClass(attachTo = "CharacterBody3D")
-class Player(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
+class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
 
 	@ScriptProperty
 	var moveSpeed = 8.0
@@ -213,7 +213,7 @@ class Player(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(godotOb
 		} else if (!self.isOnFloor() && self.velocity.y < 0.0f) {
 			characterSkin.fall()
 		} else if (self.isOnFloor()) {
-			val xzVelocity = Vector3(self.velocity.x, 0f, self.velocity.z)
+			val xzVelocity = Vector3(self.velocity.x.toDouble(), 0.0, self.velocity.z.toDouble())
 			if (xzVelocity.length() > stoppingSpeed) {
 				characterSkin.setMoving(true)
 				characterSkin.setMovingSpeed(Mathf.inverseLerp(0.0, moveSpeed, xzVelocity.length()))

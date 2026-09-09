@@ -39,6 +39,9 @@ class DemoPage(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Nod
   @OnReady
   fun ready() {
     setPaused(true)
+    // Same owner as desktop's DemoScenes.warmUp(self): this page lives as long as the scene and
+    // releases the pool in exitTree. (The former web Player override warmed it from Player.ready.)
+    DemoScenes.warmUpBulletPool(self)
 
     demoMouseMode = Input.getMouseMode()
     Input.setMouseMode(Input.MOUSE_MODE_VISIBLE)
