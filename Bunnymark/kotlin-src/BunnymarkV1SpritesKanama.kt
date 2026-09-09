@@ -8,7 +8,6 @@ import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
-import net.multigesture.kanama.api.ManualGodotLifetimeApi
 import net.multigesture.kanama.api.Node2D
 import net.multigesture.kanama.api.ResourceLoader
 import net.multigesture.kanama.api.Sprite2D
@@ -16,7 +15,6 @@ import net.multigesture.kanama.api.Texture2D
 import net.multigesture.kanama.types.Vector2
 
 @ScriptClass(attachTo = "Node2D")
-@OptIn(ManualGodotLifetimeApi::class)
 class BunnymarkV1SpritesKanama(godotObject: GodotHandle) : KanamaScript<Node2D>(godotObject, ::Node2D) {
     private data class Bunny(val sprite: Sprite2D, var speed: Vector2)
 

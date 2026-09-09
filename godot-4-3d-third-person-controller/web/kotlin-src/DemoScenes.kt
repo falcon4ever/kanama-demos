@@ -1,4 +1,3 @@
-@file:OptIn(net.multigesture.kanama.api.ManualGodotLifetimeApi::class)
 
 package thirdperson
 

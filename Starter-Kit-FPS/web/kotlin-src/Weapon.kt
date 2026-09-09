@@ -7,7 +7,6 @@ import net.multigesture.kanama.annotations.PropertyHint
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.ScriptProperty
 import net.multigesture.kanama.api.GodotHandle
-import net.multigesture.kanama.api.ManualGodotLifetimeApi
 import net.multigesture.kanama.api.PackedScene
 import net.multigesture.kanama.api.Texture2D
 import net.multigesture.kanama.types.Vector2
@@ -55,7 +54,6 @@ class Weapon(objectId: GodotHandle) : KanamaWebScript(objectId) {
    * Harness-only: releases the hydrated sub-resource handles so the smoke's teardown can drain to
    * zero (Weapon resources themselves persist in Godot's resource cache).
    */
-  @OptIn(ManualGodotLifetimeApi::class)
   fun releaseHydratedAssets() {
     crosshair?.close()
     crosshair = null
