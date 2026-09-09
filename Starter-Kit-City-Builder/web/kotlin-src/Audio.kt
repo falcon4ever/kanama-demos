@@ -34,7 +34,11 @@ class Audio(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) 
       val player = AudioStreamPlayer.create()
       self.addChild(player)
       player.setVolumeDb(-10.0)
-      player.signal("finished").connect(self, argumentCount = 0) { onStreamFinished(player) }
+      // The Web AudioStreamPlayer wrapper exposes Signals.finished; the desktop twin keeps the
+      // raw name on the parity-audit allowlist until the desktop wrapper gains the constant.
+      player.signal(AudioStreamPlayer.Signals.finished).connect(self, argumentCount = 0) {
+        onStreamFinished(player)
+      }
       player.setBus(bus)
       available.addLast(player)
       players.add(player)
