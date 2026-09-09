@@ -91,14 +91,14 @@ class Player(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(godotOb
         initialPosition = self.transform.origin
         orientation = playerModel.globalTransform.withOrigin(Vector3.ZERO)
         ready = true
-        if (self.getMultiplayer()?.isServer() != true) {
+        if (!self.isMultiplayerServer()) {
             self.setProcess(false)
         }
     }
 
     @OnPhysicsProcess
     fun physicsProcess(delta: Double) {
-        if (self.getMultiplayer()?.isServer() == true) {
+        if (self.isMultiplayerServer()) {
             applyInput(delta)
         } else {
             animate(currentAnimation, delta)

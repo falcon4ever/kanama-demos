@@ -12,6 +12,7 @@ import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Material
 import net.multigesture.kanama.api.MeshInstance3D
 import net.multigesture.kanama.api.Node
+import net.multigesture.kanama.api.MultiplayerAPI
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.OfflineMultiplayerPeer
 import net.multigesture.kanama.api.PackedScene
@@ -65,11 +66,38 @@ fun GodotObject.asNode3DOrNull(): Node3D? =
 fun Node.isPlayerNode(): Boolean =
     kotlinScriptInstance<Player>() != null || getName() == "Player" || getName().toLongOrNull() != null
 
-fun Node.isOfflineMultiplayer(): Boolean =
-    getMultiplayer()?.getMultiplayerPeer() is OfflineMultiplayerPeer
+// `Node.getMultiplayer()` returns an owned +1 on the SceneMultiplayer, like every RefCounted
+// getter (kanama docs/game-dev/godot-api.md#resource-ownership). GDScript's `multiplayer`
+// drops that reference at scope exit; here the release is explicit, so every read goes
+// through this helper. Before it, per-frame reads in DebugLabel/PlayerInputSynchronizer left
+// `Leaked instance: SceneMultiplayer ... Reference count: 6867` in the headless smoke.
+inline fun <R> Node.withMultiplayer(block: (MultiplayerAPI) -> R): R? {
+    val api = getMultiplayer() ?: return null
+    try {
+        return block(api)
+    } finally {
+        api.close()
+    }
+}
 
+fun Node.isMultiplayerServer(): Boolean = withMultiplayer { it.isServer() } == true
+
+fun Node.multiplayerPeers(): List<Int> = withMultiplayer { it.getPeers() } ?: emptyList()
+
+fun Node.multiplayerUniqueId(): Int = withMultiplayer { it.getUniqueId() } ?: 0
+
+fun Node.multiplayerRemoteSenderId(): Int = withMultiplayer { it.getRemoteSenderId() } ?: 0
+
+// getMultiplayerPeer() is a second owned +1 (the previous `is OfflineMultiplayerPeer` test also
+// never matched: the wrapper comes back typed as the base MultiplayerPeer, so the class is
+// checked by name here).
+fun Node.isOfflineMultiplayer(): Boolean =
+    withMultiplayer { api -> api.getMultiplayerPeer()?.use { it.isClass("OfflineMultiplayerPeer") } } == true
+
+// getSurfaceOverrideMaterial() is an owned +1; the ShaderMaterial handed back is a view over the
+// material the mesh keeps alive, so the caller must not close it.
 fun MeshInstance3D.shaderMaterialOverride(surface: Int = 0): ShaderMaterial? =
-    getSurfaceOverrideMaterial(surface)?.let { ShaderMaterial.fromResource(it) }
+    getSurfaceOverrideMaterial(surface)?.use { ShaderMaterial.fromResource(it) }
 
 fun Material?.asShaderMaterial(): ShaderMaterial? =
     this?.let { ShaderMaterial.fromResource(it) }

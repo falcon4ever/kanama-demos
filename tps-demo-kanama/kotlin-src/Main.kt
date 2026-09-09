@@ -20,7 +20,7 @@ class Main(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
         if (DisplayServer.getName() == "headless") {
             Engine.maxFps = 60
         }
-        SceneMultiplayer.fromApi(self.getMultiplayer())?.serverRelay = false
+        self.withMultiplayer { SceneMultiplayer.fromApi(it)?.serverRelay = false }
         net.multigesture.kanama.api.GD.randomize()
         goToMainMenu()
     }
@@ -28,9 +28,9 @@ class Main(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
     @RegisterFunction("go_to_main_menu")
     fun goToMainMenu() {
         val menu = TpsScenes.scene(TpsScenes.MENU) ?: return
-        self.getMultiplayer()?.getMultiplayerPeer()?.closeConnection()
+        self.withMultiplayer { api -> api.getMultiplayerPeer()?.use { it.closeConnection() } }
         // close what you create (Kanama task 61): the engine keeps its own reference once assigned.
-        TpsFactory.offlineMultiplayerPeer().use { self.getMultiplayer()?.multiplayerPeer = it }
+        TpsFactory.offlineMultiplayerPeer().use { peer -> self.withMultiplayer { it.multiplayerPeer = peer } }
         changeSceneToPacked(menu)
     }
 

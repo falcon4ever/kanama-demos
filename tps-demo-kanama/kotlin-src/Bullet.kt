@@ -30,7 +30,7 @@ class Bullet(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(godotOb
         animationPlayer = self.requireAs("AnimationPlayer", ::AnimationPlayer)
         collisionShape = self.requireAs("CollisionShape3D", ::CollisionShape3D)
         omniLight = self.requireAs("OmniLight3D", ::OmniLight3D)
-        if (self.getMultiplayer()?.isServer() != true) {
+        if (!self.isMultiplayerServer()) {
             self.setPhysicsProcess(false)
             collisionShape.disabled = true
         }
@@ -47,18 +47,24 @@ class Bullet(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(godotOb
         val displacement = -(self.transform.basis.z * (delta * BULLET_VELOCITY))
         val collision = self.moveAndCollide(displacement)
         if (collision != null) {
-            hit = true
-            val collider = collision.getCollider()
-            val node = collider?.asNode3DOrNull()
-            if (node != null) {
-                MainThread.postNextFrame {
-                    if (node.isQueuedForDeletion() || !node.isInsideTree()) return@postNextFrame
-                    node.kotlinScriptInstance<RedRobot>()?.hit()
-                        ?: node.kotlinScriptInstance<Player>()?.hit()
+            // moveAndCollide() hands back an owned KinematicCollision3D (+1) on every physics
+            // tick; release it once read or Godot reports one leaked instance per tick at exit.
+            try {
+                hit = true
+                val collider = collision.getCollider()
+                val node = collider?.asNode3DOrNull()
+                if (node != null) {
+                    MainThread.postNextFrame {
+                        if (node.isQueuedForDeletion() || !node.isInsideTree()) return@postNextFrame
+                        node.kotlinScriptInstance<RedRobot>()?.hit()
+                            ?: node.kotlinScriptInstance<Player>()?.hit()
+                    }
                 }
+                collisionShape.disabled = true
+                explode()
+            } finally {
+                collision.close()
             }
-            collisionShape.disabled = true
-            explode()
         }
     }
 
@@ -78,7 +84,7 @@ class Bullet(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(godotOb
 
     @RegisterFunction
     fun destroy() {
-        if (self.getMultiplayer()?.isServer() == true) {
+        if (self.isMultiplayerServer()) {
             self.queueFree()
         }
     }

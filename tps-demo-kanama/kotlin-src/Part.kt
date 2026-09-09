@@ -64,15 +64,24 @@ class Part(godotObject: MemorySegment) : KanamaScript<RigidBody3D>(godotObject, 
         if (!OS.hasFeature("dedicated_server")) {
             val mesh = self.requireAs("Model", ::Node3D).getChild(0)?.let { MeshInstance3D(it.handle) }
             meshInstance = mesh
-            val duplicated = Material.fromResource(mesh?.mesh?.surfaceGetMaterial(0)?.duplicate())
-            material = duplicated
-            if (duplicated != null) {
-                mesh?.mesh?.surfaceSetMaterial(0, duplicated)
-                val nextPassResource = duplicated.nextPass?.duplicate()
-                duplicated.nextPass = Material.fromResource(nextPassResource)
-                if (nextPassResource != null) {
-                    fadeMaterial = ShaderMaterial.fromResource(nextPassResource)
+            // `mesh.mesh`, `surfaceGetMaterial(0)` and `nextPass` are owned +1 read-backs
+            // (kanama docs/game-dev/godot-api.md#resource-ownership): read once, close once.
+            // The two duplicate() results are ours for the part's lifetime; the `material` /
+            // `fadeMaterial` views over them are what releaseDuplicatedMaterials() closes.
+            val sourceMesh = mesh?.mesh
+            try {
+                val duplicated = sourceMesh?.surfaceGetMaterial(0)?.use { Material.fromResource(it.duplicate()) }
+                material = duplicated
+                if (duplicated != null) {
+                    sourceMesh.surfaceSetMaterial(0, duplicated)
+                    val nextPassResource = duplicated.nextPass?.use { it.duplicate() }
+                    duplicated.nextPass = Material.fromResource(nextPassResource)
+                    if (nextPassResource != null) {
+                        fadeMaterial = ShaderMaterial.fromResource(nextPassResource)
+                    }
                 }
+            } finally {
+                sourceMesh?.close()
             }
         }
     }
@@ -81,7 +90,7 @@ class Part(godotObject: MemorySegment) : KanamaScript<RigidBody3D>(godotObject, 
     fun explode() {
         if (exploded || self.isQueuedForDeletion() || !self.isInsideTree()) return
         exploded = true
-        if (self.getMultiplayer()?.isServer() != true) return
+        if (!self.isMultiplayerServer()) return
         multiplayerSynchronizer.publicVisibility = true
         self.freeze = false
         col1.disabled = false
@@ -123,11 +132,10 @@ class Part(godotObject: MemorySegment) : KanamaScript<RigidBody3D>(godotObject, 
         self.freeze = true
         self.linearVelocity = Vector3.ZERO
         self.angularVelocity = Vector3.ZERO
-        meshInstance?.mesh?.surfaceSetMaterial(0, null)
+        meshInstance?.mesh?.use { it.surfaceSetMaterial(0, null) }
         meshInstance = null
         self.hide()
-        material = null
-        fadeMaterial = null
+        releaseDuplicatedMaterials()
         if (System.getenv("KANAMA_TPS_SMOKE_QUIT_AFTER_PARTS_DESTROYED") == "1") {
             net.multigesture.kanama.api.GD.print("TPS smoke part destroyed")
             kanamaScope.launch {
@@ -143,8 +151,16 @@ class Part(godotObject: MemorySegment) : KanamaScript<RigidBody3D>(godotObject, 
         kanamaScope.cancel()
         self.setProcess(false)
         disableCollision()
+        releaseDuplicatedMaterials()
         meshInstance = null
+    }
+
+    // The mesh keeps its own reference to the duplicated surface material and to its nextPass;
+    // closing here drops only the +1 each duplicate() handed us (same shape as the Web twin).
+    private fun releaseDuplicatedMaterials() {
+        fadeMaterial?.close()
         fadeMaterial = null
+        material?.close()
         material = null
     }
 

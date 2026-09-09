@@ -8,7 +8,6 @@ import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Label
-import net.multigesture.kanama.api.ManualGodotLifetimeApi
 import net.multigesture.kanama.api.Node2D
 import net.multigesture.kanama.api.ResourceLoader
 import net.multigesture.kanama.api.Sprite2D
@@ -18,7 +17,6 @@ import net.multigesture.kanama.types.Vector2
 import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Node2D")
-@OptIn(ManualGodotLifetimeApi::class)
 class BunnymarkV2Kanama(godotObject: MemorySegment) : KanamaScript<Node2D>(godotObject, ::Node2D) {
     private val gravity = 500.0
     private val bunnySpeeds = mutableListOf<Vector2>()

@@ -9,6 +9,7 @@ import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.AnimationMixer
 import net.multigesture.kanama.api.AnimationNodeStateMachinePlayback
 import net.multigesture.kanama.api.BaseMaterial3D
+import net.multigesture.kanama.api.Material
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.MeshInstance3D
@@ -28,6 +29,9 @@ class SophiaSkin(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject,
     private lateinit var stateMachine: AnimationNodeStateMachinePlayback
     private lateinit var blinkTimer: Timer
     private lateinit var closedEyesTimer: Timer
+    // getSurfaceOverrideMaterial() is an owned +1 (kanama task 97): kept here for the skin's
+    // lifetime and closed in exitTree; eyeMat is the typed view over the same material.
+    private var eyeMaterial: Material? = null
     private var eyeMat: BaseMaterial3D? = null
     private var runTilt = 0.0
 
@@ -38,7 +42,8 @@ class SophiaSkin(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject,
         blinkTimer = self.requireAs("BlinkTimer", ::Timer)
         closedEyesTimer = self.requireAs("ClosedEyesTimer", ::Timer)
         val sophiaMesh = self.getAsOrNull("sophia/rig/Skeleton3D/Sophia", ::MeshInstance3D)
-        eyeMat = sophiaMesh?.getSurfaceOverrideMaterial(2)?.let { BaseMaterial3D.fromMaterial(it) }
+        eyeMaterial = sophiaMesh?.getSurfaceOverrideMaterial(2)
+        eyeMat = eyeMaterial?.let { BaseMaterial3D.fromMaterial(it) }
 
         blinkTimer.signal(Timer.Signals.timeout).connect(self, argumentCount = 0) {
             eyeMat?.setUv1Offset(Vector3(0.0, 0.5, 0.0))
@@ -58,6 +63,8 @@ class SophiaSkin(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject,
     @OnExitTree
     fun exitTree() {
         eyeMat = null
+        eyeMaterial?.close()
+        eyeMaterial = null
     }
 
     @RegisterFunction("set_blink")

@@ -63,6 +63,7 @@ class Smoke(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::No
         check(assignedCrosshair != null) {
             "FPS smoke expected Crosshair.texture to remain set after Player.change_weapon"
         }
+        assignedCrosshair.close() // owned +1 read-back; the Crosshair node keeps its own
 
         stopAudio()
         self.getTree().quit()

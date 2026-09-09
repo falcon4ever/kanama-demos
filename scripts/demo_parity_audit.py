@@ -22,16 +22,25 @@ UNLOAD_THEN_SCOPED_LAUNCH_RE = re.compile(
     r"SceneTree\.unloadCurrentScene\(\)(?P<body>.{0,800}?)\bkanamaScope\.launch\s*\{",
     re.DOTALL,
 )
-BORROWED_ANIMATION_CLOSE_RE = re.compile(
-    r"\.getAnimation\s*\([^)]*\)\s*\??\.\s*(?:use\s*\{|close\s*\()",
+# Ownership rules (Kanama task 97). The one rule lives in kanama
+# docs/game-dev/godot-api.md "Resource Ownership": every RefCounted-typed return —
+# create(), ResourceLoader.load…, and plain getters such as getAnimation()/getMesh() —
+# is an owned +1 the caller closes. This audit therefore never flags closing an owned
+# return (the regexes that did — BORROWED_ANIMATION_CLOSE_RE, ACTIVE_TWEEN_SCHEDULE_CLOSE_RE,
+# GAMEPLAY_RESOURCE_CLOSE_RE — taught the opposite of the docs and forced real leaks).
+# What it still rejects is the two cases the docs forbid:
+#   - closing a *borrowed view* the script minted itself over a handle it already had
+#     (Resource.fromHandle / X.fromObject), which releases a reference never taken;
+#   - closing a *live Tween* (createTween(), or a field named after one), which must be
+#     kill()ed through the Godot lifecycle instead. A Tweener is not a Tween: the
+#     PropertyTweener/CallbackTweener a tweenProperty()/tweenCallback() call hands back is
+#     an owned return and closing it is correct.
+BORROWED_VIEW_CLOSE_RE = re.compile(
+    r"\.from(?:Handle|Object)\s*\((?:[^()]|\([^()]*\))*\)\s*\??\s*\.\s*(?:use\s*\{|close\s*\()",
     re.DOTALL,
 )
-ACTIVE_TWEEN_SCHEDULE_CLOSE_RE = re.compile(
-    r"\.tween(?:Property|Method|Callback)\s*\([^)]*\)\s*\??\s*(?:\.let\s*\{[^}]*?\bclose\s*\(\)|\.close\s*\()",
-    re.DOTALL,
-)
-GAMEPLAY_RESOURCE_CLOSE_RE = re.compile(
-    r"\b(?P<name>\w*(?:tween|mesh|scene|stream|material|texture|animation|resource)\w*)\??\s*\.close\s*\(",
+LIVE_TWEEN_CLOSE_RE = re.compile(
+    r"(?:\.createTween\s*\([^)]*\)|\b(?P<name>(?!\w*tweener)\w*tween\w*))\??\s*\.\s*(?:use\s*\{|close\s*\()",
     re.IGNORECASE,
 )
 
@@ -73,24 +82,6 @@ ALLOWED_STRING_CONNECTS = {
     ("Starter-Kit-Match3/kotlin-src/Main.kt", "center_grid_on_screen"),
     # web/ mirror of the accepted Match3 port above.
     ("Starter-Kit-Match3/web/kotlin-src/Main.kt", "center_grid_on_screen"),
-}
-
-ALLOWED_RESOURCE_CLOSES = {
-    # The Bunnymark harness owns these ResourceLoader-created texture wrappers
-    # for the benchmark scene lifetime and releases them on exit.
-    ("Bunnymark/kotlin-src/BunnymarkV1DrawTextureKanama.kt", "bunnyTexture"),
-    ("Bunnymark/kotlin-src/BunnymarkV1SpritesKanama.kt", "bunnyTexture"),
-    ("Bunnymark/kotlin-src/BunnymarkV2Kanama.kt", "bunnyTexture"),
-    ("Bunnymark/kotlin-src/BunnymarkV3Kanama.kt", "bunnyTexture"),
-    # web/ mirror: the Bunnymark web port owns bunnyTexture the same way (a
-    # caller-owned ResourceLoader wrapper released on exit_tree) — this is the
-    # legitimate "close what you create" interop case, not a gameplay leak.
-    ("Bunnymark/web/kotlin-src/BunnymarkV1SpritesKanama.kt", "bunnyTexture"),
-    # City-Builder owns the MeshLibrary it creates via MeshLibrary.create() and
-    # hands to the GridMap; it releases that owning reference in exit_tree after
-    # clearing the GridMap's ref — the "close what you create" case (Kanama task 61
-    # / issue #91), not a gameplay leak. The GridMap keeps its own reference.
-    ("Starter-Kit-City-Builder/kotlin-src/Builder.kt", "meshLibrary"),
 }
 
 ALLOWED_SMOKE_ENV_FILES = {
@@ -194,37 +185,22 @@ def audit_file(path: Path, root: Path) -> list[Finding]:
             "work scheduled after SceneTree.unloadCurrentScene() must not use scene-owned kanamaScope; use MainThread.postAfterFrames",
         )
 
-    for match in BORROWED_ANIMATION_CLOSE_RE.finditer(text):
+    for match in BORROWED_VIEW_CLOSE_RE.finditer(text):
         add_finding(
             findings,
             rel,
             text,
             match.start(),
-            "AnimationPlayer.getAnimation() returns a scene-owned animation; do not close/use-wrap it to silence shutdown warnings",
+            "fromHandle()/fromObject() mint a borrowed view over a handle you already hold; closing it releases a reference you never took (kanama docs/game-dev/godot-api.md#resource-ownership)",
         )
 
-    for match in ACTIVE_TWEEN_SCHEDULE_CLOSE_RE.finditer(text):
-        if smoke:
-            continue
+    for match in LIVE_TWEEN_CLOSE_RE.finditer(text):
         add_finding(
             findings,
             rel,
             text,
             match.start(),
-            "active Tween/Tweener returned by tweenProperty/tweenMethod/tweenCallback must not be closed immediately; let Godot run it and close only after finish/kill if tracked",
-        )
-
-    for match in GAMEPLAY_RESOURCE_CLOSE_RE.finditer(text):
-        if smoke:
-            continue
-        if (rel, match.group("name")) in ALLOWED_RESOURCE_CLOSES:
-            continue
-        add_finding(
-            findings,
-            rel,
-            text,
-            match.start(),
-            "gameplay scripts should not close resource/tween-like Godot values; use Godot lifecycle APIs or add a narrow audit allowlist for caller-owned interop values",
+            "a live Tween is engine-owned: kill() it, do not close() it (kanama docs/game-dev/godot-api.md#resource-ownership)",
         )
 
     return findings
