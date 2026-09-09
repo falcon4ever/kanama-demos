@@ -3,6 +3,7 @@ package thirdperson
 import net.multigesture.kanama.annotations.OnInput
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.InputEventKey
@@ -11,10 +12,9 @@ import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.OS
 import net.multigesture.kanama.api.Window
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Node")
-class FullScreenHandler(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node) {
+class FullScreenHandler(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
 
     // Upstream sets this in _init() unconditionally (full_screen_handler.gd), so the handler
     // keeps processing while the tree is paused -- which is the whole point: F11 / alt-enter
@@ -27,7 +27,9 @@ class FullScreenHandler(godotObject: MemorySegment) : KanamaScript<Node>(godotOb
 
     @OnInput
     fun input(event: GodotObject) {
-        if (OS.hasFeature("HTML5")) {
+        // Godot 4 spells the browser feature tag "web" (the Godot-3 "HTML5" tag is false on every
+        // 4.x platform, so this branch never ran anywhere). Desktop is unaffected: "web" is false there.
+        if (OS.hasFeature("web")) {
             val mouseButton = InputEventMouseButton.from(event) ?: return
             if (mouseButton.isPressed() && Input.getMouseMode() != Input.MOUSE_MODE_CAPTURED) {
                 Input.setMouseMode(Input.MOUSE_MODE_CAPTURED)
