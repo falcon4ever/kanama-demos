@@ -5,6 +5,10 @@ This is intentionally conservative: it fails on new risky patterns, but
 allowlists places where the original demos are genuinely dynamic, such as
 Godot-style damage/squash duck typing and smoke-only probes.
 
+`./gradlew check` runs this audit (with the two Kanama guardrail audits) on every
+push and pull request through `.github/workflows/check.yml`; nothing here needs
+Godot or compiled scripts.
+
 TEMPORARY (delete when kanama-demos#46 merges): on main this audit still reports
 `tps-demo-kanama/web/kotlin-src/Part.kt:147,149`: exit_tree closes the two materials
 the script duplicated and owns. That is the Kanama resource-ownership rule applied
