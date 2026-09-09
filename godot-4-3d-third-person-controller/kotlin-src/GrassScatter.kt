@@ -31,16 +31,22 @@ class GrassScatter(godotObject: MemorySegment) : KanamaScript<MultiMeshInstance3
     @OnReady
     fun ready() {
         val targetMeshNode = self.requireAs(targetMeshPath, ::MeshInstance3D)
+        // getMesh() is an owned +1 (kanama docs/game-dev/godot-api.md#resource-ownership);
+        // ArrayMesh.fromResource() below is a view over the same mesh, so only `mesh` is closed.
         val mesh = targetMeshNode.getMesh() ?: return
-        val multimesh = self.multimesh
-        if (multimesh == null) return
+        try {
+            val multimesh = self.multimesh
+            if (multimesh == null) return
 
-        val arrayMesh = ArrayMesh.fromResource(mesh) ?: return
-        MeshDataTool.create().use { meshDataTool ->
-            meshDataTool.createFromSurface(arrayMesh, 0)
-            collectWalkableTriangles(meshDataTool)
-            if (triangles.isEmpty()) return
-            scatterInstances(meshDataTool, multimesh, targetMeshNode)
+            val arrayMesh = ArrayMesh.fromResource(mesh) ?: return
+            MeshDataTool.create().use { meshDataTool ->
+                meshDataTool.createFromSurface(arrayMesh, 0)
+                collectWalkableTriangles(meshDataTool)
+                if (triangles.isEmpty()) return
+                scatterInstances(meshDataTool, multimesh, targetMeshNode)
+            }
+        } finally {
+            mesh.close()
         }
     }
 

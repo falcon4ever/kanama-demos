@@ -60,7 +60,7 @@ class Level(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::No
         }
         GD.print("TPS Level ready: GI configured")
 
-        if (self.getMultiplayer()?.isServer() == true) {
+        if (self.isMultiplayerServer()) {
             GD.print("TPS Level ready: server spawning robots")
             for (child in robotSpawnPoints.getChildren()) {
                 spawnRobot(Node3D(child.handle))
@@ -68,13 +68,15 @@ class Level(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::No
             val spawnPoints = playerSpawnPoints.getChildren().map { Marker3D(it.handle) }.shuffled()
             GD.print("TPS Level ready: adding local player")
             addPlayer(1, spawnPoints.firstOrNull())
-            for ((index, id) in (self.getMultiplayer()?.getPeers() ?: emptyList()).withIndex()) {
+            for ((index, id) in self.multiplayerPeers().withIndex()) {
                 addPlayer(id.toLong(), spawnPoints.getOrNull(index + 1))
             }
-            self.getMultiplayer()?.signal(net.multigesture.kanama.api.MultiplayerAPI.Signals.peerConnected)
-                ?.connect(self, argumentCount = 1) { args -> addPlayer((args.firstOrNull() as Number).toLong(), null) }
-            self.getMultiplayer()?.signal(net.multigesture.kanama.api.MultiplayerAPI.Signals.peerDisconnected)
-                ?.connect(self, argumentCount = 1) { args -> delPlayer((args.firstOrNull() as Number).toLong()) }
+            self.withMultiplayer { api ->
+                api.signal(net.multigesture.kanama.api.MultiplayerAPI.Signals.peerConnected)
+                    .connect(self, argumentCount = 1) { args -> addPlayer((args.firstOrNull() as Number).toLong(), null) }
+                api.signal(net.multigesture.kanama.api.MultiplayerAPI.Signals.peerDisconnected)
+                    .connect(self, argumentCount = 1) { args -> delPlayer((args.firstOrNull() as Number).toLong()) }
+            }
             if (!shouldQuitAfterReady) {
                 runSmokeRobotDeathCheckIfRequested()
             }

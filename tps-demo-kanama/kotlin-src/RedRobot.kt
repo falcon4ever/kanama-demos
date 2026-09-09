@@ -26,7 +26,6 @@ import net.multigesture.kanama.api.OS
 import net.multigesture.kanama.api.PhysicsRayQueryParameters3D
 import net.multigesture.kanama.api.RayCast3D
 import net.multigesture.kanama.api.RigidBody3D
-import net.multigesture.kanama.api.ShaderMaterial
 import net.multigesture.kanama.api.Timer
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.types.Basis
@@ -147,7 +146,7 @@ class RedRobot(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(godot
 		deathHeadPart.explode()
 		explosionSound.play()
 		self.emitSignal("exploded")
-		if (self.getMultiplayer()?.isServer() == true) {
+		if (self.isMultiplayerServer()) {
 				kanamaScope.launch {
 					self.getTree().createTimer(10.0)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
 					self.queueFree()
@@ -224,7 +223,7 @@ class RedRobot(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(godot
 	@OnPhysicsProcess
 	fun physicsProcess(delta: Double) {
 		if (dead) return
-		if (self.getMultiplayer()?.isServer() != true) {
+		if (!self.isMultiplayerServer()) {
 			animate(delta)
 			return
 		}
@@ -303,7 +302,7 @@ class RedRobot(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(godot
 	@RegisterFunction("_clip_ray")
 	fun clipRay(length: Double) {
 		if (OS.hasFeature("dedicated_server")) return
-		val material = rayMesh.getSurfaceOverrideMaterial(0)?.let { ShaderMaterial.fromResource(it) } ?: return
+		val material = rayMesh.shaderMaterialOverride() ?: return
 		material.setShaderParameter("clip", length + rayMesh.position.z)
 	}
 

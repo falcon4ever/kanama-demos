@@ -76,7 +76,11 @@ object DemoScenes {
         }
         bulletPool.clear()
         pooledBulletHandles.clear()
+        // ResourceLoader.load… results are owned +1s; clearing the maps alone kept every cached
+        // scene (and its sub-resources) alive until process exit.
+        audioCache.values.forEach { it.close() }
         audioCache.clear()
+        sceneCache.values.forEach { it.close() }
         sceneCache.clear()
     }
 

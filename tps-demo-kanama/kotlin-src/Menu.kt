@@ -86,18 +86,20 @@ class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
         loadingDoneTimer.signal(Timer.Signals.timeout).connect(self, argumentCount = 0) {
             onLoadingDoneTimerTimeout()
         }
-        self.getMultiplayer()?.signal(MultiplayerAPI.Signals.connectedToServer)
-            ?.connect(self, argumentCount = 0) { onConnectedToServer() }
-        self.getMultiplayer()?.signal(MultiplayerAPI.Signals.connectionFailed)
-            ?.connect(self, argumentCount = 0) { showConnectionFailure("Could not reach the host. Check the address, port, and Wi-Fi network.") }
-        self.getMultiplayer()?.signal(MultiplayerAPI.Signals.serverDisconnected)
-            ?.connect(self, argumentCount = 0) {
-                if (joinedLobby) showConnectionFailure("The host disconnected.")
-            }
-        self.getMultiplayer()?.signal(MultiplayerAPI.Signals.peerConnected)
-            ?.connect(self, argumentCount = 1) { args -> onLobbyPeerConnected((args.firstOrNull() as Number).toLong()) }
-        self.getMultiplayer()?.signal(MultiplayerAPI.Signals.peerDisconnected)
-            ?.connect(self, argumentCount = 1) { args -> onLobbyPeerDisconnected((args.firstOrNull() as Number).toLong()) }
+        self.withMultiplayer { api ->
+            api.signal(MultiplayerAPI.Signals.connectedToServer)
+                .connect(self, argumentCount = 0) { onConnectedToServer() }
+            api.signal(MultiplayerAPI.Signals.connectionFailed)
+                .connect(self, argumentCount = 0) { showConnectionFailure("Could not reach the host. Check the address, port, and Wi-Fi network.") }
+            api.signal(MultiplayerAPI.Signals.serverDisconnected)
+                .connect(self, argumentCount = 0) {
+                    if (joinedLobby) showConnectionFailure("The host disconnected.")
+                }
+            api.signal(MultiplayerAPI.Signals.peerConnected)
+                .connect(self, argumentCount = 1) { args -> onLobbyPeerConnected((args.firstOrNull() as Number).toLong()) }
+            api.signal(MultiplayerAPI.Signals.peerDisconnected)
+                .connect(self, argumentCount = 1) { args -> onLobbyPeerDisconnected((args.firstOrNull() as Number).toLong()) }
+        }
 
         registerButtons()
         SafeArea.applyInsets(self.requireAs("UI", ::Control))
@@ -244,7 +246,7 @@ class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
         loadedLevelScene = scene
         if (!joinedLobby) {
             enterLoadedLevel()
-        } else if (self.getMultiplayer()?.isServer() == true) {
+        } else if (self.isMultiplayerServer()) {
             readyPeers += 1L
             enterLobbyWhenReady()
         } else {
@@ -373,8 +375,8 @@ class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
                 readyPeers.clear()
                 onlineHost.disabled = true
                 onlineStatus.text = "Starting when every player finishes loading..."
-                GD.print("TPS lobby start requested peers=${self.getMultiplayer()?.getPeers()?.size ?: 0}")
-                self.getMultiplayer()?.getPeers()?.forEach { MenuRpcs.rpcIdPrepareGame(this, it.toLong()) }
+                GD.print("TPS lobby start requested peers=${self.multiplayerPeers().size}")
+                self.multiplayerPeers().forEach { MenuRpcs.rpcIdPrepareGame(this, it.toLong()) }
                 prepareGame()
             }
             return
@@ -389,7 +391,7 @@ class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
             return
         }
         replacePeer(nextPeer)
-        self.getMultiplayer()?.multiplayerPeer = peer
+        self.withMultiplayer { it.multiplayerPeer = peer }
         connectingAsClient = false
         joinedLobby = true
         hostingLobby = true
@@ -424,7 +426,7 @@ class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
         setOnlineBusy(true)
         onlineStatus.text = "Connecting to $address:$port..."
         GD.print("TPS lobby connecting address=$address port=$port")
-        self.getMultiplayer()?.multiplayerPeer = peer
+        self.withMultiplayer { it.multiplayerPeer = peer }
     }
 
     private fun onConnectedToServer() {
@@ -458,7 +460,7 @@ class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
     private fun resetOnlinePeer() {
         peer.closeConnection()
         replacePeer(TpsFactory.offlineMultiplayerPeer())
-        self.getMultiplayer()?.multiplayerPeer = peer
+        self.withMultiplayer { it.multiplayerPeer = peer }
         connectingAsClient = false
         joinedLobby = false
         hostingLobby = false
@@ -478,7 +480,7 @@ class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
         if (lobbyStarting) {
             MenuRpcs.rpcIdPrepareGame(this, id)
         } else {
-            val players = (self.getMultiplayer()?.getPeers()?.size ?: 0) + 1
+            val players = (self.multiplayerPeers().size) + 1
             onlineStatus.text = "$players players connected. Share ${preferredLanAddress() ?: "this device"}:${onlinePort.value.toInt()}, or tap Start Game."
         }
     }
@@ -505,7 +507,7 @@ class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
     @Rpc(mode = RpcMode.ANY_PEER)
     fun readyForGame() {
         if (!hostingLobby || !lobbyStarting) return
-        val sender = self.getMultiplayer()?.getRemoteSenderId()?.toLong() ?: 0L
+        val sender = self.multiplayerRemoteSenderId().toLong()
         if (sender <= 0L) return
         readyPeers += sender
         GD.print("TPS lobby peer ready id=$sender")
@@ -516,14 +518,14 @@ class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
         if (!hostingLobby || loadedLevelScene == null) return
         val expected = buildSet {
             add(1L)
-            self.getMultiplayer()?.getPeers()?.forEach { add(it.toLong()) }
+            self.multiplayerPeers().forEach { add(it.toLong()) }
         }
         if (!readyPeers.containsAll(expected)) {
             GD.print("TPS lobby waiting ready=${readyPeers.size}/${expected.size}")
             return
         }
         GD.print("TPS lobby all players ready count=${expected.size}")
-        self.getMultiplayer()?.getPeers()?.forEach { MenuRpcs.rpcIdEnterGame(this, it.toLong()) }
+        self.multiplayerPeers().forEach { MenuRpcs.rpcIdEnterGame(this, it.toLong()) }
         enterGame()
     }
 
@@ -537,7 +539,7 @@ class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node)
         if (levelSceneChangeStarted) return
         val scene = loadedLevelScene ?: return
         levelSceneChangeStarted = true
-        self.getMultiplayer()?.multiplayerPeer = peer
+        self.withMultiplayer { it.multiplayerPeer = peer }
         GD.print("TPS calling parent replace_main_scene for ${TpsScenes.LEVEL}")
         self.getParent()?.callDeferred("replace_main_scene", scene)
     }
