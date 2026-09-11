@@ -32,7 +32,8 @@ Optional environment:
       (devicectl --console) into <output-dir>/console.log and FAIL when it shows a crash
       signature (KANAMA_IOS_CONSOLE_FAIL_PATTERN, default: app terminated by a signal / FATAL)
       or when no `[kanama][ios]` line arrived in the window. 0 (default): launch-only, as before.
-      The app keeps running on the device either way.
+      Stopping the stream terminates the app (devicectl sends SIGTERM); the verdict is taken from
+      the log as it stood before that.
 EOF
 }
 
@@ -182,16 +183,21 @@ else
       break  # the stream ended on its own: the app exited
     fi
   done
+  # Judge the log as it stood BEFORE the stream is stopped: stopping devicectl terminates the
+  # app with SIGTERM and it then reports "App terminated due to signal 15." — our own doing, not
+  # a crash (the first validation run failed every demo on exactly that line).
+  console_lines="$(wc -l <"$CONSOLE_LOG" | tr -d ' ')"
+  VERDICT_LOG="$OUTPUT_DIR/console.window.log"
+  head -n "$console_lines" "$CONSOLE_LOG" >"$VERDICT_LOG"
   kill "$console_pid" >/dev/null 2>&1 || true
   wait "$console_pid" >/dev/null 2>&1 || true
-  console_lines="$(wc -l <"$CONSOLE_LOG" | tr -d ' ')"
-  if grep -q -E "$CONSOLE_FAIL_PATTERN" "$CONSOLE_LOG"; then
+  if grep -q -E "$CONSOLE_FAIL_PATTERN" "$VERDICT_LOG"; then
     echo "[ios_device_run] console: crash signature within ${waited}s (${console_lines} lines): $CONSOLE_LOG"
-    grep -n -E "$CONSOLE_FAIL_PATTERN" "$CONSOLE_LOG" | head -5 | sed 's/^/[ios_device_run]   /'
+    grep -n -E "$CONSOLE_FAIL_PATTERN" "$VERDICT_LOG" | head -5 | sed 's/^/[ios_device_run]   /'
     echo "[ios_device_run] FAIL"
     exit 1
   fi
-  if ! grep -q '\[kanama\]\[ios\]' "$CONSOLE_LOG"; then
+  if ! grep -q '\[kanama\]\[ios\]' "$VERDICT_LOG"; then
     echo "[ios_device_run] console: no [kanama][ios] line in ${waited}s (${console_lines} lines) — the runtime never reported: $CONSOLE_LOG"
     echo "[ios_device_run] FAIL"
     exit 1
