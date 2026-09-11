@@ -20,6 +20,14 @@ Required environment:
 Optional environment:
   KANAMA_ROOT=/path/to/kanama
   DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+  KANAMA_IOS_RUN_STAGE=all|build|launch
+      all    (default) build, install and launch.
+      build  install the addon, export and build the app; stop before touching the device.
+             Lets a caller build several demos concurrently (one KANAMA_ROOT each) and
+             serialize the device steps afterwards.
+      launch install and launch the app a previous `build` stage left in the output dir.
+  KANAMA_IOS_RUN_GRADLE_ARGS="..."  extra arguments for the installIosAddon Gradle call
+      (e.g. --no-daemon -Pkotlin.compiler.execution.strategy=in-process for concurrent builds).
 EOF
 }
 
@@ -63,15 +71,26 @@ fi
 
 DEMO_DIR="$(cd "$DEMO_DIR" && pwd)"
 OUTPUT_DIR="$(mkdir -p "$OUTPUT_DIR" && cd "$OUTPUT_DIR" && pwd)"
+RUN_STAGE="${KANAMA_IOS_RUN_STAGE:-all}"
+case "$RUN_STAGE" in
+  all|build|launch) ;;
+  *)
+    echo "[ios_device_run] KANAMA_IOS_RUN_STAGE must be all, build or launch (got: $RUN_STAGE)." >&2
+    exit 2
+    ;;
+esac
 IPA_PATH="$OUTPUT_DIR/$APP_NAME.ipa"
 XCODE_PROJECT="$OUTPUT_DIR/$APP_NAME.xcodeproj"
 DERIVED_DATA_DIR="$OUTPUT_DIR/DerivedData"
 APP_PATH="$DERIVED_DATA_DIR/Build/Products/Debug-iphoneos/$APP_NAME.app"
 
+if [[ "$RUN_STAGE" != "launch" ]]; then
 echo "[ios_device_run] installing Kanama iOS addon: $DEMO_DIR"
 (
   cd "$KANAMA_ROOT"
+  # shellcheck disable=SC2086 # KANAMA_IOS_RUN_GRADLE_ARGS is deliberately word-split.
   DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" ./gradlew \
+    ${KANAMA_IOS_RUN_GRADLE_ARGS:-} \
     installIosAddon \
     "-PkanamaIosProjectDir=$DEMO_DIR" \
     "-PkanamaIosProjectScriptsDir=$DEMO_DIR/kotlin-src" \
@@ -102,6 +121,17 @@ DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcodebuild \
 
 if [[ ! -d "$APP_PATH" ]]; then
   echo "[ios_device_run] Expected built app was not produced: $APP_PATH" >&2
+  exit 1
+fi
+fi  # RUN_STAGE != launch
+
+if [[ "$RUN_STAGE" == "build" ]]; then
+  echo "[ios_device_run] built app (stage=build, device untouched): $APP_PATH"
+  echo "[ios_device_run] PASS"
+  exit 0
+fi
+if [[ ! -d "$APP_PATH" ]]; then
+  echo "[ios_device_run] stage=launch but no built app at: $APP_PATH (run the build stage first)" >&2
   exit 1
 fi
 
