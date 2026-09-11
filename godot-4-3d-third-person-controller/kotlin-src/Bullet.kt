@@ -8,14 +8,14 @@ import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.Curve
 import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.types.Vector3
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Node3D")
-class Bullet(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::Node3D) {
+class Bullet(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
 
     @ScriptProperty
     var scaleDecay: Curve? = null
@@ -104,7 +104,7 @@ class Bullet(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::N
     }
 
     private fun onBodyEntered(body: Node3D) {
-        if (shooter?.handle?.address() == body.handle.address()) return
+        if (shooter?.isSameInstance(body) == true) return
 
         if (body.isInGroup("damageables")) {
             val impactPoint = self.globalPosition - body.globalPosition
