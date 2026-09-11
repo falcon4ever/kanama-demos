@@ -28,7 +28,7 @@ env:
   # for the same reason Kanama's web.yml pins DEMOS_REF: an unpinned checkout lets an
   # unrelated Kanama commit redden every demos PR. Bump it deliberately when either
   # guardrail script changes (see AGENTS.md, "Update For A New Kanama Release").
-  KANAMA_REF: 2d4777ec73791371b43300d6735bbefca471e538
+  KANAMA_REF: c4b93984919837e7ec63712cf68167fa17a922a6
 
 jobs:
   check:
