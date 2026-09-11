@@ -48,6 +48,15 @@ object DemoScenes {
     scene(path)
   }
 
+  /**
+   * Shared-file entry (the converged DemoPage calls `warmUp(owner)` like desktop): Web has no
+   * instance warm-up, so this pools the bullets against the owner and nothing else. `null` warms
+   * nothing (desktop's non-mobile branch), which the shared DemoPage never passes on Web.
+   */
+  fun warmUp(owner: Node?) {
+    owner?.let { warmUpBulletPool(it) }
+  }
+
   fun launchBullet(
     parent: Node?,
     shooter: Node,

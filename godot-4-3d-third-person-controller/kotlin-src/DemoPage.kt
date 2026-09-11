@@ -8,6 +8,7 @@ import net.multigesture.kanama.api.AudioStreamPlayer
 import net.multigesture.kanama.api.BaseButton
 import net.multigesture.kanama.api.Button
 import net.multigesture.kanama.api.Control
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.KanamaScript
@@ -18,10 +19,9 @@ import net.multigesture.kanama.api.SceneTree
 import net.multigesture.kanama.api.Tween
 import net.multigesture.kanama.api.WorldEnvironment
 import net.multigesture.kanama.types.Color
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Node")
-class DemoPage(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node) {
+class DemoPage(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
     private lateinit var demoPageRoot: Control
     private lateinit var resumeButton: Button
     private lateinit var exitButton: Button
@@ -42,7 +42,9 @@ class DemoPage(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::N
     @OnReady
     fun ready() {
         self.getTree().setPaused(true)
-        DemoScenes.warmUp(if (shouldWarmUpInstances()) self else null)
+        // Desktop warms the enemy/player instances only where the first instantiation hitches
+        // (mobile); Web always warms its bullet pool against this page, as its former override did.
+        DemoScenes.warmUp(if (shouldWarmUpInstances() || isWeb()) self else null)
 
         demoMouseMode = Input.getMouseMode()
         Input.setMouseMode(Input.MOUSE_MODE_VISIBLE)
@@ -136,6 +138,11 @@ class DemoPage(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::N
 
     private fun exitDemo() {
         if (exiting) return
+        if (isWeb()) {
+            // A browser page has no app to quit: Exit just resumes gameplay (the former Web override).
+            resumeDemo()
+            return
+        }
         exiting = true
         clearPageTween()
         releaseWarmup()
@@ -196,8 +203,16 @@ class DemoPage(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::N
         hideAfterTween = false
     }
 
+    /** Harness entry: the Web smoke presses Resume the same way the button does. */
+    internal fun resumeFromSmoke() {
+        resumeDemo()
+    }
+
     private fun enableDeferredLightingAfterResume() {
         if (deferredLightingEnabled) return
+        // The Compatibility renderer (Web) has no SSIL/SDFGI: skip the upgrade rather than queue
+        // no-op toggles every resume.
+        if (isWeb()) return
         deferredLightingEnabled = true
         MainThread.postAfterFrames(ENABLE_LIGHTING_AFTER_RESUME_FRAMES) {
             if (!exiting) {
@@ -218,6 +233,8 @@ class DemoPage(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::N
 
     private fun shouldWarmUpInstances(): Boolean =
         OS.hasFeature("mobile") || OS.hasFeature("android") || OS.hasFeature("Android")
+
+    private fun isWeb(): Boolean = OS.hasFeature("web")
 
     private fun Color.withAlpha(alpha: Float): Color =
         Color(r, g, b, alpha)
