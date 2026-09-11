@@ -215,6 +215,11 @@ else
     echo "[ios_device_run] FAIL"
     exit 1
   fi
+  if grep -q -E "failed to launch|could not be, unlocked|RequestDenied" "$VERDICT_LOG"; then
+    echo "[ios_device_run] console: the launch was refused (device locked?) — $(grep -m1 -o 'Unable to launch[^(]*' "$VERDICT_LOG" | head -1): $CONSOLE_LOG"
+    echo "[ios_device_run] FAIL"
+    exit 1
+  fi
   if ! grep -q '\[kanama\]\[ios\]' "$VERDICT_LOG"; then
     echo "[ios_device_run] console: no [kanama][ios] line in ${waited}s (${console_lines} lines; launch timeout ${launch_timeout}s) — the runtime never reported: $CONSOLE_LOG"
     echo "[ios_device_run] FAIL"
