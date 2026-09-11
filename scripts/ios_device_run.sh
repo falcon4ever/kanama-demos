@@ -28,6 +28,11 @@ Optional environment:
       launch install and launch the app a previous `build` stage left in the output dir.
   KANAMA_IOS_RUN_GRADLE_ARGS="..."  extra arguments for the installIosAddon Gradle call
       (e.g. --no-daemon -Pkotlin.compiler.execution.strategy=in-process for concurrent builds).
+  KANAMA_IOS_CONSOLE_SECONDS=N  after launching, stream the device console for N seconds
+      (devicectl --console) into <output-dir>/console.log and FAIL when it shows a crash
+      signature (KANAMA_IOS_CONSOLE_FAIL_PATTERN, default: app terminated by a signal / FATAL)
+      or when no `[kanama][ios]` line arrived in the window. 0 (default): launch-only, as before.
+      The app keeps running on the device either way.
 EOF
 }
 
@@ -138,10 +143,60 @@ fi
 echo "[ios_device_run] installing app: $BUNDLE_ID"
 DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device install app --device "$DEVICE_ID" "$APP_PATH"
 
+CONSOLE_SECONDS="${KANAMA_IOS_CONSOLE_SECONDS:-0}"
+if [[ ! "$CONSOLE_SECONDS" =~ ^[0-9]+$ ]]; then
+  echo "[ios_device_run] KANAMA_IOS_CONSOLE_SECONDS must be a non-negative integer (got: $CONSOLE_SECONDS)." >&2
+  exit 2
+fi
+CONSOLE_FAIL_PATTERN="${KANAMA_IOS_CONSOLE_FAIL_PATTERN:-App terminated due to signal|FATAL}"
+
 echo "[ios_device_run] launching app: $BUNDLE_ID"
-DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device process launch \
-  --device "$DEVICE_ID" \
-  --terminate-existing \
-  "$BUNDLE_ID"
+if [[ "$CONSOLE_SECONDS" -eq 0 ]]; then
+  DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device process launch \
+    --device "$DEVICE_ID" \
+    --terminate-existing \
+    "$BUNDLE_ID"
+else
+  # Task 105: `--console` streams the device's stdout/stderr to the host and blocks until the app
+  # exits (the demos never self-quit), so run it in the background, watch the log for the window,
+  # then stop the stream; the app keeps running. A crash inside the window shows up as devicectl's
+  # "App terminated due to signal N" (or the runtime's own FATAL line) and fails the step; a
+  # window with no `[kanama][ios]` line at all means the runtime never came up.
+  CONSOLE_LOG="$OUTPUT_DIR/console.log"
+  : >"$CONSOLE_LOG"
+  DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device process launch \
+    --device "$DEVICE_ID" \
+    --terminate-existing \
+    --console \
+    "$BUNDLE_ID" \
+    >>"$CONSOLE_LOG" 2>&1 &
+  console_pid="$!"
+  waited=0
+  while [[ "$waited" -lt "$CONSOLE_SECONDS" ]]; do
+    sleep 2
+    waited=$((waited + 2))
+    if grep -q -E "$CONSOLE_FAIL_PATTERN" "$CONSOLE_LOG" 2>/dev/null; then
+      break
+    fi
+    if ! kill -0 "$console_pid" 2>/dev/null; then
+      break  # the stream ended on its own: the app exited
+    fi
+  done
+  kill "$console_pid" >/dev/null 2>&1 || true
+  wait "$console_pid" >/dev/null 2>&1 || true
+  console_lines="$(wc -l <"$CONSOLE_LOG" | tr -d ' ')"
+  if grep -q -E "$CONSOLE_FAIL_PATTERN" "$CONSOLE_LOG"; then
+    echo "[ios_device_run] console: crash signature within ${waited}s (${console_lines} lines): $CONSOLE_LOG"
+    grep -n -E "$CONSOLE_FAIL_PATTERN" "$CONSOLE_LOG" | head -5 | sed 's/^/[ios_device_run]   /'
+    echo "[ios_device_run] FAIL"
+    exit 1
+  fi
+  if ! grep -q '\[kanama\]\[ios\]' "$CONSOLE_LOG"; then
+    echo "[ios_device_run] console: no [kanama][ios] line in ${waited}s (${console_lines} lines) — the runtime never reported: $CONSOLE_LOG"
+    echo "[ios_device_run] FAIL"
+    exit 1
+  fi
+  echo "[ios_device_run] console: ${console_lines} lines in ${waited}s, no crash signature: $CONSOLE_LOG"
+fi
 
 echo "[ios_device_run] PASS"
