@@ -28,7 +28,8 @@ Optional environment:
       launch install and launch the app a previous `build` stage left in the output dir.
   KANAMA_IOS_RUN_GRADLE_ARGS="..."  extra arguments for the installIosAddon Gradle call
       (e.g. --no-daemon -Pkotlin.compiler.execution.strategy=in-process for concurrent builds).
-  KANAMA_IOS_CONSOLE_SECONDS=N  after launching, stream the device console for N seconds
+  KANAMA_IOS_CONSOLE_SECONDS=N  after launching, wait for the runtime's first [kanama][ios] line
+      (bounded by KANAMA_IOS_LAUNCH_TIMEOUT, default 120 s), then stream the device console for N more seconds
       (devicectl --console) into <output-dir>/console.log and FAIL when it shows a crash
       signature (KANAMA_IOS_CONSOLE_FAIL_PATTERN, default: app terminated by a signal / FATAL)
       or when no `[kanama][ios]` line arrived in the window. 0 (default): launch-only, as before.
@@ -172,8 +173,16 @@ else
     "$BUNDLE_ID" \
     >>"$CONSOLE_LOG" 2>&1 &
   console_pid="$!"
+  # Phase 1: wait for the runtime's first `[kanama][ios]` line, bounded by
+  # KANAMA_IOS_LAUNCH_TIMEOUT (default 120 s, as the starter smoke does). A Forward+/Metal demo
+  # on an iPhone 12 can sit 30+ s in renderer setup before the extension prints anything (FPS did,
+  # on the first validation run), so the launch phase is not part of the watch window.
+  # Phase 2: keep watching for CONSOLE_SECONDS after that first line. Either phase ends early on a
+  # crash signature or when the stream ends (the app exited).
+  launch_timeout="${KANAMA_IOS_LAUNCH_TIMEOUT:-120}"
   waited=0
-  while [[ "$waited" -lt "$CONSOLE_SECONDS" ]]; do
+  launched_at=""
+  while :; do
     sleep 2
     waited=$((waited + 2))
     if grep -q -E "$CONSOLE_FAIL_PATTERN" "$CONSOLE_LOG" 2>/dev/null; then
@@ -181,6 +190,15 @@ else
     fi
     if ! kill -0 "$console_pid" 2>/dev/null; then
       break  # the stream ended on its own: the app exited
+    fi
+    if [[ -z "$launched_at" ]] && grep -q '\[kanama\]\[ios\]' "$CONSOLE_LOG" 2>/dev/null; then
+      launched_at="$waited"
+      echo "[ios_device_run] console: runtime reported after ${launched_at}s; watching ${CONSOLE_SECONDS}s more"
+    fi
+    if [[ -z "$launched_at" ]]; then
+      [[ "$waited" -ge "$launch_timeout" ]] && break
+    else
+      [[ $((waited - launched_at)) -ge "$CONSOLE_SECONDS" ]] && break
     fi
   done
   # Judge the log as it stood BEFORE the stream is stopped: stopping devicectl terminates the
@@ -198,7 +216,7 @@ else
     exit 1
   fi
   if ! grep -q '\[kanama\]\[ios\]' "$VERDICT_LOG"; then
-    echo "[ios_device_run] console: no [kanama][ios] line in ${waited}s (${console_lines} lines) — the runtime never reported: $CONSOLE_LOG"
+    echo "[ios_device_run] console: no [kanama][ios] line in ${waited}s (${console_lines} lines; launch timeout ${launch_timeout}s) — the runtime never reported: $CONSOLE_LOG"
     echo "[ios_device_run] FAIL"
     exit 1
   fi
