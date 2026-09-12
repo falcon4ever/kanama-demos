@@ -10,11 +10,34 @@ import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.SceneMultiplayer
+import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.LevelNames
 import net.multigesture.kanama.generated.MenuNames
 
 @ScriptClass(attachTo = "Node")
 class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
+    /**
+     * Browser-harness entry points. Main is the persistent scene root — it outlives the menu/level
+     * swap — so the Web smoke drives play and teardown through it. Declared first so their Web
+     * method ids stay stable: [smokeStartGame] is method#1 and [smokeTeardown] is method#2.
+     */
+    @RegisterFunction("smoke_start_game")
+    fun smokeStartGame() {
+        val menu = self.getChildren().firstNotNullOfOrNull { it.kotlinScriptInstance<Menu>() }
+            ?: error("TPS smoke could not find the Menu script to start a game")
+        menu.onPlayPressed()
+    }
+
+    @RegisterFunction("smoke_teardown")
+    fun smokeTeardown() {
+        // Godot's resource cache keeps the loaded scenes alive past the scene-root free, and the
+        // settings ConfigFile is a Kotlin-owned handle: both must be released for the live-handle
+        // count to drain to zero.
+        TpsScenes.releaseCachedScenes()
+        TpsSettings.releaseConfigFile()
+        self.queueFree()
+    }
+
     @OnReady
     fun ready() {
         if (DisplayServer.getName() == "headless") {
@@ -57,12 +80,11 @@ class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
             node.signal(LevelNames.Signals.quit).connect(self, argumentCount = 0) { goToMainMenu() }
         }
         if (node.hasSignal(MenuNames.Signals.replaceMainScene)) {
-            node.signal(MenuNames.Signals.replaceMainScene).connect(self, argumentCount = 1) { args ->
-                val scene = args.firstOrNull() as? net.multigesture.kanama.api.PackedScene ?: run {
-                    GD.pushError("TPS Main replace_main_scene signal did not provide a PackedScene")
-                    return@connect
-                }
-                replaceMainScene(scene)
+            // The emitted PackedScene rides back through call_deferred so each backend types it
+            // itself (the Web object-signal channel delivers a plain handle).
+            node.signal(MenuNames.Signals.replaceMainScene).connectObject(self) { emitted ->
+                GD.print("TPS Main received replace_main_scene")
+                self.callDeferred("change_scene_to_packed", emitted)
             }
         }
     }
