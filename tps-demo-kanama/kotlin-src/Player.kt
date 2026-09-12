@@ -13,6 +13,7 @@ import net.multigesture.kanama.api.AnimationTree
 import net.multigesture.kanama.api.AudioStreamPlayer
 import net.multigesture.kanama.api.CPUParticles3D
 import net.multigesture.kanama.api.CharacterBody3D
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Marker3D
 import net.multigesture.kanama.api.MultiplayerSynchronizer
@@ -24,11 +25,10 @@ import net.multigesture.kanama.types.Basis
 import net.multigesture.kanama.types.Transform3D
 import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector3
-import java.lang.foreign.MemorySegment
 
 @GlobalClass
 @ScriptClass(attachTo = "CharacterBody3D")
-class Player(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
+class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
     enum class AnimationState(val id: Long) {
         JUMP_UP(0),
         JUMP_DOWN(1),
@@ -65,8 +65,10 @@ class Player(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(godotOb
             }
         }
 
+    // Spelled literal (AnimationState.WALK.id): expression defaults are not portable to the Web
+    // proxy, which needs a plain literal it can re-emit.
     @ScriptProperty(name = "current_animation")
-    var currentAnimation = AnimationState.WALK.id
+    var currentAnimation = 3L
 
     @OnEnterTree
     fun enterTree() {

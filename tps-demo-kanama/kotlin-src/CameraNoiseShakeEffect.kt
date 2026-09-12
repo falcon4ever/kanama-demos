@@ -8,13 +8,13 @@ import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.Camera3D
 import net.multigesture.kanama.api.FastNoiseLite
 import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.types.Vector3
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Camera3D")
-class CameraNoiseShakeEffect(godotObject: MemorySegment) : KanamaScript<Camera3D>(godotObject, ::Camera3D) {
+class CameraNoiseShakeEffect(godotObject: GodotHandle) : KanamaScript<Camera3D>(godotObject, ::Camera3D) {
     private var startRotation = Vector3.ZERO
     private var trauma = 0.0
     private var time = 0.0

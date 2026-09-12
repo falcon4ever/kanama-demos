@@ -9,12 +9,12 @@ import net.multigesture.kanama.api.Engine
 import net.multigesture.kanama.api.Environment
 import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.InputEvent
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.RenderingServer
 import net.multigesture.kanama.api.Viewport
 import net.multigesture.kanama.api.Window
-import java.lang.foreign.MemorySegment
 
 object TpsSettings {
     const val SDFGI = 0L
@@ -159,7 +159,7 @@ object TpsSettings {
 }
 
 @ScriptClass(attachTo = "Node")
-class Settings(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node) {
+class Settings(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
     @OnReady
     fun ready() {
         TpsSettings.loadSettings()

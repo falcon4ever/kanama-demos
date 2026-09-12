@@ -13,6 +13,7 @@ import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.InputEvent
 import net.multigesture.kanama.api.KanamaCoroutineOwner
 import net.multigesture.kanama.api.KanamaScope
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.LightmapGI
 import net.multigesture.kanama.api.MainThread
@@ -26,12 +27,11 @@ import net.multigesture.kanama.api.WorldEnvironment
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.RedRobotNames
 import java.io.File
-import java.lang.foreign.MemorySegment
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 @ScriptClass(attachTo = "Node3D")
-class Level(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::Node3D), KanamaCoroutineOwner {
+class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D), KanamaCoroutineOwner {
     override val kanamaScope = KanamaScope()
 
     private var lightmapGi: LightmapGI? = null

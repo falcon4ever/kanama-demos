@@ -6,15 +6,15 @@ import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.Engine
 import net.multigesture.kanama.api.DisplayServer
 import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.SceneMultiplayer
 import net.multigesture.kanama.generated.LevelNames
 import net.multigesture.kanama.generated.MenuNames
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Node")
-class Main(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node) {
+class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
     @OnReady
     fun ready() {
         if (DisplayServer.getName() == "headless") {

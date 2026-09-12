@@ -17,6 +17,7 @@ import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.InputEvent
 import net.multigesture.kanama.api.InputEventMouseMotion
 import net.multigesture.kanama.api.intersectRay
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.api.Mathf
@@ -30,10 +31,9 @@ import net.multigesture.kanama.types.Quaternion
 import net.multigesture.kanama.types.Color
 import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector3
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "MultiplayerSynchronizer")
-class PlayerInputSynchronizer(godotObject: MemorySegment) :
+class PlayerInputSynchronizer(godotObject: GodotHandle) :
     KanamaScript<MultiplayerSynchronizer>(godotObject, ::MultiplayerSynchronizer) {
 
     private var toggledAim = false

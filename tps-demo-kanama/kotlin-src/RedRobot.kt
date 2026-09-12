@@ -20,6 +20,7 @@ import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.intersectRay
 import net.multigesture.kanama.api.KanamaCoroutineOwner
 import net.multigesture.kanama.api.KanamaScope
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.api.Mathf
@@ -34,12 +35,11 @@ import net.multigesture.kanama.types.Basis
 import net.multigesture.kanama.types.Transform3D
 import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector3
-import java.lang.foreign.MemorySegment
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 @ScriptClass(attachTo = "CharacterBody3D")
-class RedRobot(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D), KanamaCoroutineOwner {
+class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D), KanamaCoroutineOwner {
 	override val kanamaScope = KanamaScope()
 
 	@ScriptProperty(name = "test_shoot")
@@ -51,14 +51,16 @@ class RedRobot(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(godot
 	@ScriptProperty
 	var health = 5L
 
+	// Spelled literal (State.APPROACH.id): expression defaults are not portable to the Web proxy.
 	@ScriptProperty
-	var state = State.APPROACH.id
+	var state = 0L
 
 	@ScriptProperty
 	var dead = false
 
+	// Spelled literal (AIM_PREPARE_TIME): expression defaults are not portable to the Web proxy.
 	@ScriptProperty(name = "aim_preparing")
-	var aimPreparing = AIM_PREPARE_TIME
+	var aimPreparing = 0.5
 
 	private var shootCountdown = SHOOT_WAIT
 	private var aimCountdown = AIM_TIME

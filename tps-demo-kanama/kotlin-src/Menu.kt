@@ -14,6 +14,7 @@ import net.multigesture.kanama.api.DisplayServer
 import net.multigesture.kanama.api.ENetMultiplayerPeer
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.IP
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Label
 import net.multigesture.kanama.api.LineEdit
@@ -32,10 +33,9 @@ import net.multigesture.kanama.api.Viewport
 import net.multigesture.kanama.api.Window
 import net.multigesture.kanama.api.WorldEnvironment
 import net.multigesture.kanama.generated.MenuRpcs
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Node")
-class Menu(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node) {
+class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
     private var peer: MultiplayerPeer = TpsFactory.offlineMultiplayerPeer()
     private val metalFxSupported = RenderingServer.getCurrentRenderingDriverName() == "metal"
 
