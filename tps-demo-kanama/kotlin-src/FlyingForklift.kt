@@ -3,13 +3,13 @@ package tps
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.SpotLight3D
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Node3D")
-class FlyingForklift(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::Node3D) {
+class FlyingForklift(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
     @OnReady
     fun ready() {
         if (!TpsSettings.renderBool("shadow_mapping")) {

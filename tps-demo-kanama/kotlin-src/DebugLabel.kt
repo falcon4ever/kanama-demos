@@ -6,14 +6,14 @@ import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.DisplayServer
 import net.multigesture.kanama.api.Engine
 import net.multigesture.kanama.api.Input
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Label
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.api.OS
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Label")
-class DebugLabel(godotObject: MemorySegment) : KanamaScript<Label>(godotObject, ::Label) {
+class DebugLabel(godotObject: GodotHandle) : KanamaScript<Label>(godotObject, ::Label) {
     @OnReady
     fun ready() {
         // Keep the top-left debug readout out of the phone's rounded corner /

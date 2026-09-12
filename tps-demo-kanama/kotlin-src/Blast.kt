@@ -9,14 +9,14 @@ import net.multigesture.kanama.api.CPUParticles3D
 import net.multigesture.kanama.api.Camera3D
 import net.multigesture.kanama.api.KanamaCoroutineOwner
 import net.multigesture.kanama.api.KanamaScope
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node3D
-import java.lang.foreign.MemorySegment
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 @ScriptClass(attachTo = "Node3D")
-class Blast(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::Node3D), KanamaCoroutineOwner {
+class Blast(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D), KanamaCoroutineOwner {
 	override val kanamaScope = KanamaScope()
 
 	private lateinit var lightRays: CPUParticles3D

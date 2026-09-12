@@ -10,6 +10,7 @@ import net.multigesture.kanama.annotations.ScriptProperty
 import net.multigesture.kanama.api.CollisionShape3D
 import net.multigesture.kanama.api.KanamaCoroutineOwner
 import net.multigesture.kanama.api.KanamaScope
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Material
 import net.multigesture.kanama.api.Mathf
@@ -21,12 +22,11 @@ import net.multigesture.kanama.api.RigidBody3D
 import net.multigesture.kanama.api.ShaderMaterial
 import net.multigesture.kanama.api.Timer
 import net.multigesture.kanama.types.Vector3
-import java.lang.foreign.MemorySegment
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 @ScriptClass(attachTo = "RigidBody3D")
-class Part(godotObject: MemorySegment) : KanamaScript<RigidBody3D>(godotObject, ::RigidBody3D), KanamaCoroutineOwner {
+class Part(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::RigidBody3D), KanamaCoroutineOwner {
     override val kanamaScope = KanamaScope()
 
     @ScriptProperty
