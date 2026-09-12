@@ -9,15 +9,15 @@ import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.CharacterBody3D
 import net.multigesture.kanama.api.CollisionShape3D
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.MainThread
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.OmniLight3D
 import net.multigesture.kanama.api.kotlinScriptInstance
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "CharacterBody3D")
-class Bullet(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
+class Bullet(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
     private var timeAlive = 5.0
     private var hit = false
     private var exploded = false
