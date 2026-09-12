@@ -1,6 +1,7 @@
 package thirdperson
 
 import net.multigesture.kanama.api.AudioStream
+import net.multigesture.kanama.api.OS
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.PackedScene
@@ -57,17 +58,35 @@ object DemoScenes {
     // Android hitches if the first enemy/player bullet is instantiated during combat.
     // Keep a small pool ready so shooting only resets an existing scene.
     private val bulletPool = ArrayDeque<Node>()
-    private val pooledBulletHandles = mutableSetOf<Long>()
+    // Every bullet ever pooled (live or borrowed), compared by instance identity so the same
+    // file serves desktop handles and Web handles alike.
+    private val pooledBullets = mutableListOf<Node>()
+    // Web keeps the DemoPage-era reductions (task 64 parcel 5): no scene / audio warm-up (the
+    // browser decodes lazily and the pipeline has no AudioStream cache surface), a smaller pool,
+    // no instance warm-up -- teardown-safe, and the smoke's readyDeadline stays comfortable.
+    private val isWeb: Boolean
+        get() = OS.hasFeature("web")
 
     fun warmUp(owner: Node? = null) {
-        warmupPaths.forEach { path ->
-            scene(path)
+        if (!isWeb) {
+            warmupPaths.forEach { path ->
+                scene(path)
+            }
+            warmupAudioPaths.forEach { path ->
+                audio(path)
+            }
+            owner?.let { warmUpInstances(it) }
         }
-        warmupAudioPaths.forEach { path ->
-            audio(path)
-        }
-        owner?.let { warmUpInstances(it) }
         owner?.let { warmUpBulletPool(it) }
+    }
+
+    /**
+     * Warm one scene into the cache under the CALLER's ownership. The Web smoke's SmokeQuit uses
+     * it for the death puff: a dying bot would otherwise own the cache entry and its death sweep
+     * would leave a dead resource handle for releaseWarmUp to close.
+     */
+    fun warmUp(path: String) {
+        scene(path)
     }
 
     fun releaseWarmUp() {
@@ -75,7 +94,7 @@ object DemoScenes {
             node.queueFree()
         }
         bulletPool.clear()
-        pooledBulletHandles.clear()
+        pooledBullets.clear()
         // ResourceLoader.load… results are owned +1s; clearing the maps alone kept every cached
         // scene (and its sub-resources) alive until process exit.
         audioCache.values.forEach { it.close() }
@@ -109,14 +128,13 @@ object DemoScenes {
     }
 
     fun recycleBullet(node: Node): Boolean {
-        val handle = node.handle.address()
-        if (!pooledBulletHandles.contains(handle)) return false
+        if (pooledBullets.none { it.isSameInstance(node) }) return false
 
         val spatial = Node3D(node.handle)
         spatial.globalPosition = WARMUP_POSITION
         spatial.setVisible(false)
         node.setProcess(false)
-        if (!bulletPool.any { it.handle.address() == handle }) {
+        if (bulletPool.none { it.isSameInstance(node) }) {
             bulletPool.addLast(node)
         }
         return true
@@ -148,16 +166,16 @@ object DemoScenes {
     }
 
     private fun warmUpBulletPool(owner: Node) {
-        if (pooledBulletHandles.isNotEmpty()) return
+        if (pooledBullets.isNotEmpty()) return
 
-        repeat(BULLET_POOL_SIZE) {
+        repeat(if (isWeb) WEB_BULLET_POOL_SIZE else BULLET_POOL_SIZE) {
             val node = instantiate(BULLET) ?: return@repeat
             val spatial = Node3D(node.handle)
             spatial.setVisible(false)
             owner.addChild(node)
             spatial.globalPosition = WARMUP_POSITION
             node.setProcess(false)
-            pooledBulletHandles.add(node.handle.address())
+            pooledBullets.add(node)
             bulletPool.addLast(node)
         }
     }
@@ -167,4 +185,5 @@ object DemoScenes {
 
     private val WARMUP_POSITION = Vector3(0.0, -10_000.0, 0.0)
     private const val BULLET_POOL_SIZE = 8
+    private const val WEB_BULLET_POOL_SIZE = 4
 }
