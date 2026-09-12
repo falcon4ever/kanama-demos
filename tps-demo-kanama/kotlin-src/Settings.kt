@@ -76,6 +76,14 @@ object TpsSettings {
         configFile.save(CONFIG_FILE_PATH)
     }
 
+    /**
+     * Smoke teardown: the settings ConfigFile is a Kotlin-owned handle held for the whole session
+     * (it outlives every scene), so the browser smoke releases it to drain the live-handle count.
+     */
+    fun releaseConfigFile() {
+        configFile.close()
+    }
+
     fun videoLong(key: String): Long = (configFile.getValue("video", key) as Number).toLong()
     fun videoInt(key: String): Int = (configFile.getValue("video", key) as Number).toInt()
     fun renderLong(key: String): Long = (configFile.getValue("rendering", key) as Number).toLong()

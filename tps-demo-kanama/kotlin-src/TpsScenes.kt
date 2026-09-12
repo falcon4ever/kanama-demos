@@ -38,6 +38,15 @@ object TpsScenes {
         sceneCache.getOrPut(path) { ResourceLoader.loadPackedScene(path) ?: return null }
 
     fun instantiate(path: String): Node? = scene(path)?.instantiate()
+
+    /**
+     * Smoke teardown: the scene cache holds PackedScene handles that outlive the scene root (Godot
+     * caches resources), so the browser smoke releases them to drain the live-handle count to zero.
+     */
+    fun releaseCachedScenes() {
+        sceneCache.values.forEach { it.close() }
+        sceneCache.clear()
+    }
 }
 
 object TpsFactory {

@@ -243,11 +243,7 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
         )
 
     private fun composeBases(first: Basis, second: Basis): Basis =
-        Basis(
-            x = first * second.x,
-            y = first * second.y,
-            z = first * second.z,
-        )
+        Basis(first * second.x, first * second.y, first * second.z)
 
     private companion object {
         const val MOTION_INTERPOLATE_SPEED = 10.0
