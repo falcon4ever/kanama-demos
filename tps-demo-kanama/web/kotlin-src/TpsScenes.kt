@@ -10,6 +10,7 @@ import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Material
 import net.multigesture.kanama.api.MeshInstance3D
+import net.multigesture.kanama.api.MultiplayerAPI
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.OfflineMultiplayerPeer
@@ -71,6 +72,26 @@ fun GodotObject.asNode3DOrNull(): Node3D? = if (handle.value == 0) null else Nod
 
 fun Node.isPlayerNode(): Boolean =
   kotlinScriptInstance<Player>() != null || getName() == "Player" || getName().toLongOrNull() != null
+
+// The shared multiplayer helpers, verbatim (task 64 parcel 7): the Web facade's MultiplayerAPI
+// answers the offline values and `close()` is a no-op, so Player / Bullet / DebugLabel / Main
+// compile against them on the shared kotlin-src while this file stays overridden (RID ray queries).
+inline fun <R> Node.withMultiplayer(block: (MultiplayerAPI) -> R): R? {
+    val api = getMultiplayer() ?: return null
+    try {
+        return block(api)
+    } finally {
+        api.close()
+    }
+}
+
+fun Node.isMultiplayerServer(): Boolean = withMultiplayer { it.isServer() } == true
+
+fun Node.multiplayerPeers(): List<Int> = withMultiplayer { it.getPeers() } ?: emptyList()
+
+fun Node.multiplayerUniqueId(): Int = withMultiplayer { it.getUniqueId() } ?: 0
+
+fun Node.multiplayerRemoteSenderId(): Int = withMultiplayer { it.getRemoteSenderId() } ?: 0
 
 fun Node.isOfflineMultiplayer(): Boolean =
   getMultiplayer()?.getMultiplayerPeer() is OfflineMultiplayerPeer
