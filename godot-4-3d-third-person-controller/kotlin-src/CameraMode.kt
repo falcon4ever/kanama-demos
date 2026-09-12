@@ -8,6 +8,7 @@ import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.ScriptProperty
 import net.multigesture.kanama.api.Camera3D
 import net.multigesture.kanama.api.CanvasItem
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.InputEventKey
@@ -16,10 +17,9 @@ import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.OS
 import net.multigesture.kanama.types.Basis
 import net.multigesture.kanama.types.Vector3
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Node3D")
-class CameraMode(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::Node3D) {
+class CameraMode(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
     @ScriptProperty
     var cameraSpeed: Long = 10L
 
