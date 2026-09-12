@@ -1,5 +1,6 @@
 package thirdperson
 
+import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.RegisterFunction
@@ -9,6 +10,8 @@ import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.CollisionShape3D
+import net.multigesture.kanama.api.GodotHandle
+import net.multigesture.kanama.generated.PlayerMethods
 import net.multigesture.kanama.api.KanamaCoroutineOwner
 import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.KanamaScript
@@ -20,13 +23,11 @@ import net.multigesture.kanama.api.RigidBody3D
 import net.multigesture.kanama.api.SignalConnection
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.SmokePuffNames
-import net.multigesture.kanama.generated.PlayerMethods
 import net.multigesture.kanama.types.Vector3
-import java.lang.foreign.MemorySegment
 import kotlinx.coroutines.launch
 
 @ScriptClass(attachTo = "RigidBody3D")
-class BeetleBot(godotObject: MemorySegment) : KanamaScript<RigidBody3D>(godotObject, ::RigidBody3D), KanamaCoroutineOwner {
+class BeetleBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::RigidBody3D), KanamaCoroutineOwner {
     override val kanamaScope = KanamaScope()
 
     @ScriptProperty
@@ -46,6 +47,7 @@ class BeetleBot(godotObject: MemorySegment) : KanamaScript<RigidBody3D>(godotObj
     private var bodyExitedConnection: SignalConnection? = null
     private var target: Node3D? = null
     private var alive = true
+    private var tearingDown = false
 
     @OnReady
     fun ready() {
@@ -63,6 +65,17 @@ class BeetleBot(godotObject: MemorySegment) : KanamaScript<RigidBody3D>(godotObj
             .connectObject(self) { body -> onBodyExited(Node3D(body.handle)) }
 
         beetleSkin.idle()
+    }
+
+    @OnExitTree
+    fun exitTree() {
+        // Teardown can still deliver in-flight area signals after this point (measured on Web);
+        // the flag makes the callbacks inert, their sub-node handles are already released.
+        tearingDown = true
+        runCatching { bodyEnteredConnection?.close() }
+        runCatching { bodyExitedConnection?.close() }
+        bodyEnteredConnection = null
+        bodyExitedConnection = null
     }
 
     @OnPhysicsProcess
@@ -146,13 +159,15 @@ class BeetleBot(godotObject: MemorySegment) : KanamaScript<RigidBody3D>(godotObj
     }
 
     private fun onBodyEntered(body: Node3D) {
+        if (tearingDown) return
         if (!body.isPlayer()) return
         target = body
         reactionAnimationPlayer.play("found_player")
     }
 
     private fun onBodyExited(body: Node3D) {
-        if (target?.handle?.address() != body.handle.address()) return
+        if (tearingDown) return
+        if (target?.isSameInstance(body) != true) return
         target = null
         reactionAnimationPlayer.play("lost_player")
         beetleSkin.idle()

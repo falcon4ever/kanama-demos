@@ -1,5 +1,6 @@
 package thirdperson
 
+import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.RegisterFunction
@@ -9,6 +10,8 @@ import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.CollisionShape3D
+import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaCoroutineOwner
 import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.KanamaScript
@@ -19,11 +22,10 @@ import net.multigesture.kanama.api.SignalConnection
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.SmokePuffNames
 import net.multigesture.kanama.types.Vector3
-import java.lang.foreign.MemorySegment
 import kotlinx.coroutines.launch
 
 @ScriptClass(attachTo = "RigidBody3D")
-class BeeBot(godotObject: MemorySegment) : KanamaScript<RigidBody3D>(godotObject, ::RigidBody3D), KanamaCoroutineOwner {
+class BeeBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::RigidBody3D), KanamaCoroutineOwner {
 	override val kanamaScope = KanamaScope()
 
 	@ScriptProperty
@@ -47,6 +49,7 @@ class BeeBot(godotObject: MemorySegment) : KanamaScript<RigidBody3D>(godotObject
 	private var shootCount = 0.0
 	private var target: Node3D? = null
 	private var alive = true
+	private var tearingDown = false
 
 	@OnReady
 	fun ready() {
@@ -64,6 +67,17 @@ class BeeBot(godotObject: MemorySegment) : KanamaScript<RigidBody3D>(godotObject
 			.connectObject(self) { body -> onBodyExited(Node3D(body.handle)) }
 
 		beeRoot.playIdle()
+	}
+
+	@OnExitTree
+	fun exitTree() {
+		// Teardown can still deliver in-flight area signals after this point (measured on Web);
+		// the flag makes the callbacks inert, their sub-node handles are already released.
+		tearingDown = true
+		runCatching { bodyEnteredConnection?.close() }
+		runCatching { bodyExitedConnection?.close() }
+		bodyEnteredConnection = null
+		bodyExitedConnection = null
 	}
 
 	@OnPhysicsProcess
@@ -132,6 +146,7 @@ class BeeBot(godotObject: MemorySegment) : KanamaScript<RigidBody3D>(godotObject
 	}
 
 	private fun onBodyEntered(body: Node3D) {
+		if (tearingDown) return
 		if (!body.isPlayer()) return
 		shootCount = 0.0
 		target = body
@@ -139,9 +154,12 @@ class BeeBot(godotObject: MemorySegment) : KanamaScript<RigidBody3D>(godotObject
 	}
 
 	private fun onBodyExited(body: Node3D) {
+		if (tearingDown) return
 		if (!body.isPlayer()) return
-		if (target?.handle?.address() == body.handle.address()) {
+		if (target?.isSameInstance(body) == true) {
 			target = null
+			// The exit can land while the bot's sub-nodes are already gone (Web teardown order).
+			if (!GD.isInstanceValid(reactionAnimationPlayer)) return
 			reactionAnimationPlayer.play("lost_player")
 		}
 	}
