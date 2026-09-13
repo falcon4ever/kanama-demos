@@ -15,9 +15,7 @@ import net.multigesture.kanama.api.BoneAttachment3D
 import net.multigesture.kanama.api.CharacterBody3D
 import net.multigesture.kanama.api.CollisionShape3D
 import net.multigesture.kanama.api.CPUParticles3D
-import net.multigesture.kanama.api.create
 import net.multigesture.kanama.api.GodotObject
-import net.multigesture.kanama.api.intersectRay
 import net.multigesture.kanama.api.KanamaCoroutineOwner
 import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.GodotHandle
