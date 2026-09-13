@@ -5,13 +5,13 @@ import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.ScriptProperty
 import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Sprite2D
 import net.multigesture.kanama.types.Vector2
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Sprite2D")
-class BunnyKanama(godotObject: MemorySegment) : KanamaScript<Sprite2D>(godotObject, ::Sprite2D) {
+class BunnyKanama(godotObject: GodotHandle) : KanamaScript<Sprite2D>(godotObject, ::Sprite2D) {
     @ScriptProperty
     var speed: Vector2 = Vector2(0.0, 0.0)
 

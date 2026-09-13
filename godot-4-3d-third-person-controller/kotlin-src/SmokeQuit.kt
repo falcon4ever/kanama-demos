@@ -3,6 +3,7 @@ package thirdperson
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.BaseButton
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaCoroutineOwner
 import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.KanamaScript
@@ -14,11 +15,10 @@ import net.multigesture.kanama.api.ResourceLoader
 import net.multigesture.kanama.api.SceneTree
 import net.multigesture.kanama.types.Basis
 import net.multigesture.kanama.types.Vector3
-import java.lang.foreign.MemorySegment
 import kotlinx.coroutines.launch
 
 @ScriptClass(attachTo = "Node")
-class SmokeQuit(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node), KanamaCoroutineOwner {
+class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node), KanamaCoroutineOwner {
     override val kanamaScope = KanamaScope()
 
     @OnReady
@@ -170,7 +170,7 @@ class SmokeQuit(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::
             val bullet3d = Node3D(bullet.handle)
             bullet3d.globalPosition = Vector3(0f, 30f, 0f)
             val shooter = bulletObject.call("get", "shooter") as? GodotObject
-            check(shooter?.handle?.address() == parent.handle.address()) {
+            check(shooter?.isSameInstance(parent) == true) {
                 "Bullet shooter property was not preserved before add_child"
             }
             val start = bullet3d.globalPosition

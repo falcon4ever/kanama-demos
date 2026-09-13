@@ -179,7 +179,7 @@ class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotOb
 					Node3D(blast.handle).globalTransform.withOrigin(hit["position"] as? Vector3 ?: rayOrigin)
 			}
 			val collider = hit["collider"] as? GodotObject
-			if (collider != null && player?.handle?.address() == collider.handle.address()) {
+			if (collider != null && player?.isSameInstance(collider) == true) {
 					val hitPlayer = player?.kotlinScriptInstance<Player>()
 					if (hitPlayer != null) {
 						kanamaScope.launch {
@@ -319,7 +319,7 @@ class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotOb
 	@RegisterFunction("_on_area_body_exited")
 	fun onAreaBodyExited(body: GodotObject) {
 		val node = Node3D(body.handle)
-		if (player?.handle?.address() == node.handle.address()) {
+		if (player?.isSameInstance(node) == true) {
 			player = null
 		}
 	}
@@ -351,7 +351,7 @@ class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotOb
 		val query = PhysicsRayQueryParameters3D.create(rayOrigin, rayTo, 0xffffffffL, listOf(self.getRid()))!!
 		val hit = self.getWorld3d()?.directSpaceState?.intersectRay(query) ?: return false
 		val collider = hit["collider"] as? GodotObject ?: return false
-		return collider.handle.address() == target.handle.address()
+		return collider.isSameInstance(target)
 	}
 
 	private fun toLocalTarget(target: Vector3): Vector3 =

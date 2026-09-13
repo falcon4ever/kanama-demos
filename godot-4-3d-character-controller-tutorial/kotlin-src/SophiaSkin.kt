@@ -10,6 +10,7 @@ import net.multigesture.kanama.api.AnimationMixer
 import net.multigesture.kanama.api.AnimationNodeStateMachinePlayback
 import net.multigesture.kanama.api.BaseMaterial3D
 import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.getStateMachinePlayback
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Material
@@ -18,11 +19,10 @@ import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.setParameter
 import net.multigesture.kanama.api.Timer
 import net.multigesture.kanama.types.Vector3
-import java.lang.foreign.MemorySegment
 
 @GlobalClass
 @ScriptClass(attachTo = "Node3D")
-class SophiaSkin(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::Node3D) {
+class SophiaSkin(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
 
     @Export
     var blink = true

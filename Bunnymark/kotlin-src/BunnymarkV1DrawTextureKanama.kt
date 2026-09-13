@@ -6,16 +6,16 @@ import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node2D
 import net.multigesture.kanama.api.ResourceLoader
 import net.multigesture.kanama.api.Texture2D
 import net.multigesture.kanama.types.Color
 import net.multigesture.kanama.types.Vector2
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Node2D")
-class BunnymarkV1DrawTextureKanama(godotObject: MemorySegment) : KanamaScript<Node2D>(godotObject, ::Node2D) {
+class BunnymarkV1DrawTextureKanama(godotObject: GodotHandle) : KanamaScript<Node2D>(godotObject, ::Node2D) {
     data class Bunny(var position: Vector2, var speed: Vector2)
 
     private val gravity = 500.0

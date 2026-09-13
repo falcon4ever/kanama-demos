@@ -2,6 +2,7 @@ package citybuilder
 
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.getUsedCells
 import net.multigesture.kanama.api.GridMap
 import net.multigesture.kanama.api.KanamaScript
@@ -9,10 +10,9 @@ import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.types.Vector3i
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Node")
-class Smoke(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node) {
+class Smoke(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
     @OnReady
     fun ready() {
         if (System.getenv("KANAMA_CITY_BUILDER_SMOKE") != "1") return

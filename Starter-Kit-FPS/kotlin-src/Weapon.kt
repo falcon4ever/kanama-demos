@@ -6,17 +6,17 @@ import net.multigesture.kanama.annotations.GlobalClass
 import net.multigesture.kanama.annotations.PropertyHint
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.PackedScene
 import net.multigesture.kanama.api.Resource
 import net.multigesture.kanama.api.Texture2D
 import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector3
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Resource")
 @GlobalClass
-class Weapon(godotObject: MemorySegment) : KanamaScript<Resource>(godotObject, Resource::fromHandle) {
+class Weapon(godotObject: GodotHandle) : KanamaScript<Resource>(godotObject, Resource::fromHandle) {
     @ExportSubgroup("Model")
     @ScriptProperty
     var model: PackedScene? = null

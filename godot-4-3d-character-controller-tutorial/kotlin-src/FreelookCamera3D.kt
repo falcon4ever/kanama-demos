@@ -7,6 +7,7 @@ import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.Camera3D
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.InputEvent
@@ -19,11 +20,10 @@ import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector3
-import java.lang.foreign.MemorySegment
 
 @GlobalClass
 @ScriptClass(attachTo = "Camera3D")
-class FreelookCamera3D(godotObject: MemorySegment) : KanamaScript<Camera3D>(godotObject, ::Camera3D) {
+class FreelookCamera3D(godotObject: GodotHandle) : KanamaScript<Camera3D>(godotObject, ::Camera3D) {
 
     @Export
     var movementSpeed = 10.0

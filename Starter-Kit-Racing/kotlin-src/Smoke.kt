@@ -2,14 +2,14 @@ package racing
 
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.ScriptClass
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.OS
 import net.multigesture.kanama.api.RigidBody3D
-import java.lang.foreign.MemorySegment
 import net.multigesture.kanama.api.KanamaScript
 
 @ScriptClass(attachTo = "Node3D")
-class Smoke(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::Node3D) {
+class Smoke(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
     private var frames = 0
     private val sphere by lazy {
         val root = self.getParent() ?: error("Racing smoke expected Smoke to have a parent scene")

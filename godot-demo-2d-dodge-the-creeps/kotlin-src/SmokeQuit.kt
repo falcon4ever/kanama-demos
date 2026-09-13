@@ -2,6 +2,7 @@ package dodge
 
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.KanamaCoroutineOwner
 import net.multigesture.kanama.api.KanamaScope
@@ -9,11 +10,10 @@ import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.MainThread
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.kotlinScriptInstance
-import java.lang.foreign.MemorySegment
 import kotlinx.coroutines.launch
 
 @ScriptClass(attachTo = "Node")
-class SmokeQuit(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node), KanamaCoroutineOwner {
+class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node), KanamaCoroutineOwner {
     override val kanamaScope = KanamaScope()
 
     @OnReady

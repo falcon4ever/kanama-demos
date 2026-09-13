@@ -1,5 +1,6 @@
 package thirdperson
 
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
@@ -21,10 +22,9 @@ import net.multigesture.kanama.api.SurfaceTool
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector3
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Node3D")
-class GrenadeLauncher(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::Node3D) {
+class GrenadeLauncher(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
     @ScriptProperty
     var minThrowDistance: Double = 7.0
 

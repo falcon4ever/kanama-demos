@@ -13,6 +13,7 @@ import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.Camera3D
 import net.multigesture.kanama.api.CharacterBody3D
 import net.multigesture.kanama.api.GPUParticles3D
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.InputEvent
@@ -24,10 +25,9 @@ import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.EventsNames
 import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector3
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "CharacterBody3D")
-class Player3DTemplate(godotObject: MemorySegment) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
+class Player3DTemplate(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
     @Export
     @ExportGroup("Movement")
     var moveSpeed = 8.0

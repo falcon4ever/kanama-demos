@@ -1,5 +1,6 @@
 package fps
 
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
@@ -11,12 +12,11 @@ import net.multigesture.kanama.api.OS
 import net.multigesture.kanama.api.TextureRect
 import net.multigesture.kanama.types.Transform3D
 import net.multigesture.kanama.types.Vector3
-import java.lang.foreign.MemorySegment
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.kotlinScriptInstance
 
 @ScriptClass(attachTo = "Node3D")
-class Smoke(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::Node3D) {
+class Smoke(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
 
     @OnReady
     fun ready() {
