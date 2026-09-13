@@ -6,12 +6,12 @@ import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.AudioStreamPlayer
 import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Node")
-class Audio(godotObject: MemorySegment) : KanamaScript<Node>(godotObject, ::Node) {
+class Audio(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
 
     private val numPlayers = 12
     private val bus = "master"

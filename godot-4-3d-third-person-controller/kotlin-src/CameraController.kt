@@ -11,6 +11,7 @@ import net.multigesture.kanama.annotations.ScriptProperty
 import net.multigesture.kanama.api.Camera3D
 import net.multigesture.kanama.api.CharacterBody3D
 import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.InputEventMouseMotion
@@ -22,10 +23,9 @@ import net.multigesture.kanama.api.SpringArm3D
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.types.Basis
 import net.multigesture.kanama.types.Vector3
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Node3D")
-class CameraController(godotObject: MemorySegment) : KanamaScript<Node3D>(godotObject, ::Node3D) {
+class CameraController(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
     @ScriptProperty
     var invertMouseY = false
 

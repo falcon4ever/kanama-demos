@@ -6,6 +6,7 @@ import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Label
 import net.multigesture.kanama.api.Node2D
@@ -14,10 +15,9 @@ import net.multigesture.kanama.api.Sprite2D
 import net.multigesture.kanama.api.Texture2D
 import net.multigesture.kanama.binding.runtime.ObjectCalls
 import net.multigesture.kanama.types.Vector2
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "Node2D")
-class BunnymarkV2Kanama(godotObject: MemorySegment) : KanamaScript<Node2D>(godotObject, ::Node2D) {
+class BunnymarkV2Kanama(godotObject: GodotHandle) : KanamaScript<Node2D>(godotObject, ::Node2D) {
     private val gravity = 500.0
     private val bunnySpeeds = mutableListOf<Vector2>()
     private lateinit var screenSize: Vector2
@@ -30,9 +30,9 @@ class BunnymarkV2Kanama(godotObject: MemorySegment) : KanamaScript<Node2D>(godot
         screenSize = self.getViewportRect().size
         bunnyTexture = ResourceLoader.loadTexture2D("res://images/godot_bunny.png")
         GD.randomize()
-        bunnies = Node2D(ObjectCalls.constructObject("Node2D"))
+        bunnies = Node2D(GodotHandle(ObjectCalls.constructObject("Node2D")))
         self.addChild(bunnies)
-        label = Label(ObjectCalls.constructObject("Label"))
+        label = Label(GodotHandle(ObjectCalls.constructObject("Label")))
         label.position = Vector2(0.0, 20.0)
         self.addChild(label)
     }
@@ -86,7 +86,7 @@ class BunnymarkV2Kanama(godotObject: MemorySegment) : KanamaScript<Node2D>(godot
 
     @RegisterFunction("add_bunny")
     fun addBunny() {
-        val bunny = Sprite2D(ObjectCalls.constructObject("Sprite2D"))
+        val bunny = Sprite2D(GodotHandle(ObjectCalls.constructObject("Sprite2D")))
         bunny.setTexture(bunnyTexture)
         bunnies.addChild(bunny)
         bunny.position = Vector2(screenSize.x / 2.0, screenSize.y / 2.0)
