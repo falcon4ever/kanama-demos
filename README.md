@@ -116,11 +116,22 @@ Run the runtime and replication guardrail audits:
 `./gradlew check` runs those three audits together and nothing else. They are
 Python scans over `kotlin-src/` and the scenes: they need the sibling Kanama
 checkout (or `-PkanamaRoot=`) for the two guardrail scripts, but no Godot, no
-Kanama build, and no compiled demo scripts. `.github/workflows/check.yml` runs
-`check` on every push and pull request against the Kanama commit pinned in its
-`KANAMA_REF`. The headless smokes are not part of `check`: the desktop, Android,
-and iOS smokes run locally, and the Web matrix runs in Kanama's `web.yml`
-against the demos commit pinned there.
+Kanama build, and no compiled demo scripts.
+
+`.github/workflows/check.yml` runs two jobs on every push and pull request, both
+against the Kanama commit pinned in its `KANAMA_REF`:
+
+- `check` — the three audits above, against a sparse `scripts/` checkout of
+  Kanama.
+- `desktop-scripts` — a full Kanama checkout, then one
+  `:project-scripts:jar -PkanamaProjectScriptsDir=<demo>/kotlin-src` build per
+  demo, so every demo's `kotlin-src` is compiled for desktop against that
+  Kanama commit. This is the compile half of `<demo>BuildScripts`; it keeps
+  going after a red demo, so one broken port does not hide another.
+
+The headless smokes are not part of either job: they run a demo rather than
+compile it. The desktop, Android, and iOS smokes run locally, and the Web matrix
+runs in Kanama's `web.yml` against the demos commit pinned there.
 
 Run or open one demo:
 
