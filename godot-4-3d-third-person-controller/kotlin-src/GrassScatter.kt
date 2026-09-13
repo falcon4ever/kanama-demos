@@ -1,5 +1,6 @@
 package thirdperson
 
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
@@ -15,10 +16,9 @@ import net.multigesture.kanama.types.Basis
 import net.multigesture.kanama.types.NodePath
 import net.multigesture.kanama.types.Transform3D
 import net.multigesture.kanama.types.Vector3
-import java.lang.foreign.MemorySegment
 
 @ScriptClass(attachTo = "MultiMeshInstance3D")
-class GrassScatter(godotObject: MemorySegment) : KanamaScript<MultiMeshInstance3D>(
+class GrassScatter(godotObject: GodotHandle) : KanamaScript<MultiMeshInstance3D>(
     godotObject,
     ::MultiMeshInstance3D,
 ) {

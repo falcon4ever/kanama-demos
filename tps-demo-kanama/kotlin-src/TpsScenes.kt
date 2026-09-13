@@ -69,8 +69,10 @@ fun Basis.composedWith(other: Basis): Basis =
         z = this * other.z,
     )
 
+// A handle is opaque now (task 104): the null check that used to read handle.address()
+// reads the captured instance id, which is 0 exactly for a NULL-handle wrapper.
 fun GodotObject.asNode3DOrNull(): Node3D? =
-    if (handle.address() == 0L) null else Node3D(handle)
+    if (instanceId == 0L) null else Node3D(handle)
 
 fun Node.isPlayerNode(): Boolean =
     kotlinScriptInstance<Player>() != null || getName() == "Player" || getName().toLongOrNull() != null
