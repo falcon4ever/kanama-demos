@@ -24,8 +24,9 @@ wording.
 - Repo status, requirements, task names, demo list, licenses, and Android
   notes: `README.md`.
 - Root aggregate tasks and demo prefixes: `build.gradle.kts`.
-- CI: `.github/workflows/check.yml` runs `./gradlew check` on every push and
-  pull request.
+- CI: `.github/workflows/check.yml` runs two jobs on every push and pull
+  request — `check` (`./gradlew check`) and `desktop-scripts`, which compiles
+  every demo's `kotlin-src` for desktop against the pinned Kanama.
 - Shared per-demo Kanama Gradle wiring: `gradle/kanama-demo.gradle.kts`.
 - GDScript porting and gameplay rules:
   `../kanama/docs/contributing/demo-porting-rules.md`,
@@ -137,7 +138,11 @@ Update these together:
 - `KANAMA_REF` in `.github/workflows/check.yml` when Kanama's
   `scripts/audit_runtime_node_lookups.py` or
   `scripts/audit_replicated_script_properties.py` changed; the CI audits run
-  against that Kanama commit's `scripts/`.
+  against that Kanama commit's `scripts/`. The same `KANAMA_REF` pins the
+  `desktop-scripts` job, which checks Kanama out in full and compiles every
+  demo's `kotlin-src` against it, so a runtime or wrapper change that renames or
+  moves an API reddens the demos PR that has not been updated for it. Bump
+  `KANAMA_REF` with the release, then fix whatever the lane reports.
 - Smoke results or support wording only after the matching smoke path passes.
 
 Then run:
@@ -201,8 +206,14 @@ that need the Kanama checkout's `scripts/` (sibling or `-PkanamaRoot=`) but no
 Godot, Kanama build, or compiled scripts. `.github/workflows/check.yml` runs it
 on every push and pull request against the Kanama commit pinned in `KANAMA_REF`,
 so a red `check` on a pull request is a real finding, not a stale gate. Run it
-with `--continue` locally too, so one red audit does not hide the others. The
-import and smoke steps below are not covered by CI; run them locally.
+with `--continue` locally too, so one red audit does not hide the others.
+
+The workflow's second job, `desktop-scripts`, compiles every demo's `kotlin-src`
+for desktop against that same pinned Kanama: the compile half of
+`./gradlew buildAllScripts`, without the addon-install step that needs a Godot
+project. Run `buildAllScripts` locally before pushing a port and the lane will
+have nothing to report. The import and smoke steps below are still not covered by
+CI; run them locally.
 
 Before release-facing changes:
 
