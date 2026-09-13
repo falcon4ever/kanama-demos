@@ -3,7 +3,6 @@ package citybuilder
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GodotHandle
-import net.multigesture.kanama.api.getUsedCells
 import net.multigesture.kanama.api.GridMap
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.kotlinScriptInstance

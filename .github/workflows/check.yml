@@ -1,14 +1,23 @@
 name: check
 
-# Task 92: `./gradlew check` is this repository's static gate -- the demo parity
-# audit plus Kanama's two guardrail audits (runtime node lookups, replicated
-# script properties). All three are Python scans of `kotlin-src/` and the scenes:
-# no Godot, no Kanama build and no compiled demo scripts are needed, so it runs on
-# every push and pull request on a plain Ubuntu runner.
+# Two jobs, both against the Kanama commit pinned in KANAMA_REF:
 #
-# What is NOT here: the desktop/Android/iOS/Web smokes. They need Godot, a Kanama
-# build and mostly real devices; run them locally (README "Smoke Scripts") or through
-# Kanama's web.yml, which pins this repository at DEMOS_REF.
+# `check` (task 92) is this repository's static gate -- the demo parity audit plus
+# Kanama's two guardrail audits (runtime node lookups, replicated script
+# properties). All three are Python scans of `kotlin-src/` and the scenes: no
+# Godot, no Kanama build and no compiled demo scripts are needed, so it runs on a
+# plain Ubuntu runner against a sparse `scripts/` checkout of Kanama.
+#
+# `desktop-scripts` (task 109) compiles every demo's `kotlin-src` for desktop, the
+# reference backend. It exists because `check` builds nothing: two demos reached
+# main with `kotlin-src` that no longer compiled (tps-demo's dangling `api.create`
+# / `api.intersectRay` imports, and Starter-Kit-City-Builder's four `<Class>.jvm.kt`
+# companion-extension imports that became plain members), and nothing in CI noticed.
+#
+# What is NOT here: the desktop/Android/iOS/Web smokes -- running a demo, as opposed
+# to compiling it. They need Godot and mostly real devices; run them locally (README
+# "Smoke Scripts") or through Kanama's web.yml, which pins this repository at
+# DEMOS_REF.
 on:
   pull_request:
   push:
@@ -23,11 +32,13 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # The Kanama commit whose scripts/audit_runtime_node_lookups.py and
-  # scripts/audit_replicated_script_properties.py the guardrail audits run. Pinned
-  # for the same reason Kanama's web.yml pins DEMOS_REF: an unpinned checkout lets an
-  # unrelated Kanama commit redden every demos PR. Bump it deliberately when either
-  # guardrail script changes (see AGENTS.md, "Update For A New Kanama Release").
+  # The Kanama commit both jobs check out: the `check` job reads its
+  # scripts/audit_runtime_node_lookups.py and scripts/audit_replicated_script_properties.py,
+  # and the `desktop-scripts` job builds its runtime to compile the demo scripts
+  # against. Pinned for the same reason Kanama's web.yml pins DEMOS_REF: an unpinned
+  # checkout lets an unrelated Kanama commit redden every demos PR. Bump it
+  # deliberately when either guardrail script changes, and whenever the demos are
+  # moved to a newer Kanama runtime (see AGENTS.md, "Update For A New Kanama Release").
   KANAMA_REF: f275936864c95c3bebc8421af90cac66e0325001
 
 jobs:
@@ -70,3 +81,89 @@ jobs:
           # another (task 92 found a runtimeNodeLookupAudit finding that way).
           ./gradlew check --continue --no-daemon -Pkotlin.compiler.execution.strategy=in-process \
             -PkanamaRoot="$GITHUB_WORKSPACE/kanama"
+
+  desktop-scripts:
+    name: desktop kotlin-src compile (every demo)
+    runs-on: ubuntu-24.04
+    # Measured 2026-09-13 (macOS arm64, the lane's exact commands against a
+    # pristine checkout of the pinned Kanama): 11 min from an empty Gradle home,
+    # of which 8m54s is the first demo -- dependency downloads plus Kanama's own
+    # `:`/`:processor`/KSP compile, which every later demo then reuses -- and
+    # 10-17 s per demo after that; 2m14s for the eleven on a warm cache. A CI
+    # runner has fewer and slower cores than that, so the budget is generous.
+    timeout-minutes: 45
+    steps:
+      # Same sibling layout as the `check` job: kanama/ beside kanama-demos/.
+      - name: Checkout kanama-demos
+        uses: actions/checkout@v6
+        with:
+          path: kanama-demos
+
+      # Full checkout, not the `check` job's sparse `scripts/` one: this lane
+      # builds Kanama itself. `:project-scripts` depends on the `:`, `:annotations`
+      # and `:processor` projects, so the demo scripts compile and run KSP against
+      # this exact commit's runtime -- no published artifact, no mavenLocal.
+      - name: Checkout Kanama (pinned, full)
+        uses: actions/checkout@v6
+        with:
+          repository: falcon4ever/kanama
+          ref: ${{ env.KANAMA_REF }}
+          path: kanama
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: gradle
+
+      # This is the compile half of a demo's own `buildScripts` task in
+      # source-checkout mode (gradle/kanama-demo.gradle.kts): the demo Gradle
+      # builds resolve Kanama from the checkout at `-PkanamaRoot`/`KANAMA_ROOT`
+      # (README "Repository Layout", AGENTS.md "Kanama Inputs") and shell out to
+      # `<kanamaRoot>/gradlew :project-scripts:jar
+      # -PkanamaProjectScriptsDir=<demo>/kotlin-src`. The `installAddonJar` half is
+      # skipped on purpose: it only copies the jar plus the CMake host bootstrap
+      # into a Godot project, and no Godot runs here.
+      #
+      # The demos' `mavenLocal()` repository is the OTHER, packaged-consumer route
+      # (a `publishKanamaToMavenLocal` on a source checkout, or `-PkanamaKitDir`);
+      # it is not what the demos README/AGENTS.md document for a new Kanama
+      # release, and it would let a stale local publication decide the result.
+      #
+      # One invocation per demo, and the loop keeps going after a red one, for the
+      # same reason the `check` job passes `--continue`: one broken demo must not
+      # hide another.
+      - name: Compile every demo's kotlin-src for desktop
+        shell: bash
+        working-directory: kanama-demos
+        run: |
+          demos_dir="$PWD"
+          kanama_dir="$GITHUB_WORKSPACE/kanama"
+          failed=""
+          total=0
+          for src in */kotlin-src; do
+            demo="${src%/kotlin-src}"
+            total=$((total + 1))
+            echo "::group::$demo"
+            start=$(date +%s)
+            if (cd "$kanama_dir" && ./gradlew --no-daemon \
+                  -Pkotlin.compiler.execution.strategy=in-process \
+                  :project-scripts:jar \
+                  -PkanamaProjectScriptsDir="$demos_dir/$src"); then
+              echo "RESULT $demo OK ($(( $(date +%s) - start ))s)"
+            else
+              echo "RESULT $demo FAILED ($(( $(date +%s) - start ))s)"
+              failed="$failed $demo"
+            fi
+            echo "::endgroup::"
+          done
+          if [ "$total" -eq 0 ]; then
+            echo "No */kotlin-src directory was found: the lane compiled nothing."
+            exit 1
+          fi
+          if [ -n "$failed" ]; then
+            echo "Desktop kotlin-src compile failed for:$failed"
+            exit 1
+          fi
+          echo "Desktop kotlin-src compiled for all $total demos."
