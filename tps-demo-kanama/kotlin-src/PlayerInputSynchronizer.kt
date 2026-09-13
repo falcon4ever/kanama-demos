@@ -11,12 +11,10 @@ import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.Camera3D
 import net.multigesture.kanama.api.CollisionObject3D
 import net.multigesture.kanama.api.ColorRect
-import net.multigesture.kanama.api.create
 import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.InputEvent
 import net.multigesture.kanama.api.InputEventMouseMotion
-import net.multigesture.kanama.api.intersectRay
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.kotlinScriptInstance

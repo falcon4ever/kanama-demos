@@ -257,6 +257,9 @@ tasks.register("smokeGodotRenderChecked") {
     doLast {
         val output = ByteArrayOutputStream()
         val reloadMarker = layout.buildDirectory.file("reports/tps-reload-smoke.marker").get().asFile
+        // Level writes the marker with Godot's ConfigFile (task 64 parcel 8), which does not
+        // create the directory for it.
+        reloadMarker.parentFile.mkdirs()
         reloadMarker.delete()
         val result = execSupport.execOperations.exec {
             commandLine(
@@ -426,6 +429,9 @@ tasks.register("smokeGodotReloadChecked") {
     doLast {
         val output = ByteArrayOutputStream()
         val reloadMarker = layout.buildDirectory.file("reports/tps-reload-smoke.marker").get().asFile
+        // Level writes the marker with Godot's ConfigFile (task 64 parcel 8), which does not
+        // create the directory for it.
+        reloadMarker.parentFile.mkdirs()
         reloadMarker.delete()
         val result = execSupport.execOperations.exec {
             commandLine(

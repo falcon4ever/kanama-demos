@@ -26,7 +26,6 @@ import net.multigesture.kanama.api.Timer
 import net.multigesture.kanama.api.WorldEnvironment
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.RedRobotNames
-import java.io.File
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
@@ -93,6 +92,14 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         }
     }
 
+    /**
+     * Reload-smoke bookkeeping: the desktop smoke enters the level twice in one run and quits on
+     * the second ready. The count lives in a marker file when the harness names one, so a reload
+     * that loses the in-process counter is still seen. The marker is a Godot `ConfigFile` -- the
+     * file API both backends share -- rather than `java.io.File`, which the Wasm target has no
+     * equivalent for. On Web the whole path is inert by construction: the export's `System.getenv`
+     * shim always answers null, so neither env var is ever set.
+     */
     private fun observeSmokeLevelReady(): Boolean {
         if (System.getenv("KANAMA_TPS_SMOKE_QUIT_AFTER_SECOND_LEVEL_READY") != "1") return false
         val markerPath = System.getenv("KANAMA_TPS_SMOKE_RELOAD_MARKER")
@@ -100,13 +107,28 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
             smokeLevelReadyCount += 1
             smokeLevelReadyCount
         } else {
-            val marker = File(markerPath)
-            marker.parentFile?.mkdirs()
-            val nextCount = (marker.takeIf { it.exists() }?.readText()?.trim()?.toIntOrNull() ?: 0) + 1
-            marker.writeText(nextCount.toString())
-            nextCount
+            bumpReloadMarker(markerPath)
         }
         return readyCount >= 2
+    }
+
+    private fun bumpReloadMarker(markerPath: String): Int {
+        // close what you create (Kanama task 61): the marker ConfigFile is ours for this call only.
+        val marker = TpsFactory.configFile()
+        try {
+            marker.load(markerPath)
+            val previous = if (marker.hasSectionKey(MARKER_SECTION, MARKER_KEY)) {
+                (marker.getValue(MARKER_SECTION, MARKER_KEY) as? Number)?.toInt() ?: 0
+            } else {
+                0
+            }
+            val nextCount = previous + 1
+            marker.setValue(MARKER_SECTION, MARKER_KEY, nextCount.toLong())
+            marker.save(markerPath)
+            return nextCount
+        } finally {
+            marker.close()
+        }
     }
 
     private fun runSmokeRobotDeathCheckIfRequested() {
@@ -289,6 +311,9 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
     fun quit() = Unit
 
     private companion object {
+        const val MARKER_SECTION = "smoke"
+        const val MARKER_KEY = "level_ready_count"
+
         var smokeLevelReadyCount = 0
     }
 }
