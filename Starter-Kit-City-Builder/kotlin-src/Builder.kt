@@ -7,10 +7,6 @@ import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.ScriptProperty
 import net.multigesture.kanama.api.Camera3D
 import net.multigesture.kanama.api.GD
-import net.multigesture.kanama.api.getNodePropertyName
-import net.multigesture.kanama.api.getNodePropertyValue
-import net.multigesture.kanama.api.getNodeType
-import net.multigesture.kanama.api.getUsedCells
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.GridMap
