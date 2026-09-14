@@ -135,6 +135,18 @@ if grep -q 'ResourceFormatLoader\._load bound kotlinClass= ' "$EXPORT_LOG"; then
   echo "[ios_device_run] scene-stored @ScriptProperty values would be dropped from this export; refusing to build it." >&2
   exit 1
 fi
+# Task 112: compare every converted scene with its source — a script property present in the
+# .tscn but missing from the exported .scn fails the step, whatever dropped it. The check lives in
+# kanama (shared with the starter smoke); a KANAMA_ROOT that predates it is warned about, not failed.
+SCENE_PARITY_CHECK="$KANAMA_ROOT/scripts/check_exported_scene_properties.gd"
+if [[ -f "$SCENE_PARITY_CHECK" ]]; then
+  if ! "$GODOT_BIN" --headless --path "$DEMO_DIR" --script "$SCENE_PARITY_CHECK"; then
+    echo "[ios_device_run] exported scenes lost script properties (see [check_exported_scenes] lines above); refusing to build it." >&2
+    exit 1
+  fi
+else
+  echo "[ios_device_run] WARNING: $SCENE_PARITY_CHECK not found in KANAMA_ROOT; skipping the exported-scene parity check (task 112)" >&2
+fi
 
 if [[ ! -d "$XCODE_PROJECT" ]]; then
   echo "[ios_device_run] Expected Xcode project was not produced: $XCODE_PROJECT" >&2
