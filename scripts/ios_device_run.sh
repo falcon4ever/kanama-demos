@@ -96,16 +96,45 @@ echo "[ios_device_run] installing Kanama iOS addon: $DEMO_DIR"
 (
   cd "$KANAMA_ROOT"
   # shellcheck disable=SC2086 # KANAMA_IOS_RUN_GRADLE_ARGS is deliberately word-split.
+  # Register the demo's kotlin-src for BOTH targets. -PkanamaIosProjectScriptsDir feeds the
+  # Kotlin/Native runtime (KSP registrars); -PkanamaProjectScriptsDir compiles the same sources
+  # into the DESKTOP scripts jar the export-time editor loads. Without the second one the editor
+  # binds no Kotlin class to the demo's .kt scripts, reports no @ScriptProperty list, and Godot's
+  # export (which instantiates and re-packs every scene when converting text resources to binary)
+  # silently drops every scene-stored script property — Match3's tile_scene arrived null on the
+  # phone and Main._ready aborted (task 106).
   DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" ./gradlew \
     ${KANAMA_IOS_RUN_GRADLE_ARGS:-} \
     installIosAddon \
     "-PkanamaIosProjectDir=$DEMO_DIR" \
     "-PkanamaIosProjectScriptsDir=$DEMO_DIR/kotlin-src" \
+    "-PkanamaProjectScriptsDir=$DEMO_DIR/kotlin-src" \
     "-PkanamaXcodeDeveloperDir=$XCODE_DEVELOPER_DIR"
 )
 
-echo "[ios_device_run] exporting Godot iOS project: $IPA_PATH"
-"$GODOT_BIN" --headless --path "$DEMO_DIR" --export-debug iOS "$IPA_PATH"
+# Godot caches each text->binary scene conversion under .godot/exported/ keyed by the source
+# .tscn's md5 + mtime, so a conversion made while the desktop scripts jar was wrong (properties
+# stripped) is reused by every later export until the .tscn itself changes. Drop the cache so this
+# export converts from the current scripts.
+rm -rf "$DEMO_DIR/.godot/exported"
+
+EXPORT_LOG="$OUTPUT_DIR/export.log"
+echo "[ios_device_run] exporting Godot iOS project: $IPA_PATH (log: $EXPORT_LOG)"
+"$GODOT_BIN" --headless --path "$DEMO_DIR" --export-debug iOS "$IPA_PATH" 2>&1 | tee "$EXPORT_LOG"
+export_status="${PIPESTATUS[0]}"
+if [[ "$export_status" -ne 0 ]]; then
+  echo "[ios_device_run] Godot export failed (exit $export_status)" >&2
+  exit 1
+fi
+# The desktop runtime logs every .kt it loads during the export with the Kotlin class it bound.
+# An empty class means the scripts jar does not contain that script: the exported scenes would
+# carry none of its @ScriptProperty values, which is invisible until the app crashes on device.
+if grep -q 'ResourceFormatLoader\._load bound kotlinClass= ' "$EXPORT_LOG"; then
+  echo "[ios_device_run] export-time editor bound no Kotlin class to a project script:" >&2
+  grep -B1 'ResourceFormatLoader\._load bound kotlinClass= ' "$EXPORT_LOG" | grep '_load path=' >&2 || true
+  echo "[ios_device_run] scene-stored @ScriptProperty values would be dropped from this export; refusing to build it." >&2
+  exit 1
+fi
 
 if [[ ! -d "$XCODE_PROJECT" ]]; then
   echo "[ios_device_run] Expected Xcode project was not produced: $XCODE_PROJECT" >&2
