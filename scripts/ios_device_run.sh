@@ -75,7 +75,10 @@ if [[ ! -x "$KANAMA_ROOT/gradlew" ]]; then
   echo "[ios_device_run] Kanama Gradle wrapper is not executable: $KANAMA_ROOT/gradlew" >&2
   exit 2
 fi
-if [[ ! -d "$KANAMA_ROOT/ios-runtime" || ! -f "$KANAMA_ROOT/ios/include/kanama_ios.h" ]]; then
+# The iOS runtime sources live in `ios-runtime/` up to kanama 130e6b35 and in `src/iosMain/` from
+# task 104 step 3 on (one KMP module); accept either, the C header is the constant.
+if [[ ! -f "$KANAMA_ROOT/ios/include/kanama_ios.h" ]] ||
+   [[ ! -d "$KANAMA_ROOT/ios-runtime" && ! -d "$KANAMA_ROOT/src/iosMain" ]]; then
   echo "[ios_device_run] KANAMA_ROOT does not look like the Kanama runtime repo: $KANAMA_ROOT" >&2
   exit 2
 fi
