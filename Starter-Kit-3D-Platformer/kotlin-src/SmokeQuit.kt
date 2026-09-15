@@ -20,6 +20,8 @@ class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::No
         if (System.getenv("KANAMA_DEMO_SMOKE_QUIT") != "1") return
         kanamaScope.launch {
             SceneTree.delaySeconds(0.2)
+            // One line every smoke prints once its checks ran; the iOS runner requires it (task 111).
+            println("[kanama:smoke] SmokeQuit complete")
             val tree = self.getTree()
             MainThread.post {
                 tree.quit()

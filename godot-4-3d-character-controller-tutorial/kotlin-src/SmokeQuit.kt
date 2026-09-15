@@ -21,6 +21,8 @@ class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::No
             repeat(20) {
                 MainThread.awaitNextFrame()
             }
+            // One line every smoke prints once its checks ran; the iOS runner requires it (task 111).
+            println("[kanama:smoke] SmokeQuit complete")
             val tree = self.getTree()
             tree.unloadCurrentScene()
             MainThread.postAfterFrames(QUIT_AFTER_UNLOAD_FRAMES) {

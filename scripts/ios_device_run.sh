@@ -28,6 +28,14 @@ Optional environment:
       launch install and launch the app a previous `build` stage left in the output dir.
   KANAMA_IOS_RUN_GRADLE_ARGS="..."  extra arguments for the installIosAddon Gradle call
       (e.g. --no-daemon -Pkotlin.compiler.execution.strategy=in-process for concurrent builds).
+  KANAMA_IOS_SMOKE_QUIT=1  launch with the demo's smoke switch (KANAMA_DEMO_SMOKE_QUIT=1 in the app's
+      environment, via devicectl --environment-variables) so its kotlin-src/SmokeQuit.kt runs on the phone —
+      spawn / damage / free / quit — inside the console window; the step then also REQUIRES the smoke's
+      completion line (KANAMA_IOS_SMOKE_COMPLETE_PATTERN, default: [kanama:smoke] SmokeQuit complete).
+      Ignored for demos without kotlin-src/SmokeQuit.kt. Needs KANAMA_IOS_CONSOLE_SECONDS > 0. (task 111)
+  KANAMA_IOS_CRASH_REPORTS=1  (default when KANAMA_IOS_CONSOLE_SECONDS > 0) snapshot the device's crash
+      logs before the launch and again after the window; a NEW <AppName>-*.ips fails the step even when the
+      crash left no signature in the console, and the report is copied to <output-dir>/crashes/. (task 111)
   KANAMA_IOS_CONSOLE_SECONDS=N  after launching, wait for the runtime's first [kanama][ios] line
       (bounded by KANAMA_IOS_LAUNCH_TIMEOUT, default 120 s), then stream the device console for N more seconds
       (devicectl --console) into <output-dir>/console.log and FAIL when it shows a crash
@@ -193,11 +201,57 @@ if [[ ! "$CONSOLE_SECONDS" =~ ^[0-9]+$ ]]; then
 fi
 CONSOLE_FAIL_PATTERN="${KANAMA_IOS_CONSOLE_FAIL_PATTERN:-App terminated due to signal|FATAL}"
 
+# Task 111: run the demo's smoke on the phone. Only meaningful with a console window (the smoke's
+# completion line is read from it) and only for demos that ship kotlin-src/SmokeQuit.kt.
+SMOKE_QUIT="${KANAMA_IOS_SMOKE_QUIT:-0}"
+SMOKE_COMPLETE_PATTERN="${KANAMA_IOS_SMOKE_COMPLETE_PATTERN:-\[kanama:smoke\] SmokeQuit complete}"
+smoke_active=0
+launch_env_args=()
+if [[ "$SMOKE_QUIT" == "1" ]]; then
+  if [[ "$CONSOLE_SECONDS" -eq 0 ]]; then
+    echo "[ios_device_run] KANAMA_IOS_SMOKE_QUIT=1 needs KANAMA_IOS_CONSOLE_SECONDS > 0 (the completion line is read from the console); ignoring." >&2
+  elif [[ ! -f "$DEMO_DIR/kotlin-src/SmokeQuit.kt" ]]; then
+    echo "[ios_device_run] smoke: $DEMO_DIR has no kotlin-src/SmokeQuit.kt; launch-only step"
+  else
+    smoke_active=1
+    launch_env_args=(--environment-variables '{"KANAMA_DEMO_SMOKE_QUIT":"1"}')
+    echo "[ios_device_run] smoke: launching with KANAMA_DEMO_SMOKE_QUIT=1; requiring '$SMOKE_COMPLETE_PATTERN'"
+  fi
+fi
+
+# Task 111: crash reports. The console window sees a crash only while it is open and only when
+# devicectl prints the signal line; the device's crash logs see every crash of the process.
+CRASH_REPORTS="${KANAMA_IOS_CRASH_REPORTS:-}"
+if [[ -z "$CRASH_REPORTS" ]]; then
+  if [[ "$CONSOLE_SECONDS" -gt 0 ]]; then CRASH_REPORTS=1; else CRASH_REPORTS=0; fi
+fi
+snapshot_crash_reports() {
+  # $1 = destination dir; lists this app's .ips names (one per line) on stdout, empty on copy failure.
+  local dest="$1"
+  rm -rf "$dest"
+  mkdir -p "$dest"
+  if DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device copy from --device "$DEVICE_ID" \
+      --domain-type systemCrashLogs --source . --destination "$dest" >/dev/null 2>&1; then
+    local f
+    for f in "$dest/$APP_NAME"-*.ips "$dest/$APP_NAME".*.ips; do
+      if [[ -e "$f" ]]; then basename "$f"; fi
+    done
+  else
+    echo "[ios_device_run] WARNING: could not copy the device's crash logs (before/after diff disabled for this step)" >&2
+  fi
+  return 0  # a no-match glob must not fail the caller under set -e
+}
+crashes_before=""
+if [[ "$CRASH_REPORTS" == "1" ]]; then
+  crashes_before="$(snapshot_crash_reports "$OUTPUT_DIR/crashes.before")"
+fi
+
 echo "[ios_device_run] launching app: $BUNDLE_ID"
 if [[ "$CONSOLE_SECONDS" -eq 0 ]]; then
   DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device process launch \
     --device "$DEVICE_ID" \
     --terminate-existing \
+    "${launch_env_args[@]}" \
     "$BUNDLE_ID"
 else
   # Task 105: `--console` streams the device's stdout/stderr to the host and blocks until the app
@@ -211,6 +265,7 @@ else
     --device "$DEVICE_ID" \
     --terminate-existing \
     --console \
+    "${launch_env_args[@]}" \
     "$BUNDLE_ID" \
     >>"$CONSOLE_LOG" 2>&1 &
   console_pid="$!"
@@ -242,6 +297,10 @@ else
       [[ $((waited - launched_at)) -ge "$CONSOLE_SECONDS" ]] && break
     fi
   done
+  if [[ "$smoke_active" -eq 1 ]] && grep -q -E "$SMOKE_COMPLETE_PATTERN" "$CONSOLE_LOG" 2>/dev/null; then
+    # Give the quit a moment so a crash inside SceneTree.quit() / teardown still lands in the log.
+    sleep 3
+  fi
   # Judge the log as it stood BEFORE the stream is stopped: stopping devicectl terminates the
   # app with SIGTERM and it then reports "App terminated due to signal 15." — our own doing, not
   # a crash (the first validation run failed every demo on exactly that line).
@@ -266,7 +325,32 @@ else
     echo "[ios_device_run] FAIL"
     exit 1
   fi
+  if [[ "$smoke_active" -eq 1 ]]; then
+    if grep -q -E "$SMOKE_COMPLETE_PATTERN" "$VERDICT_LOG"; then
+      echo "[ios_device_run] smoke: completion line seen ($(grep -c -E "$SMOKE_COMPLETE_PATTERN" "$VERDICT_LOG")x)"
+    else
+      echo "[ios_device_run] smoke: SmokeQuit ran but its completion line never appeared in ${waited}s — the smoke did not finish (crash without signature, hang, or the env var did not reach the app): $CONSOLE_LOG"
+      echo "[ios_device_run] FAIL"
+      exit 1
+    fi
+  fi
   echo "[ios_device_run] console: ${console_lines} lines in ${waited}s, no crash signature: $CONSOLE_LOG"
+fi
+
+if [[ "$CRASH_REPORTS" == "1" ]]; then
+  crashes_after="$(snapshot_crash_reports "$OUTPUT_DIR/crashes.after")"
+  new_crashes="$(comm -13 <(printf '%s\n' "$crashes_before" | sort -u) <(printf '%s\n' "$crashes_after" | sort -u) | sed '/^$/d')"
+  if [[ -n "$new_crashes" ]]; then
+    mkdir -p "$OUTPUT_DIR/crashes"
+    while IFS= read -r ips; do
+      cp "$OUTPUT_DIR/crashes.after/$ips" "$OUTPUT_DIR/crashes/" 2>/dev/null || true
+      echo "[ios_device_run] crash report: NEW $ips -> $OUTPUT_DIR/crashes/$ips"
+    done <<<"$new_crashes"
+    echo "[ios_device_run] FAIL"
+    exit 1
+  fi
+  echo "[ios_device_run] crash reports: no new $APP_NAME report on the device"
+  rm -rf "$OUTPUT_DIR/crashes.before" "$OUTPUT_DIR/crashes.after"
 fi
 
 echo "[ios_device_run] PASS"
