@@ -63,6 +63,8 @@ class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::No
     }
 
     private fun finishSmoke() {
+        // One line every smoke prints once its checks ran; the iOS runner requires it (task 111).
+        println("[kanama:smoke] SmokeQuit complete")
         SceneTree.unloadCurrentScene()
         MainThread.postAfterFrames(QUIT_AFTER_UNLOAD_FRAMES) {
             SceneTree.quit()

@@ -34,6 +34,8 @@ class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::No
             if (System.getenv("KANAMA_DODGE_SMOKE_MOVE") == "1") {
                 Input.actionRelease("move_right")
             }
+            // One line every smoke prints once its checks ran; the iOS runner requires it (task 111).
+            println("[kanama:smoke] SmokeQuit complete")
             val tree = self.getTree()
             MainThread.post { tree.quit() }
         }
