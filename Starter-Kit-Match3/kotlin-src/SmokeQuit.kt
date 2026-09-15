@@ -34,6 +34,8 @@ class SmokeQuit(godotObject: GodotHandle) :
           ?: error("SmokeQuit parent is missing the Main script")
       GD.print("KANAMA-DIFF match3.Main ${main.differentialProbe()}")
       SceneTree.delaySeconds(0.1)
+      // One line every smoke prints once its checks ran; the iOS runner requires it (task 111).
+      println("[kanama:smoke] SmokeQuit complete")
       val tree = self.getTree()
       MainThread.post { tree.quit() }
     }
