@@ -195,7 +195,21 @@ if [[ ! -d "$APP_PATH" ]]; then
 fi
 
 echo "[ios_device_run] installing app: $BUNDLE_ID"
-DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device install app --device "$DEVICE_ID" "$APP_PATH"
+INSTALL_LOG="$OUTPUT_DIR/install.log"
+DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device install app --device "$DEVICE_ID" "$APP_PATH" 2>&1 | tee "$INSTALL_LOG"
+# The exported app keeps the bundle id from the demo's export preset. If that is not the id this
+# run was asked to launch, the launch below would start whatever app already sits under the
+# requested id (an older build) and report ITS console as this run's result — which is exactly how
+# a task-115 diagnosis run re-ran the previous gate build unnoticed. Refuse instead (task 118).
+INSTALLED_BUNDLE_ID="$(sed -n 's/^.*bundleID: *//p' "$INSTALL_LOG" | head -n 1 | tr -d '[:space:]')"
+if [[ -z "$INSTALLED_BUNDLE_ID" ]]; then
+  echo "[ios_device_run] install did not report a bundleID (see $INSTALL_LOG); refusing to launch blind." >&2
+  exit 1
+fi
+if [[ "$INSTALLED_BUNDLE_ID" != "$BUNDLE_ID" ]]; then
+  echo "[ios_device_run] installed bundle id '$INSTALLED_BUNDLE_ID' (from the export preset) != requested '$BUNDLE_ID'; the launch would start a different app. Pass the exported id." >&2
+  exit 1
+fi
 
 CONSOLE_SECONDS="${KANAMA_IOS_CONSOLE_SECONDS:-0}"
 if [[ ! "$CONSOLE_SECONDS" =~ ^[0-9]+$ ]]; then
