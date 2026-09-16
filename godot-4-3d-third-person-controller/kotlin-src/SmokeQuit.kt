@@ -16,19 +16,31 @@ import net.multigesture.kanama.api.SceneTree
 import net.multigesture.kanama.types.Basis
 import net.multigesture.kanama.types.Vector3
 import kotlinx.coroutines.launch
+import kotlin.time.TimeSource
 
 @ScriptClass(attachTo = "Node")
 class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node), KanamaCoroutineOwner {
     override val kanamaScope = KanamaScope()
+    private val smokeClock = TimeSource.Monotonic.markNow()
+
+    // Step markers with elapsed time (task 115). println: on the phone only stdout streams to
+    // devicectl --console; the iOS System shim has no err stream.
+    private fun mark(message: String) {
+        println("[kanama:smoke] +${smokeClock.elapsedNow().inWholeMilliseconds}ms $message")
+    }
 
     @OnReady
     fun ready() {
         if (System.getenv("KANAMA_DEMO_SMOKE_QUIT") != "1") return
+        mark("ready: smoke armed")
         kanamaScope.launch {
             MainThread.awaitNextFrame()
+            mark("first frame")
             pressResumeButton()
+            mark("resume pressed")
             repeat(90) {
                 MainThread.awaitNextFrame()
+                if ((it + 1) % 30 == 0) mark("waited ${it + 1} frames")
             }
             if (System.getenv("KANAMA_DEMO_RESUME_ONLY") == "1") {
                 finishSmoke()
@@ -37,13 +49,21 @@ class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::No
             if (System.getenv("KANAMA_ROTATION_SMOKE") == "1") {
                 smokeBasisAssignment()
             }
+            mark("step smokeCoinSpawnCalls")
             smokeCoinSpawnCalls()
+            mark("step smokeGrenadeThrowCall")
             smokeGrenadeThrowCall()
+            mark("step smokeGrenadeLauncherCall")
             smokeGrenadeLauncherCall()
+            mark("step smokeBulletPreAddProperties")
             smokeBulletPreAddProperties()
+            mark("step smokeSmokePuffScene")
             smokeSmokePuffScene()
+            mark("step smokeBeetleSkinExportedPackedStrings")
             smokeBeetleSkinExportedPackedStrings()
+            mark("step smokeBeeBotDamageCall")
             smokeBeeBotDamageCall()
+            mark("step smokeBeetleBotDamageCall")
             smokeBeetleBotDamageCall()
             repeat(10) {
                 MainThread.awaitNextFrame()
@@ -64,6 +84,7 @@ class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::No
 
     private fun finishSmoke() {
         // One line every smoke prints once its checks ran; the iOS runner requires it (task 111).
+        mark("all steps done")
         println("[kanama:smoke] SmokeQuit complete")
         SceneTree.unloadCurrentScene()
         MainThread.postAfterFrames(QUIT_AFTER_UNLOAD_FRAMES) {
@@ -166,12 +187,20 @@ class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::No
             bulletObject.call("set", "velocity", Vector3.RIGHT * 10.0)
             bulletObject.call("set", "distance_limit", 14.0)
             bulletObject.call("set", "shooter", GodotObject(parent.handle))
+            mark("bullet: three sets done; get before add_child = ${bulletObject.call("get", "shooter")}")
             Node(bullet.handle).setProcessMode(Node.PROCESS_MODE_ALWAYS)
             parent.addChild(bullet)
+            mark("bullet: added")
 
             val bullet3d = Node3D(bullet.handle)
             bullet3d.globalPosition = Vector3(0f, 30f, 0f)
-            val shooter = bulletObject.call("get", "shooter") as? GodotObject
+            val rawShooter = bulletObject.call("get", "shooter")
+            val shooter = rawShooter as? GodotObject
+            mark(
+                "bullet: get shooter raw=$rawShooter class=${rawShooter?.let { it::class.simpleName }} " +
+                    "velocity=${bulletObject.call("get", "velocity")} distance_limit=${bulletObject.call("get", "distance_limit")} " +
+                    "same=${shooter?.isSameInstance(parent)}",
+            )
             check(shooter?.isSameInstance(parent) == true) {
                 "Bullet shooter property was not preserved before add_child"
             }
