@@ -83,10 +83,10 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         GD.print("TPS Level ready: complete")
         if (shouldQuitAfterReady) {
             kanamaScope.launch {
-                self.getTree().createTimer(5.0)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
+                requireNotNull(self.getTree()).createTimer(5.0)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
                 if (!self.isQueuedForDeletion() && self.isInsideTree()) {
                     GD.print("TPS smoke second level ready; quitting")
-                    self.getTree().quit()
+                    requireNotNull(self.getTree()).quit()
                 }
             }
         }
@@ -139,7 +139,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         kanamaScope.launch {
             repeat(robotCount) { index ->
                 if (index > 0) {
-                    self.getTree().createTimer(delayBetweenKills)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
+                    requireNotNull(self.getTree()).createTimer(delayBetweenKills)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
                 }
                 if (exiting || self.isQueuedForDeletion() || !self.isInsideTree()) return@launch
                 MainThread.postNextFrame {
@@ -165,10 +165,10 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
                                     }
                                 }
                                 if (shot < 4) {
-                                    self.getTree().createTimer(0.35)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
+                                    requireNotNull(self.getTree()).createTimer(0.35)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
                                 }
                             }
-                            self.getTree().createTimer(2.0)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
+                            requireNotNull(self.getTree()).createTimer(2.0)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
                             GD.print("TPS smoke robot death complete ${index + 1}/$robotCount")
                         }
                     } else {
@@ -184,7 +184,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
                     }
                 }
                 if (index == 0 && System.getenv("KANAMA_TPS_SMOKE_RETURN_TO_MENU_AFTER_FIRST_KILL") == "1") {
-                    self.getTree().createTimer(1.0)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
+                    requireNotNull(self.getTree()).createTimer(1.0)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
                     if (!exiting && !self.isQueuedForDeletion() && self.isInsideTree()) {
                         GD.print("TPS smoke returning to menu after first kill")
                         self.emitSignal("quit")
@@ -262,7 +262,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
     @RegisterFunction("_respawn_robot")
     fun respawnRobot(spawnPoint: Node3D) {
         kanamaScope.launch {
-            self.getTree().createTimer(15.0)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
+            requireNotNull(self.getTree()).createTimer(15.0)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
             if (exiting || self.isQueuedForDeletion() || !self.isInsideTree()) return@launch
             spawnRobot(spawnPoint)
         }

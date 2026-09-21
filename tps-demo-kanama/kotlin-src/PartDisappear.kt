@@ -23,17 +23,17 @@ class PartDisappear(godotObject: GodotHandle) : KanamaScript<CPUParticles3D>(god
         miniBlasts = self.requireAs("MiniBlasts", ::CPUParticles3D)
         kanamaScope.launch {
             miniBlasts.emitting = true
-            self.getTree().createTimer(0.2)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
+            requireNotNull(self.getTree()).createTimer(0.2)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
             self.emitting = true
             val smokeQuitAfterParts = System.getenv("KANAMA_TPS_SMOKE_QUIT_AFTER_PARTS") == "1"
             if (smokeQuitAfterParts) {
                 GD.print("TPS smoke part disappearance emitted")
                 val quitDelay = System.getenv("KANAMA_TPS_SMOKE_QUIT_AFTER_PARTS_DELAY")?.toDoubleOrNull() ?: 4.0
-                self.getTree().createTimer(quitDelay)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
-                self.getTree().quit()
+                requireNotNull(self.getTree()).createTimer(quitDelay)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
+                requireNotNull(self.getTree()).quit()
                 return@launch
             }
-            self.getTree().createTimer(self.lifetime * 2.0)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
+            requireNotNull(self.getTree()).createTimer(self.lifetime * 2.0)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
             self.queueFree()
         }
     }

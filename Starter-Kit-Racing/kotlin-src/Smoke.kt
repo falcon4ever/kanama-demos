@@ -26,6 +26,6 @@ class Smoke(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
             "Racing smoke expected RigidBody3D.angularVelocity to be readable"
         }
 
-        self.getTree().quit()
+        requireNotNull(self.getTree()).quit()
     }
 }

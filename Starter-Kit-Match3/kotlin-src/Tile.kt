@@ -12,6 +12,7 @@ import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Sprite2D
 import net.multigesture.kanama.api.Texture2D
 import net.multigesture.kanama.api.Tween
+import net.multigesture.kanama.api.createTween
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.TileSignals
 import net.multigesture.kanama.types.Color

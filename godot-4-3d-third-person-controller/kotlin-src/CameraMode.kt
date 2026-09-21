@@ -77,14 +77,14 @@ class CameraMode(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, :
 
     private fun toggleCameraMode() {
         if (self.isVisible()) {
-            self.getTree().setPaused(false)
+            requireNotNull(self.getTree()).setPaused(false)
             cachedCamera?.setCurrent(true)
             camera?.queueFree()
             camera = null
             self.hide()
             setCameraModeToggleVisible(true)
         } else {
-            self.getTree().setPaused(true)
+            requireNotNull(self.getTree()).setPaused(true)
             cachedCamera = self.getViewport()?.getCamera3D()
             val newCamera = Camera3D.create()
             camera = newCamera
@@ -102,7 +102,7 @@ class CameraMode(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, :
     }
 
     private fun setCameraModeToggleVisible(visible: Boolean) {
-        for (node in self.getTree().getNodesInGroup("camera_mode_toggle")) {
+        for (node in requireNotNull(self.getTree()).getNodesInGroup("camera_mode_toggle")) {
             if (node.isClass("CanvasItem")) {
                 if (visible) {
                     CanvasItem(node.handle).show()

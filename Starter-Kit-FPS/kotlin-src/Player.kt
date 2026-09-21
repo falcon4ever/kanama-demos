@@ -31,6 +31,7 @@ import net.multigesture.kanama.api.ResourceLoader
 import net.multigesture.kanama.api.TextureRect
 import net.multigesture.kanama.api.Timer
 import net.multigesture.kanama.api.Tween
+import net.multigesture.kanama.api.createTween
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.PlayerSignals
 import net.multigesture.kanama.types.Vector2
@@ -141,7 +142,7 @@ class Player(godotObject: GodotHandle) :
     previouslyFloored = self.isOnFloor()
 
     if (self.position.y < -10.0) {
-      self.getTree().reloadCurrentScene()
+      requireNotNull(self.getTree()).reloadCurrentScene()
     }
   }
 
@@ -339,7 +340,7 @@ class Player(godotObject: GodotHandle) :
     PlayerSignals.healthUpdated(this, health)
 
     if (health < 0) {
-      self.getTree().reloadCurrentScene()
+      requireNotNull(self.getTree()).reloadCurrentScene()
     }
   }
 

@@ -38,7 +38,7 @@ class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::No
     if (page != null) {
       page.resumeFromSmoke()
     } else {
-      self.getTree().setPaused(false)
+      requireNotNull(self.getTree()).setPaused(false)
     }
   }
 
