@@ -15,7 +15,7 @@ class Game(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
     fun input(event: GodotObject) {
         if (!InputEvent(event.handle).isActionPressed("toggle_fullscreen")) return
 
-        val viewport = Window(self.getViewport()?.handle ?: self.getTree().getRoot())
+        val viewport = self.getViewport()?.let { Window(it.handle) } ?: requireNotNull(self.getTree().getRoot())
         viewport.setMode(
             if (viewport.getMode() != Window.MODE_FULLSCREEN) {
                 Window.MODE_FULLSCREEN
