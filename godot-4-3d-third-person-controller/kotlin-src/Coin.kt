@@ -16,6 +16,7 @@ import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.PhysicsBody3D
 import net.multigesture.kanama.api.RigidBody3D
 import net.multigesture.kanama.api.SceneTree
+import net.multigesture.kanama.api.createTween
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.types.Vector3
 import kotlinx.coroutines.launch

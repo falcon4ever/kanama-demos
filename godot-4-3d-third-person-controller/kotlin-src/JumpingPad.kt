@@ -10,6 +10,7 @@ import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.Tween
+import net.multigesture.kanama.api.createTween
 import net.multigesture.kanama.types.Vector3
 
 @ScriptClass(attachTo = "Area3D")

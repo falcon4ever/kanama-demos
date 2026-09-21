@@ -124,7 +124,7 @@ class BeeBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, 
 		beeRoot.playPoweroff()
 
 		kanamaScope.launch {
-			self.getTree().delaySeconds(2.0)
+			requireNotNull(self.getTree()).delaySeconds(2.0)
 
 			val puff = DemoScenes.instantiate(DemoScenes.SMOKE_PUFF)
 			if (puff != null) {

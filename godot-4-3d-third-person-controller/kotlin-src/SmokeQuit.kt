@@ -78,7 +78,7 @@ class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::No
         if (resume != null) {
             resume.signal(BaseButton.Signals.pressed).emit()
         } else {
-            self.getTree().setPaused(false)
+            requireNotNull(self.getTree()).setPaused(false)
         }
     }
 
