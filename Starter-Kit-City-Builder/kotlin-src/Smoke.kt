@@ -31,6 +31,6 @@ class Smoke(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) 
         check(grid.getUsedCells().size >= builder.structures.size) {
             "GridMap smoke cells were not reported as used"
         }
-        self.getTree().quit()
+        requireNotNull(self.getTree()).quit()
     }
 }
