@@ -62,7 +62,7 @@ class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
 
     @RegisterFunction("new_game")
     fun newGame() {
-        self.getTree().callGroup("mobs", "queue_free")
+        requireNotNull(self.getTree()).callGroup("mobs", "queue_free")
         score = 0
         player.start(startPosition.position)
         startTimer.start()
