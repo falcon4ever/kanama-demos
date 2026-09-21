@@ -104,7 +104,7 @@ class Part(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::
             } else {
                 lifetime + lifetimeRandom * net.multigesture.kanama.api.GD.randf()
             }
-            self.getTree().createTimer(delay)
+            requireNotNull(self.getTree()).createTimer(delay)
                 ?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
             if (!self.isQueuedForDeletion() && self.isInsideTree()) {
                 self.setProcess(true)
@@ -140,8 +140,8 @@ class Part(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::
             net.multigesture.kanama.api.GD.print("TPS smoke part destroyed")
             kanamaScope.launch {
                 val delay = System.getenv("KANAMA_TPS_SMOKE_QUIT_AFTER_PARTS_DESTROYED_DELAY")?.toDoubleOrNull() ?: 4.0
-                self.getTree().createTimer(delay)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
-                self.getTree().quit()
+                requireNotNull(self.getTree()).createTimer(delay)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
+                requireNotNull(self.getTree()).quit()
             }
         }
     }
