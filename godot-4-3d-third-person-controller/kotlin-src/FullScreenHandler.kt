@@ -44,7 +44,7 @@ class FullScreenHandler(godotObject: GodotHandle) : KanamaScript<Node>(godotObje
             (keyEvent.getKeycode() == InputEventKey.KEY_ENTER && keyEvent.isAltPressed())
         if (!togglesFullscreen) return
 
-        val root = requireNotNull(self.getTree().getRoot())
+        val root = requireNotNull(requireNotNull(self.getTree()).getRoot())
         root.setMode(
             if (root.getMode() == Window.MODE_FULLSCREEN) {
                 Window.MODE_WINDOWED

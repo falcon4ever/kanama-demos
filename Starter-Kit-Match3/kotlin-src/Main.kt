@@ -23,6 +23,7 @@ import net.multigesture.kanama.api.PackedScene
 import net.multigesture.kanama.api.SceneTree
 import net.multigesture.kanama.api.Texture2D
 import net.multigesture.kanama.api.Tween
+import net.multigesture.kanama.api.createTween
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.MainNames
 import net.multigesture.kanama.generated.TileNames

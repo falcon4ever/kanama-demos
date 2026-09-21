@@ -137,7 +137,7 @@ class BeetleBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObjec
         self.gravityScale = 1.0
 
         kanamaScope.launch {
-            self.getTree().delaySeconds(2.0)
+            requireNotNull(self.getTree()).delaySeconds(2.0)
 
             val puff = DemoScenes.instantiate(DemoScenes.SMOKE_PUFF)
             if (puff != null) {

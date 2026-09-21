@@ -41,7 +41,7 @@ class HUD(godotObject: GodotHandle) : KanamaScript<CanvasLayer>(godotObject, ::C
             messageTimer.signal(Timer.Signals.timeout).await(self, argumentCount = 0)
             messageLabel.text = "Dodge the\nCreeps"
             messageLabel.show()
-            self.getTree().delaySeconds(1.0)
+            requireNotNull(self.getTree()).delaySeconds(1.0)
             startButton.show()
         }
     }

@@ -9,6 +9,7 @@ import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Label
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Timer
+import net.multigesture.kanama.api.createTween
 
 @ScriptClass(attachTo = "Control")
 class CoinsContainer(godotObject: GodotHandle) : KanamaScript<Control>(godotObject, ::Control) {

@@ -312,7 +312,7 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
 
     @RegisterFunction("_on_quit_pressed")
     fun onQuitPressed() {
-        self.getTree().quit()
+        requireNotNull(self.getTree()).quit()
     }
 
     @RegisterFunction("_on_apply_pressed")

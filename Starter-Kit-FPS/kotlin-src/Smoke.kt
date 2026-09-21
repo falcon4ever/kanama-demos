@@ -66,7 +66,7 @@ class Smoke(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         assignedCrosshair.close() // owned +1 read-back; the Crosshair node keeps its own
 
         stopAudio()
-        self.getTree().quit()
+        requireNotNull(self.getTree()).quit()
     }
 
 

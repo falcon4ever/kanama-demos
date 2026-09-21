@@ -150,7 +150,7 @@ class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotOb
 		self.emitSignal("exploded")
 		if (self.isMultiplayerServer()) {
 				kanamaScope.launch {
-					self.getTree().createTimer(10.0)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
+					requireNotNull(self.getTree()).createTimer(10.0)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
 					self.queueFree()
 				}
 		}
@@ -174,7 +174,7 @@ class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotOb
 		if (hit.isNotEmpty()) {
 			val blast = TpsScenes.instantiate(TpsScenes.ROBOT_BLAST)
 			if (blast != null) {
-				requireNotNull(self.getTree().root).addChild(blast)
+				requireNotNull(requireNotNull(self.getTree()).root).addChild(blast)
 				Node3D(blast.handle).globalTransform =
 					Node3D(blast.handle).globalTransform.withOrigin(hit["position"] as? Vector3 ?: rayOrigin)
 			}
@@ -183,7 +183,7 @@ class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotOb
 					val hitPlayer = player?.kotlinScriptInstance<Player>()
 					if (hitPlayer != null) {
 						kanamaScope.launch {
-							self.getTree().createTimer(0.1)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
+							requireNotNull(self.getTree()).createTimer(0.1)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
 							hitPlayer.addCameraShakeTrauma(13.0)
 					}
 				}

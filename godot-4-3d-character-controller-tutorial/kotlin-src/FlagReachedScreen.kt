@@ -25,14 +25,14 @@ class FlagReachedScreen(godotObject: GodotHandle) :
     val events = self.eventsNode()
     events.signal(EventsNames.Signals.flagReached).connect(self, argumentCount = 0) {
       kanamaScope.launch {
-        self.getTree().delaySeconds(2.0)
+        requireNotNull(self.getTree()).delaySeconds(2.0)
         animationPlayer.play("fade_in")
         animationPlayer
           .signal(AnimationMixer.Signals.animationFinished)
           .await(self, argumentCount = 1)
         // Restart the level instead of quitting the app: app-quit win behavior is wrong
         // for a touch/GUI build and for a browser page alike.
-        self.getTree().reloadCurrentScene()
+        requireNotNull(self.getTree()).reloadCurrentScene()
       }
     }
   }

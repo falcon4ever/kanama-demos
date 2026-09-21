@@ -6,6 +6,7 @@ import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.TextureRect
+import net.multigesture.kanama.api.createTween
 import net.multigesture.kanama.types.Color
 
 @ScriptClass(attachTo = "TextureRect")

@@ -29,7 +29,7 @@ class SmokeQuit(godotObject: GodotHandle) :
             self.getParent()?.kotlinScriptInstance<Main>()?.newGame()
                 ?: error("SmokeQuit parent is missing Main script")
             SceneTree.delaySeconds(2.5)
-            val tree = self.getTree()
+            val tree = requireNotNull(self.getTree())
             MainThread.post { tree.quit() }
         }
     }

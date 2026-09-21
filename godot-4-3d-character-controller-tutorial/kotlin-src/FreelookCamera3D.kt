@@ -101,7 +101,7 @@ class FreelookCamera3D(godotObject: GodotHandle) : KanamaScript<Camera3D>(godotO
             previousCamera?.makeCurrent()
         }
 
-        self.getTree().setPaused(self.isCurrent())
+        requireNotNull(self.getTree()).setPaused(self.isCurrent())
         self.setProcess(self.isCurrent())
     }
 

@@ -18,6 +18,7 @@ import net.multigesture.kanama.api.OS
 import net.multigesture.kanama.api.SceneTree
 import net.multigesture.kanama.api.Tween
 import net.multigesture.kanama.api.WorldEnvironment
+import net.multigesture.kanama.api.createTween
 import net.multigesture.kanama.types.Color
 
 @ScriptClass(attachTo = "Node")
@@ -41,7 +42,7 @@ class DemoPage(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Nod
 
     @OnReady
     fun ready() {
-        self.getTree().setPaused(true)
+        requireNotNull(self.getTree()).setPaused(true)
         // Desktop warms the enemy/player instances only where the first instantiation hitches
         // (mobile); Web always warms its bullet pool against this page, as its former override did.
         DemoScenes.warmUp(if (shouldWarmUpInstances() || isWeb()) self else null)
@@ -88,7 +89,7 @@ class DemoPage(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Nod
     fun input(event: GodotObject) {
         val inputEvent = net.multigesture.kanama.api.InputEvent(event.handle)
         if (inputEvent.isActionPressed("pause") && !inputEvent.isEcho()) {
-            if (self.getTree().isPaused()) {
+            if (requireNotNull(self.getTree()).isPaused()) {
                 resumeDemo()
             } else {
                 pauseDemo()
@@ -118,14 +119,14 @@ class DemoPage(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Nod
 
     private fun pauseDemo() {
         demoMouseMode = Input.getMouseMode()
-        self.getTree().setPaused(true)
+        requireNotNull(self.getTree()).setPaused(true)
         demoPageRoot.show()
         tweenDemoPage(Color(1f, 1f, 1f, 1f))
         Input.setMouseMode(Input.MOUSE_MODE_VISIBLE)
     }
 
     private fun resumeDemo() {
-        self.getTree().setPaused(false)
+        requireNotNull(self.getTree()).setPaused(false)
         clearPageTween()
         hideAfterTween = false
         // Transparent controls still receive touch input, so hide the overlay
@@ -146,7 +147,7 @@ class DemoPage(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Nod
         exiting = true
         clearPageTween()
         releaseWarmup()
-        self.getTree().setPaused(false)
+        requireNotNull(self.getTree()).setPaused(false)
         demoPageRoot.hide()
         stopStageMusic()
         SceneTree.unloadCurrentScene()
@@ -188,7 +189,7 @@ class DemoPage(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Nod
     }
 
     private fun finishDemoPageTween() {
-        if (hideAfterTween && !exiting && !self.getTree().isPaused()) {
+        if (hideAfterTween && !exiting && !requireNotNull(self.getTree()).isPaused()) {
             hideAfterTween = false
             demoPageRoot.hide()
             enableDeferredLightingAfterResume()

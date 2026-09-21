@@ -93,7 +93,7 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 		// safety (the freed proxy must not receive further calls this frame) and is harmless
 		// on desktop.
 		if (self.position.y < -10.0) {
-			self.getTree().reloadCurrentScene()
+			requireNotNull(self.getTree()).reloadCurrentScene()
 			return
 		}
 
