@@ -195,7 +195,7 @@ class RedRobot(godotObject: GodotHandle) :
     if (hit != null) {
       val blast = TpsScenes.instantiate(TpsScenes.ROBOT_BLAST)
       if (blast != null) {
-        self.getTree().root.addChild(blast)
+        requireNotNull(self.getTree().root).addChild(blast)
         Node3D(blast.handle).globalTransform =
           Node3D(blast.handle).globalTransform.withOrigin(hit.position)
       }
