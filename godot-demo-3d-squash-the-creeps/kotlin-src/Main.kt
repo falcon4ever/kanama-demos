@@ -101,6 +101,6 @@ class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
   }
 
   private fun retryCurrentScene() {
-    self.getTree().reloadCurrentScene()
+    requireNotNull(self.getTree()).reloadCurrentScene()
   }
 }
