@@ -82,13 +82,13 @@ class Tile(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area2
     val tween = trackedTween(if (playSound) ::onMoveFinished else null) ?: return
 
     tween.tweenProperty(self, "position", targetPosition, 0.3)?.let { tweener ->
-      tweener.setTrans(Tween.TRANS_BACK).setEase(Tween.EASE_OUT)
+      tweener?.setTrans(Tween.TRANS_BACK)?.setEase(Tween.EASE_OUT)
     }
 
     sprite()?.let { sprite ->
       sprite.scale = Vector2(1.2f, 0.8f)
       tween.tweenProperty(sprite, "scale", Vector2.ONE, 0.3)?.let { tweener ->
-        tweener.setTrans(Tween.TRANS_ELASTIC).setEase(Tween.EASE_OUT)
+        tweener?.setTrans(Tween.TRANS_ELASTIC)?.setEase(Tween.EASE_OUT)
       }
     }
   }
