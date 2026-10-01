@@ -43,18 +43,19 @@ Optional environment:
       or when no `[kanama][ios]` line arrived in the window. 0 (default): launch-only, as before.
       Stopping the stream terminates the app (devicectl sends SIGTERM); the verdict is taken from
       the log as it stood before that.
-      The window also FAILS on any `[kanama][ios][c] FAULT ` line outside the self-test's printed
-      fault-probe window, on a fault-probe window that opens and never closes, on a run that
-      opened a window but printed no OBJECTCALLS SELFTEST summary line, and on any OBJECTCALLS
-      SELFTEST summary line whose `faults=` and `expected=` disagree (kanama task 124 — the iOS
-      bridge reports every guarded early return instead of returning quietly).
+      The window also FAILS on any `[kanama][ios][c] FAULT ` line (the self-test's seven
+      deliberate `[kanama][ios][c] FAULT-PROBE ` lines do not match), on any OBJECTCALLS SELFTEST
+      summary line whose `faults=` and `expected=` disagree, and on a run whose self-test ran (the
+      `PTRCALL SELFTEST MATRIX` line is there) but printed no OBJECTCALLS SELFTEST summary line
+      (kanama task 124 — the iOS bridge reports every guarded early return instead of returning
+      quietly).
 
 Self-check:
   scripts/ios_device_run.sh --check-console-faults /path/to/console.log
       Run ONLY the task-124 fault check against an existing console log and exit 0/1. This is how
       the check's own red run is re-executed without a phone: copy a green console.log and add one
-      FAULT line, edit a summary line to faults=8 expected=7, delete the `fault-probes end` line,
-      or delete the two summary lines — each must trip it.
+      FAULT line (anywhere, including between FAULT-PROBE lines), edit a summary line to faults=8
+      expected=7, or delete the two summary lines — each must trip it.
 EOF
 }
 
@@ -62,19 +63,26 @@ EOF
 # visible from here. The C shim reports every guarded early return as
 # `[kanama][ios][c] FAULT <entry>: <reason> <detail>` and counts it; a debug build's self-test
 # makes exactly SEVEN deliberate faults (two bind probes and the five drained pending slots) and
-# prints them as `faults=<N> expected=<N>` on both OBJECTCALLS SELFTEST summary lines. So:
+# prints them as `faults=<N> expected=<N>` on both OBJECTCALLS SELFTEST summary lines. While it
+# makes them it puts the shim's sink in probe mode, so those seven print as
+# `[kanama][ios][c] FAULT-PROBE <entry>: ...` — the sink marks them on the line itself. So:
 #
-#   * ANY FAULT line in the console window fails the run — including one the summary count would
-#     have hidden, because the sink stops printing after 64 while the count keeps counting;
-#   * any summary line where faults != expected fails the run, which catches faults raised
-#     BEFORE the sink's print budget ran out as well as after.
+#   * ANY `[kanama][ios][c] FAULT ` line (with the space: FAULT-PROBE does not match) fails the
+#     run — including one the summary count would have hidden, because the sink stops printing
+#     after 64 while the count keeps counting. `null-bind`, the most common real fault, stays
+#     fatal: the probes are told apart by the sink's own mark, never by a reason token;
+#   * any summary line where faults != expected fails the run. This is what holds the probes to
+#     exactly seven, and it also catches a real fault printed as FAULT-PROBE because another thread
+#     raised it while probe mode was on (faults=8 expected=7);
+#   * a run whose self-test RAN (the C ptrcall matrix printed `PTRCALL SELFTEST MATRIX`) but that
+#     printed no summary line never reached the faults=/expected= comparison, so its silence is
+#     not evidence of health: it fails too.
 #
-# Both of those rules lean on the printed probe window, so the window itself is checked before
-# they are trusted. An UNTERMINATED window (`fault-probes begin` with no `fault-probes end` after
-# it) would otherwise swallow every FAULT line from the probes to the end of the log — a crash or
-# a hang in the middle of the probes would disable exactly the check that should catch it. And a
-# run that opened a window but never printed a summary line never reached the `faults=`/
-# `expected=` comparison at all, so its silence is not evidence of health either. Both FAIL.
+# Nothing here reads a line's meaning from its POSITION. The self-test's `fault-probes begin/end`
+# markers are Kotlin println (stdout) and the sink writes stderr; `devicectl --console` merges the
+# two streams without preserving their relative order, and on the first iPhone run all seven probe
+# lines landed after the `end` marker. An earlier version of this check trusted FAULT lines
+# between the markers and failed that healthy run; the markers are now for humans only.
 #
 # A summary line without `expected=` is an older runtime: expected is then 0, so any fault at all
 # on such a build trips the check rather than passing unnoticed.
@@ -82,54 +90,32 @@ EOF
 # a minefield of character classes once it passes through `awk -v` escape processing (the first cut
 # of this check silently matched nothing for exactly that reason, and its red run caught it).
 FAULT_LINE_MARKER='[kanama][ios][c] FAULT '
-# The debug self-test makes its seven deliberate faults inside ONE printed window, so their FAULT
-# lines are expected and every OTHER one is fatal — `null-bind`, the most common real fault, stays
-# fatal instead of being whitelisted by its text. The `faults=`/`expected=` comparison below is what
-# holds the probes themselves to exactly seven.
-FAULT_PROBE_BEGIN='OBJECTCALLS SELFTEST fault-probes begin'
-FAULT_PROBE_END='OBJECTCALLS SELFTEST fault-probes end'
+# Printed by the C ptrcall matrix at the start of every debug self-test, before any Kotlin row.
+SELFTEST_RAN_MARKER='PTRCALL SELFTEST MATRIX'
 
 check_console_faults() {
   local log="$1"
 
-  # The window's own integrity, first: everything below reads FAULT lines relative to it.
-  local begins ends summaries
-  begins="$(grep -c -F "$FAULT_PROBE_BEGIN" "$log" 2>/dev/null || true)"
-  ends="$(grep -c -F "$FAULT_PROBE_END" "$log" 2>/dev/null || true)"
-  summaries="$(grep -c -E 'OBJECTCALLS SELFTEST.*faults=' "$log" 2>/dev/null || true)"
-  : "${begins:=0}" "${ends:=0}" "${summaries:=0}"
-  # An `end` before its `begin`, or fewer ends than begins, leaves a window open to end of file.
-  local unterminated
-  unterminated="$(awk -v b="$FAULT_PROBE_BEGIN" -v e="$FAULT_PROBE_END" '
-    index($0, b) { open = 1; next }
-    index($0, e) { open = 0; next }
-    END { print open + 0 }
-  ' "$log" 2>/dev/null || echo 0)"
-  if (( begins > 0 )) && { (( ends < begins )) || [[ "$unterminated" != "0" ]]; }; then
-    echo "[ios_device_run] console: the self-test's fault-probe window was opened and never closed"
-    echo "[ios_device_run]   ('$FAULT_PROBE_BEGIN' x$begins, '$FAULT_PROBE_END' x$ends): $log"
-    echo "[ios_device_run]   an unterminated window hides every FAULT line after it, so the run fails here"
-    return 1
-  fi
-  if (( begins > 0 && summaries == 0 )); then
-    echo "[ios_device_run] console: the self-test opened a fault-probe window but printed no"
-    echo "[ios_device_run]   'OBJECTCALLS SELFTEST ... faults=' summary line, so the faults=/expected="
-    echo "[ios_device_run]   comparison never ran — the self-test did not finish: $log"
-    return 1
-  fi
-
   local first
-  first="$(awk -v b="$FAULT_PROBE_BEGIN" -v e="$FAULT_PROBE_END" -v m="$FAULT_LINE_MARKER" '
-    index($0, b) { in_probe = 1; next }
-    index($0, e) { in_probe = 0; next }
-    !in_probe && index($0, m) { print; exit }
-  ' "$log" 2>/dev/null || true)"
+  first="$(awk -v m="$FAULT_LINE_MARKER" 'index($0, m) { print; exit }' "$log" 2>/dev/null || true)"
   if [[ -n "$first" ]]; then
     echo "[ios_device_run] console: the iOS bridge reported a FAULT — a call did not reach Godot: $log"
     echo "[ios_device_run]   first: $first"
     echo "[ios_device_run]   see docs/exporting/ios.md \"When you see a FAULT line\" in the kanama checkout"
     return 1
   fi
+
+  local ran summaries
+  ran="$(grep -c -F "$SELFTEST_RAN_MARKER" "$log" 2>/dev/null || true)"
+  summaries="$(grep -c -E 'OBJECTCALLS SELFTEST.*faults=' "$log" 2>/dev/null || true)"
+  : "${ran:=0}" "${summaries:=0}"
+  if (( ran > 0 && summaries == 0 )); then
+    echo "[ios_device_run] console: the self-test ran ('$SELFTEST_RAN_MARKER' x$ran) but printed no"
+    echo "[ios_device_run]   'OBJECTCALLS SELFTEST ... faults=' summary line, so the faults=/expected="
+    echo "[ios_device_run]   comparison never ran — the self-test did not finish: $log"
+    return 1
+  fi
+
   local line faults expected
   while IFS= read -r line; do
     faults="$(printf '%s\n' "$line" | sed -n 's/.*faults=\([0-9][0-9]*\).*/\1/p')"
