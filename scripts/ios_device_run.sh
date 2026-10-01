@@ -43,8 +43,105 @@ Optional environment:
       or when no `[kanama][ios]` line arrived in the window. 0 (default): launch-only, as before.
       Stopping the stream terminates the app (devicectl sends SIGTERM); the verdict is taken from
       the log as it stood before that.
+      The window also FAILS on any `[kanama][ios][c] FAULT ` line (the self-test's seven
+      deliberate `[kanama][ios][c] FAULT-PROBE ` lines do not match), on any OBJECTCALLS SELFTEST
+      summary line whose `faults=` and `expected=` disagree, and on a run whose self-test ran (the
+      `PTRCALL SELFTEST MATRIX` line is there) but printed no OBJECTCALLS SELFTEST summary line
+      (kanama task 124 — the iOS bridge reports every guarded early return instead of returning
+      quietly).
+
+Self-check:
+  scripts/ios_device_run.sh --check-console-faults /path/to/console.log
+      Run ONLY the task-124 fault check against an existing console log and exit 0/1. This is how
+      the check's own red run is re-executed without a phone: copy a green console.log and add one
+      FAULT line (anywhere, including between FAULT-PROBE lines), edit a summary line to faults=8
+      expected=7, or delete the two summary lines — each must trip it.
 EOF
 }
+
+# kanama task 124 — the iOS bridge no longer fails quietly, and this step is what makes that
+# visible from here. The C shim reports every guarded early return as
+# `[kanama][ios][c] FAULT <entry>: <reason> <detail>` and counts it; a debug build's self-test
+# makes exactly SEVEN deliberate faults (two bind probes and the five drained pending slots) and
+# prints them as `faults=<N> expected=<N>` on both OBJECTCALLS SELFTEST summary lines. While it
+# makes them it puts the shim's sink in probe mode, so those seven print as
+# `[kanama][ios][c] FAULT-PROBE <entry>: ...` — the sink marks them on the line itself. So:
+#
+#   * ANY `[kanama][ios][c] FAULT ` line (with the space: FAULT-PROBE does not match) fails the
+#     run — including one the summary count would have hidden, because the sink stops printing
+#     after 64 while the count keeps counting. `null-bind`, the most common real fault, stays
+#     fatal: the probes are told apart by the sink's own mark, never by a reason token;
+#   * any summary line where faults != expected fails the run. This is what holds the probes to
+#     exactly seven, and it also catches a real fault printed as FAULT-PROBE because another thread
+#     raised it while probe mode was on (faults=8 expected=7);
+#   * a run whose self-test RAN (the C ptrcall matrix printed `PTRCALL SELFTEST MATRIX`) but that
+#     printed no summary line never reached the faults=/expected= comparison, so its silence is
+#     not evidence of health: it fails too.
+#
+# Nothing here reads a line's meaning from its POSITION. The self-test's `fault-probes begin/end`
+# markers are Kotlin println (stdout) and the sink writes stderr; `devicectl --console` merges the
+# two streams without preserving their relative order, and on the first iPhone run all seven probe
+# lines landed after the `end` marker. An earlier version of this check trusted FAULT lines
+# between the markers and failed that healthy run; the markers are now for humans only.
+#
+# A summary line without `expected=` is an older runtime: expected is then 0, so any fault at all
+# on such a build trips the check rather than passing unnoticed.
+# A LITERAL marker, matched with awk's index() rather than as a regex: the bracket-heavy prefix is
+# a minefield of character classes once it passes through `awk -v` escape processing (the first cut
+# of this check silently matched nothing for exactly that reason, and its red run caught it).
+FAULT_LINE_MARKER='[kanama][ios][c] FAULT '
+# Printed by the C ptrcall matrix at the start of every debug self-test, before any Kotlin row.
+SELFTEST_RAN_MARKER='PTRCALL SELFTEST MATRIX'
+
+check_console_faults() {
+  local log="$1"
+
+  local first
+  first="$(awk -v m="$FAULT_LINE_MARKER" 'index($0, m) { print; exit }' "$log" 2>/dev/null || true)"
+  if [[ -n "$first" ]]; then
+    echo "[ios_device_run] console: the iOS bridge reported a FAULT — a call did not reach Godot: $log"
+    echo "[ios_device_run]   first: $first"
+    echo "[ios_device_run]   see docs/exporting/ios.md \"When you see a FAULT line\" in the kanama checkout"
+    return 1
+  fi
+
+  local ran summaries
+  ran="$(grep -c -F "$SELFTEST_RAN_MARKER" "$log" 2>/dev/null || true)"
+  summaries="$(grep -c -E 'OBJECTCALLS SELFTEST.*faults=' "$log" 2>/dev/null || true)"
+  : "${ran:=0}" "${summaries:=0}"
+  if (( ran > 0 && summaries == 0 )); then
+    echo "[ios_device_run] console: the self-test ran ('$SELFTEST_RAN_MARKER' x$ran) but printed no"
+    echo "[ios_device_run]   'OBJECTCALLS SELFTEST ... faults=' summary line, so the faults=/expected="
+    echo "[ios_device_run]   comparison never ran — the self-test did not finish: $log"
+    return 1
+  fi
+
+  local line faults expected
+  while IFS= read -r line; do
+    faults="$(printf '%s\n' "$line" | sed -n 's/.*faults=\([0-9][0-9]*\).*/\1/p')"
+    expected="$(printf '%s\n' "$line" | sed -n 's/.*expected=\([0-9][0-9]*\).*/\1/p')"
+    [[ -z "$expected" ]] && expected=0
+    if [[ -n "$faults" && "$faults" != "$expected" ]]; then
+      echo "[ios_device_run] console: self-test fault count disagrees with the deliberate probes (faults=$faults expected=$expected): $log"
+      echo "[ios_device_run]   line: $line"
+      return 1
+    fi
+  done < <(grep -E 'OBJECTCALLS SELFTEST.*faults=' "$log" 2>/dev/null || true)
+  return 0
+}
+
+if [[ "${1:-}" == "--check-console-faults" ]]; then
+  if [[ $# -ne 2 || ! -f "$2" ]]; then
+    echo "usage: scripts/ios_device_run.sh --check-console-faults /path/to/console.log" >&2
+    exit 2
+  fi
+  if check_console_faults "$2"; then
+    echo "[ios_device_run] console fault check: PASS ($2)"
+    exit 0
+  fi
+  echo "[ios_device_run] FAIL"
+  exit 1
+fi
 
 if [[ $# -lt 4 || $# -gt 5 ]]; then
   usage
@@ -342,6 +439,10 @@ else
     echo "[ios_device_run] FAIL"
     exit 1
   fi
+  if ! check_console_faults "$VERDICT_LOG"; then
+    echo "[ios_device_run] FAIL"
+    exit 1
+  fi
   if [[ "$smoke_active" -eq 1 ]]; then
     if grep -q -E "$SMOKE_COMPLETE_PATTERN" "$VERDICT_LOG"; then
       echo "[ios_device_run] smoke: completion line seen ($(grep -c -E "$SMOKE_COMPLETE_PATTERN" "$VERDICT_LOG")x)"
@@ -351,7 +452,7 @@ else
       exit 1
     fi
   fi
-  echo "[ios_device_run] console: ${console_lines} lines in ${waited}s, no crash signature: $CONSOLE_LOG"
+  echo "[ios_device_run] console: ${console_lines} lines in ${waited}s, no crash signature and no bridge FAULT: $CONSOLE_LOG"
 fi
 
 if [[ "$CRASH_REPORTS" == "1" ]]; then
