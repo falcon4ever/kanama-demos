@@ -11,11 +11,9 @@ import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.CanvasItem
 import net.multigesture.kanama.api.CharacterBody3D
-import net.multigesture.kanama.api.ClassDB
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.Input
-import net.multigesture.kanama.api.InputEvent
 import net.multigesture.kanama.api.InputEventKey
 import net.multigesture.kanama.api.InputEventMouseButton
 import net.multigesture.kanama.api.InputMap
@@ -25,7 +23,6 @@ import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.api.MouseButton
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
-import net.multigesture.kanama.api.RefCounted
 import net.multigesture.kanama.api.ShapeCast3D
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.CharacterSkinNames
@@ -351,11 +348,9 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 				}
 				is MouseButton -> {
 					// attack / aim are mouse buttons in the original project.godot (button_index 1 / 2).
-					// Built through ClassDB + the dynamic `set` (the typed enum is encoded as INT), which
-					// both backends host; the owned reference is released once InputMap holds its own.
-					val mouseEvent = ClassDB.instantiate("InputEventMouseButton") as? RefCounted ?: continue
-					mouseEvent.set("button_index", binding)
-					InputEvent.fromHandle(mouseEvent.handle)?.let { InputMap.actionAddEvent(action, it) }
+					val mouseEvent = InputEventMouseButton.create().also { it.buttonIndex = binding }
+					InputMap.actionAddEvent(action, mouseEvent)
+					// close what you create (Kanama task 61): InputMap keeps its own reference to the event.
 					mouseEvent.close()
 				}
 			}
