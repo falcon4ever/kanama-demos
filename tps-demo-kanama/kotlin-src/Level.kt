@@ -83,7 +83,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         GD.print("TPS Level ready: complete")
         if (shouldQuitAfterReady) {
             kanamaScope.launch {
-                requireNotNull(self.getTree()).createTimer(5.0)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
+                requireNotNull(self.getTree()).createTimer(5.0).signal(Timer.Signals.timeout).await(self, argumentCount = 0)
                 if (!self.isQueuedForDeletion() && self.isInsideTree()) {
                     GD.print("TPS smoke second level ready; quitting")
                     requireNotNull(self.getTree()).quit()
@@ -139,7 +139,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         kanamaScope.launch {
             repeat(robotCount) { index ->
                 if (index > 0) {
-                    requireNotNull(self.getTree()).createTimer(delayBetweenKills)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
+                    requireNotNull(self.getTree()).createTimer(delayBetweenKills).signal(Timer.Signals.timeout).await(self, argumentCount = 0)
                 }
                 if (exiting || self.isQueuedForDeletion() || !self.isInsideTree()) return@launch
                 MainThread.postNextFrame {
@@ -165,10 +165,10 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
                                     }
                                 }
                                 if (shot < 4) {
-                                    requireNotNull(self.getTree()).createTimer(0.35)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
+                                    requireNotNull(self.getTree()).createTimer(0.35).signal(Timer.Signals.timeout).await(self, argumentCount = 0)
                                 }
                             }
-                            requireNotNull(self.getTree()).createTimer(2.0)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
+                            requireNotNull(self.getTree()).createTimer(2.0).signal(Timer.Signals.timeout).await(self, argumentCount = 0)
                             GD.print("TPS smoke robot death complete ${index + 1}/$robotCount")
                         }
                     } else {
@@ -184,7 +184,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
                     }
                 }
                 if (index == 0 && System.getenv("KANAMA_TPS_SMOKE_RETURN_TO_MENU_AFTER_FIRST_KILL") == "1") {
-                    requireNotNull(self.getTree()).createTimer(1.0)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
+                    requireNotNull(self.getTree()).createTimer(1.0).signal(Timer.Signals.timeout).await(self, argumentCount = 0)
                     if (!exiting && !self.isQueuedForDeletion() && self.isInsideTree()) {
                         GD.print("TPS smoke returning to menu after first kill")
                         self.emitSignal("quit")
@@ -211,8 +211,8 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         self.requireAs("ReflectionProbes", ::Node3D).hide()
         lightmapGi?.queueFree()
         when (TpsSettings.renderLong("gi_quality")) {
-            TpsSettings.GI_HIGH -> RenderingServer.environmentSetSdfgiRayCount(RenderingServer.ENV_SDFGI_RAY_COUNT_96)
-            TpsSettings.GI_LOW -> RenderingServer.environmentSetSdfgiRayCount(RenderingServer.ENV_SDFGI_RAY_COUNT_32)
+            TpsSettings.GI_HIGH -> RenderingServer.environmentSetSdfgiRayCount(RenderingServer.EnvironmentSDFGIRayCount.COUNT_96)
+            TpsSettings.GI_LOW -> RenderingServer.environmentSetSdfgiRayCount(RenderingServer.EnvironmentSDFGIRayCount.COUNT_32)
             else -> worldEnvironment.environment?.sdfgiEnabled = false
         }
     }
@@ -224,8 +224,8 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         self.requireAs("ReflectionProbes", ::Node3D).hide()
         lightmapGi?.queueFree()
         when (TpsSettings.renderLong("gi_quality")) {
-            TpsSettings.GI_HIGH -> RenderingServer.voxelGiSetQuality(RenderingServer.VOXEL_GI_QUALITY_HIGH)
-            TpsSettings.GI_LOW -> RenderingServer.voxelGiSetQuality(RenderingServer.VOXEL_GI_QUALITY_LOW)
+            TpsSettings.GI_HIGH -> RenderingServer.voxelGiSetQuality(RenderingServer.VoxelGIQuality.HIGH)
+            TpsSettings.GI_LOW -> RenderingServer.voxelGiSetQuality(RenderingServer.VoxelGIQuality.LOW)
             else -> self.requireAs("VoxelGI", ::Node3D).hide()
         }
     }
@@ -262,7 +262,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
     @RegisterFunction("_respawn_robot")
     fun respawnRobot(spawnPoint: Node3D) {
         kanamaScope.launch {
-            requireNotNull(self.getTree()).createTimer(15.0)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
+            requireNotNull(self.getTree()).createTimer(15.0).signal(Timer.Signals.timeout).await(self, argumentCount = 0)
             if (exiting || self.isQueuedForDeletion() || !self.isInsideTree()) return@launch
             spawnRobot(spawnPoint)
         }
@@ -296,7 +296,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         if (event.isActionPressed("quit")) {
             exiting = true
             kanamaScope.cancel()
-            Input.setMouseMode(Input.MOUSE_MODE_VISIBLE)
+            Input.setMouseMode(Input.MouseMode.VISIBLE)
             self.emitSignal("quit")
         }
     }

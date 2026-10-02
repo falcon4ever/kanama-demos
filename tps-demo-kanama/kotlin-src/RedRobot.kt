@@ -150,7 +150,7 @@ class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotOb
 		self.emitSignal("exploded")
 		if (self.isMultiplayerServer()) {
 				kanamaScope.launch {
-					requireNotNull(self.getTree()).createTimer(10.0)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
+					requireNotNull(self.getTree()).createTimer(10.0).signal(Timer.Signals.timeout).await(self, argumentCount = 0)
 					self.queueFree()
 				}
 		}
@@ -183,7 +183,7 @@ class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotOb
 					val hitPlayer = player?.kotlinScriptInstance<Player>()
 					if (hitPlayer != null) {
 						kanamaScope.launch {
-							requireNotNull(self.getTree()).createTimer(0.1)?.signal(Timer.Signals.timeout)?.await(self, argumentCount = 0)
+							requireNotNull(self.getTree()).createTimer(0.1).signal(Timer.Signals.timeout).await(self, argumentCount = 0)
 							hitPlayer.addCameraShakeTrauma(13.0)
 					}
 				}

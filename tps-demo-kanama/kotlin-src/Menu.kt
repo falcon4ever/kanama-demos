@@ -13,6 +13,7 @@ import net.multigesture.kanama.api.Control
 import net.multigesture.kanama.api.DisplayServer
 import net.multigesture.kanama.api.ENetMultiplayerPeer
 import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.GodotError
 import net.multigesture.kanama.api.IP
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
@@ -56,7 +57,7 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
 
     private val buttons = mutableMapOf<String, Button>()
     private var levelSceneChangeStarted = false
-    private var lastLoggedLoadStatus: Long? = null
+    private var lastLoggedLoadStatus: ResourceLoader.ThreadLoadStatus? = null
     private var lastLoggedProgressBucket = -1
     private var connectingAsClient = false
     private var joinedLobby = false
@@ -149,7 +150,7 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         if (!loading.visible) return
         val load = ResourceLoader.loadThreadedGetStatusWithProgress(TpsScenes.LEVEL)
         when (val status = load.status) {
-            ResourceLoader.THREAD_LOAD_IN_PROGRESS -> {
+            ResourceLoader.ThreadLoadStatus.IN_PROGRESS -> {
                 val progress = (load.progress ?: 0.0) * 100.0
                 loadingProgress.value = progress
                 val bucket = (progress / 10.0).toInt()
@@ -159,7 +160,7 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
                     lastLoggedProgressBucket = bucket
                 }
             }
-            ResourceLoader.THREAD_LOAD_LOADED -> {
+            ResourceLoader.ThreadLoadStatus.LOADED -> {
                 loadingProgress.value = 100.0
                 if (status != lastLoggedLoadStatus) {
                     GD.print("TPS load complete: ${TpsScenes.LEVEL}; waiting for loading timer")
@@ -168,8 +169,8 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
                 self.setProcess(false)
                 loadingDoneTimer.start()
             }
-            ResourceLoader.THREAD_LOAD_FAILED, ResourceLoader.THREAD_LOAD_INVALID_RESOURCE -> {
-                GD.pushError("TPS load failed: ${TpsScenes.LEVEL}; status=$status")
+            ResourceLoader.ThreadLoadStatus.FAILED, ResourceLoader.ThreadLoadStatus.INVALID_RESOURCE -> {
+                GD.pushError("TPS load failed: ${TpsScenes.LEVEL}; status=${status.value}")
                 main.show()
                 loading.hide()
             }
@@ -275,12 +276,12 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         settingsMenu.show()
         settingsActionCancel.grabFocus()
 
-        val displayMode = TpsSettings.videoLong("display_mode")
-        setPressed("DisplayMode/Windowed", displayMode == Window.MODE_WINDOWED || displayMode == Window.MODE_MAXIMIZED)
-        setPressed("DisplayMode/Fullscreen", displayMode == Window.MODE_FULLSCREEN)
-        setPressed("DisplayMode/ExclusiveFullscreen", displayMode == Window.MODE_EXCLUSIVE_FULLSCREEN)
+        val displayMode = Window.Mode(TpsSettings.videoLong("display_mode"))
+        setPressed("DisplayMode/Windowed", displayMode == Window.Mode.WINDOWED || displayMode == Window.Mode.MAXIMIZED)
+        setPressed("DisplayMode/Fullscreen", displayMode == Window.Mode.FULLSCREEN)
+        setPressed("DisplayMode/ExclusiveFullscreen", displayMode == Window.Mode.EXCLUSIVE_FULLSCREEN)
 
-        setOneLong("VSync", listOf("Disabled" to DisplayServer.VSYNC_DISABLED, "Enabled" to DisplayServer.VSYNC_ENABLED, "Adaptive" to DisplayServer.VSYNC_ADAPTIVE, "Mailbox" to DisplayServer.VSYNC_MAILBOX), TpsSettings.videoLong("vsync"))
+        setOneLong("VSync", listOf("Disabled" to DisplayServer.VSyncMode.DISABLED.value, "Enabled" to DisplayServer.VSyncMode.ENABLED.value, "Adaptive" to DisplayServer.VSyncMode.ADAPTIVE.value, "Mailbox" to DisplayServer.VSyncMode.MAILBOX.value), TpsSettings.videoLong("vsync"))
         setOneLong("MaxFPS", listOf("30" to 30L, "40" to 40L, "60" to 60L, "72" to 72L, "90" to 90L, "120" to 120L, "144" to 144L, "Unlimited" to 0L), TpsSettings.videoLong("max_fps"))
 
         val scale = TpsSettings.videoDouble("resolution_scale")
@@ -291,7 +292,7 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         setPressed("ResolutionScale/UltraQuality", approximately(scale, 1.0 / 1.3))
         setPressed("ResolutionScale/Native", approximately(scale, 1.0))
 
-        val scaleFilters = listOf("Bilinear" to Viewport.SCALING_3D_MODE_BILINEAR, "FSR1" to Viewport.SCALING_3D_MODE_FSR, "MetalFXSpatial" to Viewport.SCALING_3D_MODE_METALFX_SPATIAL, "FSR2" to Viewport.SCALING_3D_MODE_FSR2, "MetalFXTemporal" to Viewport.SCALING_3D_MODE_METALFX_TEMPORAL)
+        val scaleFilters = listOf("Bilinear" to Viewport.Scaling3DMode.BILINEAR.value, "FSR1" to Viewport.Scaling3DMode.FSR.value, "MetalFXSpatial" to Viewport.Scaling3DMode.METALFX_SPATIAL.value, "FSR2" to Viewport.Scaling3DMode.FSR2.value, "MetalFXTemporal" to Viewport.Scaling3DMode.METALFX_TEMPORAL.value)
         val scaleFilter = TpsSettings.videoLong("scale_filter")
         if (scaleFilters.any { (_, value) -> value == scaleFilter }) {
             setOneLong("ScaleFilter", scaleFilters, scaleFilter)
@@ -301,11 +302,11 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         setOneLong("GIType", listOf("LightmapGI" to TpsSettings.LIGHTMAP_GI, "VoxelGI" to TpsSettings.VOXEL_GI, "SDFGI" to TpsSettings.SDFGI), TpsSettings.renderLong("gi_type"))
         setOneLong("GIQuality", listOf("Disabled" to TpsSettings.GI_DISABLED, "Low" to TpsSettings.GI_LOW, "High" to TpsSettings.GI_HIGH), TpsSettings.renderLong("gi_quality"))
         setOneBool("TAA", TpsSettings.renderBool("taa"))
-        setOneLong("MSAA", listOf("Disabled" to Viewport.MSAA_DISABLED, "2X" to Viewport.MSAA_2X, "4X" to Viewport.MSAA_4X, "8X" to Viewport.MSAA_8X), TpsSettings.renderLong("msaa"))
+        setOneLong("MSAA", listOf("Disabled" to Viewport.MSAA.DISABLED.value, "2X" to Viewport.MSAA.MSAA_2X.value, "4X" to Viewport.MSAA.MSAA_4X.value, "8X" to Viewport.MSAA.MSAA_8X.value), TpsSettings.renderLong("msaa"))
         setOneBool("FXAA", TpsSettings.renderBool("fxaa"))
         setOneBool("ShadowMapping", TpsSettings.renderBool("shadow_mapping"))
-        setOneLong("SSAO", listOf("Disabled" to -1L, "Medium" to RenderingServer.ENV_SSAO_QUALITY_MEDIUM, "High" to RenderingServer.ENV_SSAO_QUALITY_HIGH), TpsSettings.renderLong("ssao_quality"))
-        setOneLong("SSIL", listOf("Disabled" to -1L, "Medium" to RenderingServer.ENV_SSIL_QUALITY_MEDIUM, "High" to RenderingServer.ENV_SSIL_QUALITY_HIGH), TpsSettings.renderLong("ssil_quality"))
+        setOneLong("SSAO", listOf("Disabled" to -1L, "Medium" to RenderingServer.EnvironmentSSAOQuality.MEDIUM.value, "High" to RenderingServer.EnvironmentSSAOQuality.HIGH.value), TpsSettings.renderLong("ssao_quality"))
+        setOneLong("SSIL", listOf("Disabled" to -1L, "Medium" to RenderingServer.EnvironmentSSILQuality.MEDIUM.value, "High" to RenderingServer.EnvironmentSSILQuality.HIGH.value), TpsSettings.renderLong("ssil_quality"))
         setOneBool("Bloom", TpsSettings.renderBool("bloom"))
         setOneBool("VolumetricFog", TpsSettings.renderBool("volumetric_fog"))
     }
@@ -323,22 +324,22 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
 
         val config = TpsSettings.configFile
         when {
-            pressed("DisplayMode/Windowed") -> config.setValue("video", "display_mode", Window.MODE_WINDOWED)
-            pressed("DisplayMode/Fullscreen") -> config.setValue("video", "display_mode", Window.MODE_FULLSCREEN)
-            pressed("DisplayMode/ExclusiveFullscreen") -> config.setValue("video", "display_mode", Window.MODE_EXCLUSIVE_FULLSCREEN)
+            pressed("DisplayMode/Windowed") -> config.setValue("video", "display_mode", Window.Mode.WINDOWED)
+            pressed("DisplayMode/Fullscreen") -> config.setValue("video", "display_mode", Window.Mode.FULLSCREEN)
+            pressed("DisplayMode/ExclusiveFullscreen") -> config.setValue("video", "display_mode", Window.Mode.EXCLUSIVE_FULLSCREEN)
         }
-        firstPressedValue("VSync", listOf("Disabled" to DisplayServer.VSYNC_DISABLED, "Enabled" to DisplayServer.VSYNC_ENABLED, "Adaptive" to DisplayServer.VSYNC_ADAPTIVE, "Mailbox" to DisplayServer.VSYNC_MAILBOX))?.let { config.setValue("video", "vsync", it) }
+        firstPressedValue("VSync", listOf("Disabled" to DisplayServer.VSyncMode.DISABLED, "Enabled" to DisplayServer.VSyncMode.ENABLED, "Adaptive" to DisplayServer.VSyncMode.ADAPTIVE, "Mailbox" to DisplayServer.VSyncMode.MAILBOX))?.let { config.setValue("video", "vsync", it) }
         firstPressedValue("MaxFPS", listOf("30" to 30L, "40" to 40L, "60" to 60L, "72" to 72L, "90" to 90L, "120" to 120L, "144" to 144L, "Unlimited" to 0L))?.let { config.setValue("video", "max_fps", it) }
         firstPressedValue("ResolutionScale", listOf("UltraPerformance" to 1.0 / 3.0, "Performance" to 1.0 / 2.0, "Balanced" to 1.0 / 1.7, "Quality" to 1.0 / 1.5, "UltraQuality" to 1.0 / 1.3, "Native" to 1.0))?.let { config.setValue("video", "resolution_scale", it) }
-        firstPressedValue("ScaleFilter", listOf("Bilinear" to Viewport.SCALING_3D_MODE_BILINEAR, "FSR1" to Viewport.SCALING_3D_MODE_FSR, "MetalFXSpatial" to Viewport.SCALING_3D_MODE_METALFX_SPATIAL, "FSR2" to Viewport.SCALING_3D_MODE_FSR2, "MetalFXTemporal" to Viewport.SCALING_3D_MODE_METALFX_TEMPORAL))?.let { config.setValue("video", "scale_filter", it) }
+        firstPressedValue("ScaleFilter", listOf("Bilinear" to Viewport.Scaling3DMode.BILINEAR, "FSR1" to Viewport.Scaling3DMode.FSR, "MetalFXSpatial" to Viewport.Scaling3DMode.METALFX_SPATIAL, "FSR2" to Viewport.Scaling3DMode.FSR2, "MetalFXTemporal" to Viewport.Scaling3DMode.METALFX_TEMPORAL))?.let { config.setValue("video", "scale_filter", it) }
         firstPressedValue("GIType", listOf("LightmapGI" to TpsSettings.LIGHTMAP_GI, "VoxelGI" to TpsSettings.VOXEL_GI, "SDFGI" to TpsSettings.SDFGI))?.let { config.setValue("rendering", "gi_type", it) }
         firstPressedValue("GIQuality", listOf("Disabled" to TpsSettings.GI_DISABLED, "Low" to TpsSettings.GI_LOW, "High" to TpsSettings.GI_HIGH))?.let { config.setValue("rendering", "gi_quality", it) }
         config.setValue("rendering", "taa", pressed("TAA/Enabled"))
-        firstPressedValue("MSAA", listOf("Disabled" to Viewport.MSAA_DISABLED, "2X" to Viewport.MSAA_2X, "4X" to Viewport.MSAA_4X, "8X" to Viewport.MSAA_8X))?.let { config.setValue("rendering", "msaa", it) }
+        firstPressedValue("MSAA", listOf("Disabled" to Viewport.MSAA.DISABLED, "2X" to Viewport.MSAA.MSAA_2X, "4X" to Viewport.MSAA.MSAA_4X, "8X" to Viewport.MSAA.MSAA_8X))?.let { config.setValue("rendering", "msaa", it) }
         config.setValue("rendering", "fxaa", pressed("FXAA/Enabled"))
         config.setValue("rendering", "shadow_mapping", pressed("ShadowMapping/Enabled"))
-        firstPressedValue("SSAO", listOf("Disabled" to -1L, "Medium" to RenderingServer.ENV_SSAO_QUALITY_MEDIUM, "High" to RenderingServer.ENV_SSAO_QUALITY_HIGH))?.let { config.setValue("rendering", "ssao_quality", it) }
-        firstPressedValue("SSIL", listOf("Disabled" to -1L, "Medium" to RenderingServer.ENV_SSIL_QUALITY_MEDIUM, "High" to RenderingServer.ENV_SSIL_QUALITY_HIGH))?.let { config.setValue("rendering", "ssil_quality", it) }
+        firstPressedValue("SSAO", listOf("Disabled" to -1L, "Medium" to RenderingServer.EnvironmentSSAOQuality.MEDIUM, "High" to RenderingServer.EnvironmentSSAOQuality.HIGH))?.let { config.setValue("rendering", "ssao_quality", it) }
+        firstPressedValue("SSIL", listOf("Disabled" to -1L, "Medium" to RenderingServer.EnvironmentSSILQuality.MEDIUM, "High" to RenderingServer.EnvironmentSSILQuality.HIGH))?.let { config.setValue("rendering", "ssil_quality", it) }
         config.setValue("rendering", "bloom", pressed("Bloom/Enabled"))
         config.setValue("rendering", "volumetric_fog", pressed("VolumetricFog/Enabled"))
 
@@ -384,10 +385,10 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         val nextPeer = TpsFactory.enetMultiplayerPeer()
         val port = onlinePort.value.toInt()
         val error = nextPeer.createServer(port)
-        if (error != 0L) {
+        if (error != GodotError.OK) {
             nextPeer.closeConnection()
             nextPeer.close() // discard the created-but-unused peer (task 61)
-            onlineStatus.text = "Could not host on port $port (Error $error). Try another port."
+            onlineStatus.text = "Could not host on port $port (Error ${error.value}). Try another port."
             return
         }
         replacePeer(nextPeer)
@@ -414,10 +415,10 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         }
         val nextPeer: ENetMultiplayerPeer = TpsFactory.enetMultiplayerPeer()
         val error = nextPeer.createClient(address, port)
-        if (error != 0L) {
+        if (error != GodotError.OK) {
             nextPeer.closeConnection()
             nextPeer.close() // discard the created-but-unused peer (task 61)
-            onlineStatus.text = "Could not start a connection to $address:$port (Error $error)."
+            onlineStatus.text = "Could not start a connection to $address:$port (Error ${error.value})."
             return
         }
         replacePeer(nextPeer)
