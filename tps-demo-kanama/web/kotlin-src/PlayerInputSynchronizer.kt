@@ -76,7 +76,7 @@ class PlayerInputSynchronizer(godotObject: GodotHandle) :
     if (self.getMultiplayerAuthority().toLong() == self.getMultiplayer()?.getUniqueId()?.toLong()) {
       cameraCamera?.makeCurrent()
       if (DisplayServer.getName() != "headless") {
-        Input.setMouseMode(Input.MOUSE_MODE_CAPTURED)
+        Input.setMouseMode(Input.MouseMode.CAPTURED)
       }
     } else {
       self.setProcess(false)

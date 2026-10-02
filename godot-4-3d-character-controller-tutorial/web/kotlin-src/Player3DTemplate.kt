@@ -110,16 +110,16 @@ class Player3DTemplate(godotObject: GodotHandle) :
   fun input(event: GodotObject) {
     val inputEvent = InputEvent(event.handle)
     if (inputEvent.isActionPressed("ui_cancel")) {
-      Input.setMouseMode(Input.MOUSE_MODE_VISIBLE)
+      Input.setMouseMode(Input.MouseMode.VISIBLE)
     } else if (inputEvent.isActionPressed("left_click")) {
-      Input.setMouseMode(Input.MOUSE_MODE_CAPTURED)
+      Input.setMouseMode(Input.MouseMode.CAPTURED)
     }
   }
 
   @OnUnhandledInput
   fun unhandledInput(event: GodotObject) {
     val motion = InputEventMouseMotion.from(event) ?: return
-    if (Input.getMouseMode() != Input.MOUSE_MODE_CAPTURED) return
+    if (Input.getMouseMode() != Input.MouseMode.CAPTURED) return
     val relative = motion.getRelative()
     cameraInputDirection =
       Vector2(-relative.x * mouseSensitivity, relative.y * mouseSensitivity)
