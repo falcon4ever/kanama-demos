@@ -324,22 +324,22 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
 
         val config = TpsSettings.configFile
         when {
-            pressed("DisplayMode/Windowed") -> config.setValue("video", "display_mode", Window.Mode.WINDOWED.value)
-            pressed("DisplayMode/Fullscreen") -> config.setValue("video", "display_mode", Window.Mode.FULLSCREEN.value)
-            pressed("DisplayMode/ExclusiveFullscreen") -> config.setValue("video", "display_mode", Window.Mode.EXCLUSIVE_FULLSCREEN.value)
+            pressed("DisplayMode/Windowed") -> config.setValue("video", "display_mode", Window.Mode.WINDOWED)
+            pressed("DisplayMode/Fullscreen") -> config.setValue("video", "display_mode", Window.Mode.FULLSCREEN)
+            pressed("DisplayMode/ExclusiveFullscreen") -> config.setValue("video", "display_mode", Window.Mode.EXCLUSIVE_FULLSCREEN)
         }
-        firstPressedValue("VSync", listOf("Disabled" to DisplayServer.VSyncMode.DISABLED.value, "Enabled" to DisplayServer.VSyncMode.ENABLED.value, "Adaptive" to DisplayServer.VSyncMode.ADAPTIVE.value, "Mailbox" to DisplayServer.VSyncMode.MAILBOX.value))?.let { config.setValue("video", "vsync", it) }
+        firstPressedValue("VSync", listOf("Disabled" to DisplayServer.VSyncMode.DISABLED, "Enabled" to DisplayServer.VSyncMode.ENABLED, "Adaptive" to DisplayServer.VSyncMode.ADAPTIVE, "Mailbox" to DisplayServer.VSyncMode.MAILBOX))?.let { config.setValue("video", "vsync", it) }
         firstPressedValue("MaxFPS", listOf("30" to 30L, "40" to 40L, "60" to 60L, "72" to 72L, "90" to 90L, "120" to 120L, "144" to 144L, "Unlimited" to 0L))?.let { config.setValue("video", "max_fps", it) }
         firstPressedValue("ResolutionScale", listOf("UltraPerformance" to 1.0 / 3.0, "Performance" to 1.0 / 2.0, "Balanced" to 1.0 / 1.7, "Quality" to 1.0 / 1.5, "UltraQuality" to 1.0 / 1.3, "Native" to 1.0))?.let { config.setValue("video", "resolution_scale", it) }
-        firstPressedValue("ScaleFilter", listOf("Bilinear" to Viewport.Scaling3DMode.BILINEAR.value, "FSR1" to Viewport.Scaling3DMode.FSR.value, "MetalFXSpatial" to Viewport.Scaling3DMode.METALFX_SPATIAL.value, "FSR2" to Viewport.Scaling3DMode.FSR2.value, "MetalFXTemporal" to Viewport.Scaling3DMode.METALFX_TEMPORAL.value))?.let { config.setValue("video", "scale_filter", it) }
+        firstPressedValue("ScaleFilter", listOf("Bilinear" to Viewport.Scaling3DMode.BILINEAR, "FSR1" to Viewport.Scaling3DMode.FSR, "MetalFXSpatial" to Viewport.Scaling3DMode.METALFX_SPATIAL, "FSR2" to Viewport.Scaling3DMode.FSR2, "MetalFXTemporal" to Viewport.Scaling3DMode.METALFX_TEMPORAL))?.let { config.setValue("video", "scale_filter", it) }
         firstPressedValue("GIType", listOf("LightmapGI" to TpsSettings.LIGHTMAP_GI, "VoxelGI" to TpsSettings.VOXEL_GI, "SDFGI" to TpsSettings.SDFGI))?.let { config.setValue("rendering", "gi_type", it) }
         firstPressedValue("GIQuality", listOf("Disabled" to TpsSettings.GI_DISABLED, "Low" to TpsSettings.GI_LOW, "High" to TpsSettings.GI_HIGH))?.let { config.setValue("rendering", "gi_quality", it) }
         config.setValue("rendering", "taa", pressed("TAA/Enabled"))
-        firstPressedValue("MSAA", listOf("Disabled" to Viewport.MSAA.DISABLED.value, "2X" to Viewport.MSAA.MSAA_2X.value, "4X" to Viewport.MSAA.MSAA_4X.value, "8X" to Viewport.MSAA.MSAA_8X.value))?.let { config.setValue("rendering", "msaa", it) }
+        firstPressedValue("MSAA", listOf("Disabled" to Viewport.MSAA.DISABLED, "2X" to Viewport.MSAA.MSAA_2X, "4X" to Viewport.MSAA.MSAA_4X, "8X" to Viewport.MSAA.MSAA_8X))?.let { config.setValue("rendering", "msaa", it) }
         config.setValue("rendering", "fxaa", pressed("FXAA/Enabled"))
         config.setValue("rendering", "shadow_mapping", pressed("ShadowMapping/Enabled"))
-        firstPressedValue("SSAO", listOf("Disabled" to -1L, "Medium" to RenderingServer.EnvironmentSSAOQuality.MEDIUM.value, "High" to RenderingServer.EnvironmentSSAOQuality.HIGH.value))?.let { config.setValue("rendering", "ssao_quality", it) }
-        firstPressedValue("SSIL", listOf("Disabled" to -1L, "Medium" to RenderingServer.EnvironmentSSILQuality.MEDIUM.value, "High" to RenderingServer.EnvironmentSSILQuality.HIGH.value))?.let { config.setValue("rendering", "ssil_quality", it) }
+        firstPressedValue("SSAO", listOf("Disabled" to -1L, "Medium" to RenderingServer.EnvironmentSSAOQuality.MEDIUM, "High" to RenderingServer.EnvironmentSSAOQuality.HIGH))?.let { config.setValue("rendering", "ssao_quality", it) }
+        firstPressedValue("SSIL", listOf("Disabled" to -1L, "Medium" to RenderingServer.EnvironmentSSILQuality.MEDIUM, "High" to RenderingServer.EnvironmentSSILQuality.HIGH))?.let { config.setValue("rendering", "ssil_quality", it) }
         config.setValue("rendering", "bloom", pressed("Bloom/Enabled"))
         config.setValue("rendering", "volumetric_fog", pressed("VolumetricFog/Enabled"))
 

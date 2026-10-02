@@ -33,24 +33,24 @@ object TpsSettings {
 
     private val defaults = mapOf(
         "video" to mapOf(
-            "display_mode" to Window.Mode.WINDOWED.value,
-            "vsync" to DisplayServer.VSyncMode.ENABLED.value,
+            "display_mode" to Window.Mode.WINDOWED,
+            "vsync" to DisplayServer.VSyncMode.ENABLED,
             "max_fps" to 0L,
             "resolution_scale" to 1.0,
             "scale_filter" to if (metalFxSupported) {
-                Viewport.Scaling3DMode.METALFX_TEMPORAL.value
+                Viewport.Scaling3DMode.METALFX_TEMPORAL
             } else {
-                Viewport.Scaling3DMode.FSR2.value
+                Viewport.Scaling3DMode.FSR2
             },
         ),
         "rendering" to mapOf(
             "taa" to false,
-            "msaa" to Viewport.MSAA.DISABLED.value,
+            "msaa" to Viewport.MSAA.DISABLED,
             "fxaa" to false,
             "shadow_mapping" to true,
             "gi_type" to VOXEL_GI,
             "gi_quality" to GI_LOW,
-            "ssao_quality" to RenderingServer.EnvironmentSSAOQuality.MEDIUM.value,
+            "ssao_quality" to RenderingServer.EnvironmentSSAOQuality.MEDIUM,
             "ssil_quality" to -1L,
             "bloom" to true,
             "volumetric_fog" to true,
@@ -68,7 +68,7 @@ object TpsSettings {
         }
         val mode = Window.Mode(videoLong("display_mode"))
         if (mode == Window.Mode.FULLSCREEN || mode == Window.Mode.EXCLUSIVE_FULLSCREEN) {
-            configFile.setValue("video", "display_mode", Window.Mode.WINDOWED.value)
+            configFile.setValue("video", "display_mode", Window.Mode.WINDOWED)
         }
     }
 
