@@ -31,7 +31,7 @@ class DemoPage(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Nod
     private lateinit var gridContainerKeyboard: Control
     private lateinit var gridContainerJoypad: Control
 
-    private var demoMouseMode = Input.MOUSE_MODE_VISIBLE
+    private var demoMouseMode = Input.MouseMode.VISIBLE
     private var warmupReleased = false
     private var exiting = false
     private var deferredLightingEnabled = false
@@ -48,7 +48,7 @@ class DemoPage(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Nod
         DemoScenes.warmUp(if (shouldWarmUpInstances() || isWeb()) self else null)
 
         demoMouseMode = Input.getMouseMode()
-        Input.setMouseMode(Input.MOUSE_MODE_VISIBLE)
+        Input.setMouseMode(Input.MouseMode.VISIBLE)
 
         demoPageRoot = self.requireAs("CanvasLayer/DemoPageRoot", ::Control)
         resumeButton = self.requireAs("CanvasLayer/DemoPageRoot/Content/MarginContainer/Buttons/Resume", ::Button)
@@ -122,7 +122,7 @@ class DemoPage(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Nod
         requireNotNull(self.getTree()).setPaused(true)
         demoPageRoot.show()
         tweenDemoPage(Color(1f, 1f, 1f, 1f))
-        Input.setMouseMode(Input.MOUSE_MODE_VISIBLE)
+        Input.setMouseMode(Input.MouseMode.VISIBLE)
     }
 
     private fun resumeDemo() {
@@ -180,7 +180,7 @@ class DemoPage(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Nod
 
         pageTween = tween
         tween.tweenProperty(demoPageRoot, "modulate", target, DEMO_PAGE_FADE_SECONDS)
-        tween.signal(Tween.Signals.finished).connect(self, argumentCount = 0, flags = GodotObject.CONNECT_ONE_SHOT) {
+        tween.signal(Tween.Signals.finished).connect(self, argumentCount = 0, flags = GodotObject.ConnectFlags.ONE_SHOT) {
             if (pageTween === tween) {
                 pageTween = null
             }

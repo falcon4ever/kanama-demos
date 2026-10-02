@@ -92,7 +92,7 @@ class Player(godotObject: GodotHandle) :
 
   @OnReady
   fun ready() {
-    Input.setMouseMode(Input.MOUSE_MODE_CAPTURED)
+    Input.setMouseMode(Input.MouseMode.CAPTURED)
     camera = self.requireAs("Head/Camera", ::Node3D)
     raycast = self.requireAs("Head/Camera/RayCast", ::RayCast3D)
     muzzle =
@@ -155,12 +155,12 @@ class Player(godotObject: GodotHandle) :
 
   private fun handleControls(delta: Double) {
     if (Input.isActionJustPressed("mouse_capture")) {
-      Input.setMouseMode(Input.MOUSE_MODE_CAPTURED)
+      Input.setMouseMode(Input.MouseMode.CAPTURED)
       mouseCaptured = true
     }
 
     if (Input.isActionJustPressed("mouse_capture_exit")) {
-      Input.setMouseMode(Input.MOUSE_MODE_VISIBLE)
+      Input.setMouseMode(Input.MouseMode.VISIBLE)
       mouseCaptured = false
     }
 
@@ -286,7 +286,7 @@ class Player(godotObject: GodotHandle) :
   private fun initiateChangeWeapon(index: Int) {
     weaponIndex = index
     clearTween()
-    tween = self.createTween()?.bindNode(self)?.setEase(Tween.EASE_OUT_IN)
+    tween = self.createTween().bindNode(self).setEase(Tween.EaseType.OUT_IN)
     tween?.tweenProperty(container, "position", containerOffset - Vector3(0.0, 1.0, 0.0), 0.1)
     tween?.tweenCallback(self, "change_weapon")
   }

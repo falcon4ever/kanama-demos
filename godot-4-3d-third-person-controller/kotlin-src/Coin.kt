@@ -65,7 +65,7 @@ class Coin(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::
 
             initialTweenPosition = self.globalPosition
             target = newTarget
-            val tween = self.createTween() ?: return
+            val tween = self.createTween()
             tween.tweenMethod(self, "_follow", 0.0, 1.0, FOLLOW_TWEEN_DURATION)
             tween.tweenCallback(self, "_collect")
         }

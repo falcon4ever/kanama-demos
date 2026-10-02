@@ -40,7 +40,7 @@ class CoinsContainer(godotObject: GodotHandle) : KanamaScript<Control>(godotObje
     }
 
     private fun tweenPosition(y: Long) {
-        val tween = self.createTween() ?: return
+        val tween = self.createTween()
         tween.tweenProperty(self, "position:y", y, 0.5)
     }
 

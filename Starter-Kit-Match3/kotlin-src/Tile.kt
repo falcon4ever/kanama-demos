@@ -9,6 +9,7 @@ import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.InputEventMouseButton
 import net.multigesture.kanama.api.KanamaScript
+import net.multigesture.kanama.api.MouseButton
 import net.multigesture.kanama.api.Sprite2D
 import net.multigesture.kanama.api.Texture2D
 import net.multigesture.kanama.api.Tween
@@ -67,7 +68,7 @@ class Tile(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area2
   fun inputEvent(viewport: GodotObject, event: GodotObject, shapeIdx: Long) {
     val mouseButton = InputEventMouseButton.from(event) ?: return
     if (
-      mouseButton.getButtonIndex() == InputEventMouseButton.MOUSE_BUTTON_LEFT &&
+      mouseButton.getButtonIndex() == MouseButton.LEFT &&
         mouseButton.isPressed()
     ) {
       TileSignals.tilePressed(this, gridPosition)
@@ -81,14 +82,14 @@ class Tile(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area2
   fun moveTo(targetPosition: Vector2, playSound: Boolean = true) {
     val tween = trackedTween(if (playSound) ::onMoveFinished else null) ?: return
 
-    tween.tweenProperty(self, "position", targetPosition, 0.3)?.let { tweener ->
-      tweener?.setTrans(Tween.TRANS_BACK)?.setEase(Tween.EASE_OUT)
+    tween.tweenProperty(self, "position", targetPosition, 0.3).let { tweener ->
+      tweener.setTrans(Tween.TransitionType.BACK).setEase(Tween.EaseType.OUT)
     }
 
     sprite()?.let { sprite ->
       sprite.scale = Vector2(1.2f, 0.8f)
-      tween.tweenProperty(sprite, "scale", Vector2.ONE, 0.3)?.let { tweener ->
-        tweener?.setTrans(Tween.TRANS_ELASTIC)?.setEase(Tween.EASE_OUT)
+      tween.tweenProperty(sprite, "scale", Vector2.ONE, 0.3).let { tweener ->
+        tweener.setTrans(Tween.TransitionType.ELASTIC).setEase(Tween.EaseType.OUT)
       }
     }
   }
@@ -120,12 +121,12 @@ class Tile(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area2
   private fun sprite(): Sprite2D? = self.getAsOrNull("Sprite2D", ::Sprite2D)
 
   private fun trackedTween(onFinished: (() -> Unit)? = null): Tween? {
-    val tween = self.createTween()?.setParallel(true) ?: return null
+    val tween = self.createTween().setParallel(true)
     activeTweens += tween
     tween.signal(Tween.Signals.finished).connect(
       self,
       argumentCount = 0,
-      flags = GodotObject.CONNECT_ONE_SHOT,
+      flags = GodotObject.ConnectFlags.ONE_SHOT,
     ) {
       releaseTween(tween)
       onFinished?.let { it() }

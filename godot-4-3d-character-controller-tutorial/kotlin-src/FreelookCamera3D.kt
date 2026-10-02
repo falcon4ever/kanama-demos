@@ -15,7 +15,9 @@ import net.multigesture.kanama.api.InputEventKey
 import net.multigesture.kanama.api.InputEventMouseButton
 import net.multigesture.kanama.api.InputEventMouseMotion
 import net.multigesture.kanama.api.KanamaScript
+import net.multigesture.kanama.api.Key
 import net.multigesture.kanama.api.Mathf
+import net.multigesture.kanama.api.MouseButton
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.types.Vector2
@@ -41,7 +43,7 @@ class FreelookCamera3D(godotObject: GodotHandle) : KanamaScript<Camera3D>(godotO
     @OnReady
     fun ready() {
         self.setCurrent(false)
-        self.setProcessMode(Node.PROCESS_MODE_ALWAYS)
+        self.setProcessMode(Node.ProcessMode.ALWAYS)
         self.setProcess(self.isCurrent())
         targetFov = self.getFov()
     }
@@ -56,27 +58,27 @@ class FreelookCamera3D(godotObject: GodotHandle) : KanamaScript<Camera3D>(godotO
         if (!self.isCurrent()) return
 
         val motion = InputEventMouseMotion.from(event)
-        if (motion != null && Input.getMouseMode() == Input.MOUSE_MODE_CAPTURED) {
+        if (motion != null && Input.getMouseMode() == Input.MouseMode.CAPTURED) {
             val relative = motion.getRelative()
             cameraInputDirection = Vector2(relative.x.toDouble() * mouseSensitivity, relative.y.toDouble() * mouseSensitivity)
         }
 
         val mouseButton = InputEventMouseButton.from(event) ?: return
         when (mouseButton.getButtonIndex()) {
-            MOUSE_BUTTON_WHEEL_UP -> targetFov = maxOf(targetFov - 1.0, 1.0)
-            MOUSE_BUTTON_WHEEL_DOWN -> targetFov = minOf(targetFov + 1.0, 179.0)
+            MouseButton.WHEEL_UP -> targetFov = maxOf(targetFov - 1.0, 1.0)
+            MouseButton.WHEEL_DOWN -> targetFov = minOf(targetFov + 1.0, 179.0)
         }
     }
 
     @OnProcess
     fun process(delta: Double) {
         var movement = Vector3.ZERO
-        if (Input.isKeyPressed(InputEventKey.KEY_W)) movement += Vector3.FORWARD
-        if (Input.isKeyPressed(InputEventKey.KEY_A)) movement += Vector3.LEFT
-        if (Input.isKeyPressed(InputEventKey.KEY_S)) movement += Vector3.BACK
-        if (Input.isKeyPressed(InputEventKey.KEY_D)) movement += Vector3.RIGHT
-        if (Input.isKeyPressed(InputEventKey.KEY_Q)) movement += Vector3.DOWN
-        if (Input.isKeyPressed(InputEventKey.KEY_E)) movement += Vector3.UP
+        if (Input.isKeyPressed(Key.W)) movement += Vector3.FORWARD
+        if (Input.isKeyPressed(Key.A)) movement += Vector3.LEFT
+        if (Input.isKeyPressed(Key.S)) movement += Vector3.BACK
+        if (Input.isKeyPressed(Key.D)) movement += Vector3.RIGHT
+        if (Input.isKeyPressed(Key.Q)) movement += Vector3.DOWN
+        if (Input.isKeyPressed(Key.E)) movement += Vector3.UP
 
         val rotation = self.rotation
         self.rotation = rotation
@@ -103,10 +105,5 @@ class FreelookCamera3D(godotObject: GodotHandle) : KanamaScript<Camera3D>(godotO
 
         requireNotNull(self.getTree()).setPaused(self.isCurrent())
         self.setProcess(self.isCurrent())
-    }
-
-    companion object {
-        private const val MOUSE_BUTTON_WHEEL_UP = 4L
-        private const val MOUSE_BUTTON_WHEEL_DOWN = 5L
     }
 }

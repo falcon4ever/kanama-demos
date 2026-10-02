@@ -35,7 +35,7 @@ class BeetlebotSkin(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject
 
         val animationPlayer = self.requireAs("beetle_bot/AnimationPlayer", ::AnimationPlayer)
         for (animationName in forceLoop) {
-            animationPlayer.getAnimation(animationName)?.setLoopMode(Animation.LOOP_LINEAR)
+            animationPlayer.getAnimation(animationName)?.setLoopMode(Animation.LoopMode.LINEAR)
         }
     }
 

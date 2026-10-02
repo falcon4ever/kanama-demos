@@ -17,10 +17,10 @@ class Game(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
 
         val viewport = self.getViewport()?.let { Window(it.handle) } ?: requireNotNull(requireNotNull(self.getTree()).getRoot())
         viewport.setMode(
-            if (viewport.getMode() != Window.MODE_FULLSCREEN) {
-                Window.MODE_FULLSCREEN
+            if (viewport.getMode() != Window.Mode.FULLSCREEN) {
+                Window.Mode.FULLSCREEN
             } else {
-                Window.MODE_WINDOWED
+                Window.Mode.WINDOWED
             },
         )
     }

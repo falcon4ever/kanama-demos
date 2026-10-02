@@ -175,7 +175,7 @@ class GrenadeLauncher(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObje
 
         val surfaceTool = SurfaceTool.create()
         try {
-            surfaceTool.begin(Mesh.PRIMITIVE_TRIANGLES)
+            surfaceTool.begin(Mesh.PrimitiveType.TRIANGLES)
 
             val endTime = timeToLand + 0.5
             var pointPrevious = Vector3.ZERO

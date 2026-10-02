@@ -18,6 +18,7 @@ import net.multigesture.kanama.api.KanamaCoroutineOwner
 import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Mathf
+import net.multigesture.kanama.api.MouseButton
 import net.multigesture.kanama.api.Node2D
 import net.multigesture.kanama.api.PackedScene
 import net.multigesture.kanama.api.SceneTree
@@ -181,7 +182,7 @@ class Main(godotObject: GodotHandle) :
   fun input(event: GodotObject) {
     val mouseButton = InputEventMouseButton.from(event) ?: return
     if (
-      mouseButton.getButtonIndex() == InputEventMouseButton.MOUSE_BUTTON_LEFT &&
+      mouseButton.getButtonIndex() == MouseButton.LEFT &&
         mouseButton.isReleased()
     ) {
       if (firstTouch != Vector2i(-1, -1)) {
@@ -300,7 +301,7 @@ class Main(godotObject: GodotHandle) :
         grid[piece.gridPosition.x][piece.gridPosition.y] = null
 
         val tween = trackedTween()
-        tween?.tweenProperty(piece.node, "scale", Vector2.ZERO, 0.2)
+        tween.tweenProperty(piece.node, "scale", Vector2.ZERO, 0.2)
         piecesToFree += piece.node
       }
 
@@ -373,13 +374,13 @@ class Main(godotObject: GodotHandle) :
     Input.setCustomMouseCursor(cursorTexture, hotspot = Vector2(16f, 16f))
   }
 
-  private fun trackedTween(): Tween? {
-    val tween = self.createTween() ?: return null
+  private fun trackedTween(): Tween {
+    val tween = self.createTween()
     activeTweens += tween
     tween.signal(Tween.Signals.finished).connect(
       self,
       argumentCount = 0,
-      flags = GodotObject.CONNECT_ONE_SHOT,
+      flags = GodotObject.ConnectFlags.ONE_SHOT,
     ) {
       releaseTween(tween)
     }

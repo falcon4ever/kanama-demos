@@ -44,16 +44,16 @@ class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
     if (RenderingServer.getCurrentRenderingMethod() == "gl_compatibility") {
       // Use PCF13 shadow filtering to improve quality (Medium maps to PCF5 instead).
       RenderingServer.directionalSoftShadowFilterSetQuality(
-        RenderingServer.SHADOW_QUALITY_SOFT_HIGH
+        RenderingServer.ShadowQuality.SOFT_HIGH
       )
       // Darken the light's energy to compensate for sRGB blending (without affecting sky rendering).
       val light = self.requireAs("DirectionalLight3D", ::DirectionalLight3D)
-      light.skyMode = DirectionalLight3D.SKY_MODE_SKY_ONLY
+      light.skyMode = DirectionalLight3D.SkyMode.SKY_ONLY
       val duplicate = light.duplicate()
       if (duplicate != null) {
         val newLight = DirectionalLight3D(duplicate.handle)
         newLight.lightEnergy = 0.35
-        newLight.skyMode = DirectionalLight3D.SKY_MODE_LIGHT_ONLY
+        newLight.skyMode = DirectionalLight3D.SkyMode.LIGHT_ONLY
         self.addChild(newLight)
       }
     }

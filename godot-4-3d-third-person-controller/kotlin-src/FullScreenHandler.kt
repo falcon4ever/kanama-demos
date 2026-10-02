@@ -9,6 +9,7 @@ import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.InputEventKey
 import net.multigesture.kanama.api.InputEventMouseButton
 import net.multigesture.kanama.api.KanamaScript
+import net.multigesture.kanama.api.Key
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.OS
 import net.multigesture.kanama.api.Window
@@ -22,7 +23,7 @@ class FullScreenHandler(godotObject: GodotHandle) : KanamaScript<Node>(godotObje
     // the annotation, so it has never run.
     @OnReady
     fun ready() {
-        self.setProcessMode(Node.PROCESS_MODE_ALWAYS)
+        self.setProcessMode(Node.ProcessMode.ALWAYS)
     }
 
     @OnInput
@@ -31,8 +32,8 @@ class FullScreenHandler(godotObject: GodotHandle) : KanamaScript<Node>(godotObje
         // 4.x platform, so this branch never ran anywhere). Desktop is unaffected: "web" is false there.
         if (OS.hasFeature("web")) {
             val mouseButton = InputEventMouseButton.from(event) ?: return
-            if (mouseButton.isPressed() && Input.getMouseMode() != Input.MOUSE_MODE_CAPTURED) {
-                Input.setMouseMode(Input.MOUSE_MODE_CAPTURED)
+            if (mouseButton.isPressed() && Input.getMouseMode() != Input.MouseMode.CAPTURED) {
+                Input.setMouseMode(Input.MouseMode.CAPTURED)
             }
             return
         }
@@ -40,16 +41,16 @@ class FullScreenHandler(godotObject: GodotHandle) : KanamaScript<Node>(godotObje
         val keyEvent = InputEventKey.from(event) ?: return
         if (!keyEvent.isPressed() || keyEvent.isEcho()) return
 
-        val togglesFullscreen = keyEvent.getKeycode() == InputEventKey.KEY_F11 ||
-            (keyEvent.getKeycode() == InputEventKey.KEY_ENTER && keyEvent.isAltPressed())
+        val togglesFullscreen = keyEvent.getKeycode() == Key.F11 ||
+            (keyEvent.getKeycode() == Key.ENTER && keyEvent.isAltPressed())
         if (!togglesFullscreen) return
 
         val root = requireNotNull(requireNotNull(self.getTree()).getRoot())
         root.setMode(
-            if (root.getMode() == Window.MODE_FULLSCREEN) {
-                Window.MODE_WINDOWED
+            if (root.getMode() == Window.Mode.FULLSCREEN) {
+                Window.Mode.WINDOWED
             } else {
-                Window.MODE_FULLSCREEN
+                Window.Mode.FULLSCREEN
             },
         )
     }

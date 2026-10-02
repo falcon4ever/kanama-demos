@@ -188,7 +188,7 @@ class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::No
             bulletObject.call("set", "distance_limit", 14.0)
             bulletObject.call("set", "shooter", GodotObject(parent.handle))
             mark("bullet: three sets done; get before add_child = ${bulletObject.call("get", "shooter")}")
-            Node(bullet.handle).setProcessMode(Node.PROCESS_MODE_ALWAYS)
+            Node(bullet.handle).setProcessMode(Node.ProcessMode.ALWAYS)
             parent.addChild(bullet)
             mark("bullet: added")
 

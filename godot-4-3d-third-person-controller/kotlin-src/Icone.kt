@@ -25,8 +25,8 @@ class Icone(godotObject: GodotHandle) : KanamaScript<TextureRect>(godotObject, :
         val enabled = Color(1f, 1f, 1f, 1f)
         val target = if (state) enabled else disabled
         val source = if (state) disabled else enabled
-        val tween = self.createTween() ?: return
+        val tween = self.createTween()
         val tweener = tween.tweenProperty(self, "modulate", target, 0.2)
-        tweener?.from(source)
+        tweener.from(source)
     }
 }
