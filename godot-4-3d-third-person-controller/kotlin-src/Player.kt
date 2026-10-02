@@ -18,7 +18,9 @@ import net.multigesture.kanama.api.InputEventKey
 import net.multigesture.kanama.api.InputEventMouseButton
 import net.multigesture.kanama.api.InputMap
 import net.multigesture.kanama.api.KanamaScript
+import net.multigesture.kanama.api.Key
 import net.multigesture.kanama.api.Mathf
+import net.multigesture.kanama.api.MouseButton
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.ShapeCast3D
@@ -113,7 +115,7 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 		shootCooldownTick = shootCooldown
 		grenadeCooldownTick = grenadeCooldown
 
-		Input.setMouseMode(Input.MOUSE_MODE_CAPTURED)
+		Input.setMouseMode(Input.MouseMode.CAPTURED)
 		cameraController.setup(this)
 		grenadeAimControllerNode.setVisible(false)
 		emitWeaponSwitched()
@@ -358,19 +360,21 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 		private const val STUCK_EPSILON = 0.001
 
 		private val INPUT_ACTIONS = linkedMapOf(
-			"move_left" to InputEventKey.KEY_A,
-			"move_right" to InputEventKey.KEY_D,
-			"move_up" to InputEventKey.KEY_W,
-			"move_down" to InputEventKey.KEY_S,
-			"jump" to InputEventKey.KEY_SPACE,
-			"attack" to InputEventMouseButton.MOUSE_BUTTON_LEFT,
-			"aim" to InputEventMouseButton.MOUSE_BUTTON_RIGHT,
-			"swap_weapons" to InputEventKey.KEY_TAB,
-			"pause" to InputEventKey.KEY_ESCAPE,
-			"camera_left" to InputEventKey.KEY_Q,
-			"camera_right" to InputEventKey.KEY_E,
-			"camera_up" to InputEventKey.KEY_R,
-			"camera_down" to InputEventKey.KEY_F,
+			"move_left" to Key.A,
+			"move_right" to Key.D,
+			"move_up" to Key.W,
+			"move_down" to Key.S,
+			"jump" to Key.SPACE,
+			// The port registers every fallback action as an InputEventKey, so the two mouse actions
+			// carry the mouse-button index as a keycode, exactly as the untyped constants did.
+			"attack" to Key(MouseButton.LEFT.value),
+			"aim" to Key(MouseButton.RIGHT.value),
+			"swap_weapons" to Key.TAB,
+			"pause" to Key.ESCAPE,
+			"camera_left" to Key.Q,
+			"camera_right" to Key.E,
+			"camera_up" to Key.R,
+			"camera_down" to Key.F,
 		)
 	}
 }

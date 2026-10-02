@@ -18,6 +18,7 @@ import net.multigesture.kanama.api.KanamaCoroutineOwner
 import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Mathf
+import net.multigesture.kanama.api.MouseButton
 import net.multigesture.kanama.api.Node2D
 import net.multigesture.kanama.api.PackedScene
 import net.multigesture.kanama.api.SceneTree
@@ -181,7 +182,7 @@ class Main(godotObject: GodotHandle) :
   fun input(event: GodotObject) {
     val mouseButton = InputEventMouseButton.from(event) ?: return
     if (
-      mouseButton.getButtonIndex() == InputEventMouseButton.MOUSE_BUTTON_LEFT &&
+      mouseButton.getButtonIndex() == MouseButton.LEFT &&
         mouseButton.isReleased()
     ) {
       if (firstTouch != Vector2i(-1, -1)) {
@@ -379,7 +380,7 @@ class Main(godotObject: GodotHandle) :
     tween.signal(Tween.Signals.finished).connect(
       self,
       argumentCount = 0,
-      flags = GodotObject.CONNECT_ONE_SHOT,
+      flags = GodotObject.ConnectFlags.ONE_SHOT,
     ) {
       releaseTween(tween)
     }

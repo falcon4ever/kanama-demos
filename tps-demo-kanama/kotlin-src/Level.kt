@@ -211,8 +211,8 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         self.requireAs("ReflectionProbes", ::Node3D).hide()
         lightmapGi?.queueFree()
         when (TpsSettings.renderLong("gi_quality")) {
-            TpsSettings.GI_HIGH -> RenderingServer.environmentSetSdfgiRayCount(RenderingServer.ENV_SDFGI_RAY_COUNT_96)
-            TpsSettings.GI_LOW -> RenderingServer.environmentSetSdfgiRayCount(RenderingServer.ENV_SDFGI_RAY_COUNT_32)
+            TpsSettings.GI_HIGH -> RenderingServer.environmentSetSdfgiRayCount(RenderingServer.EnvironmentSDFGIRayCount.COUNT_96)
+            TpsSettings.GI_LOW -> RenderingServer.environmentSetSdfgiRayCount(RenderingServer.EnvironmentSDFGIRayCount.COUNT_32)
             else -> worldEnvironment.environment?.sdfgiEnabled = false
         }
     }
@@ -224,8 +224,8 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         self.requireAs("ReflectionProbes", ::Node3D).hide()
         lightmapGi?.queueFree()
         when (TpsSettings.renderLong("gi_quality")) {
-            TpsSettings.GI_HIGH -> RenderingServer.voxelGiSetQuality(RenderingServer.VOXEL_GI_QUALITY_HIGH)
-            TpsSettings.GI_LOW -> RenderingServer.voxelGiSetQuality(RenderingServer.VOXEL_GI_QUALITY_LOW)
+            TpsSettings.GI_HIGH -> RenderingServer.voxelGiSetQuality(RenderingServer.VoxelGIQuality.HIGH)
+            TpsSettings.GI_LOW -> RenderingServer.voxelGiSetQuality(RenderingServer.VoxelGIQuality.LOW)
             else -> self.requireAs("VoxelGI", ::Node3D).hide()
         }
     }
@@ -296,7 +296,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         if (event.isActionPressed("quit")) {
             exiting = true
             kanamaScope.cancel()
-            Input.setMouseMode(Input.MOUSE_MODE_VISIBLE)
+            Input.setMouseMode(Input.MouseMode.VISIBLE)
             self.emitSignal("quit")
         }
     }

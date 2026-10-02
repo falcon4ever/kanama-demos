@@ -1,6 +1,5 @@
 package thirdperson
 
-import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.annotations.OnInput
 import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.OnReady
@@ -13,6 +12,8 @@ import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.InputEventKey
 import net.multigesture.kanama.api.KanamaScript
+import net.multigesture.kanama.api.Key
+import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.OS
 import net.multigesture.kanama.types.Basis
@@ -42,7 +43,7 @@ class CameraMode(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, :
     @OnInput
     fun input(event: GodotObject) {
         val keyEvent = InputEventKey.from(event) ?: return
-        if (keyEvent.isPressed() && !keyEvent.isEcho() && keyEvent.getKeycode() == InputEventKey.KEY_F10) {
+        if (keyEvent.isPressed() && !keyEvent.isEcho() && keyEvent.getKeycode() == Key.F10) {
             toggleCameraMode()
         }
     }
@@ -55,12 +56,12 @@ class CameraMode(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, :
         }
 
         var movement = Vector3.ZERO
-        if (Input.isKeyPressed(InputEventKey.KEY_W)) movement += Vector3.FORWARD
-        if (Input.isKeyPressed(InputEventKey.KEY_A)) movement += Vector3.LEFT
-        if (Input.isKeyPressed(InputEventKey.KEY_S)) movement += Vector3.BACK
-        if (Input.isKeyPressed(InputEventKey.KEY_D)) movement += Vector3.RIGHT
-        if (Input.isKeyPressed(InputEventKey.KEY_Q)) movement += Vector3.DOWN
-        if (Input.isKeyPressed(InputEventKey.KEY_E)) movement += Vector3.UP
+        if (Input.isKeyPressed(Key.W)) movement += Vector3.FORWARD
+        if (Input.isKeyPressed(Key.A)) movement += Vector3.LEFT
+        if (Input.isKeyPressed(Key.S)) movement += Vector3.BACK
+        if (Input.isKeyPressed(Key.D)) movement += Vector3.RIGHT
+        if (Input.isKeyPressed(Key.Q)) movement += Vector3.DOWN
+        if (Input.isKeyPressed(Key.E)) movement += Vector3.UP
 
         val mouseVelocity = Input.getLastMouseVelocity()
         val rotationInput = -mouseVelocity.x.toDouble() * mouseSensitivity

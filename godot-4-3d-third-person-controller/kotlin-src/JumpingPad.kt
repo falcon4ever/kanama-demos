@@ -36,7 +36,7 @@ class JumpingPad(godotObject: GodotHandle) : KanamaScript<Area3D>(godotObject, :
         mushroom.scale = mushroom.scale.withY(0.4)
         val tween = self.createTween() ?: return
         val tweener = tween.tweenProperty(mushroom, "scale:y", 1.0, 1.0)
-        tweener?.setEase(Tween.EASE_OUT)?.setTrans(Tween.TRANS_ELASTIC)
+        tweener?.setEase(Tween.EaseType.OUT)?.setTrans(Tween.TransitionType.ELASTIC)
     }
 
     companion object {

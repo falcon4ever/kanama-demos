@@ -1,5 +1,6 @@
 package thirdperson
 
+import kotlinx.coroutines.launch
 import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
@@ -11,7 +12,6 @@ import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.CollisionShape3D
 import net.multigesture.kanama.api.GodotHandle
-import net.multigesture.kanama.generated.PlayerMethods
 import net.multigesture.kanama.api.KanamaCoroutineOwner
 import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.KanamaScript
@@ -19,12 +19,13 @@ import net.multigesture.kanama.api.NavigationAgent3D
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.PhysicsBody3D
+import net.multigesture.kanama.api.PhysicsServer3D
 import net.multigesture.kanama.api.RigidBody3D
 import net.multigesture.kanama.api.SignalConnection
 import net.multigesture.kanama.api.kotlinScriptInstance
+import net.multigesture.kanama.generated.PlayerMethods
 import net.multigesture.kanama.generated.SmokePuffNames
 import net.multigesture.kanama.types.Vector3
-import kotlinx.coroutines.launch
 
 @ScriptClass(attachTo = "RigidBody3D")
 class BeetleBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::RigidBody3D), KanamaCoroutineOwner {
@@ -131,9 +132,9 @@ class BeetleBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObjec
         target = null
         deathCollisionShape.setDeferred("disabled", false)
 
-        self.setAxisLock(PhysicsBody3D.BODY_AXIS_ANGULAR_X, false)
-        self.setAxisLock(PhysicsBody3D.BODY_AXIS_ANGULAR_Y, false)
-        self.setAxisLock(PhysicsBody3D.BODY_AXIS_ANGULAR_Z, false)
+        self.setAxisLock(PhysicsServer3D.BodyAxis.ANGULAR_X, false)
+        self.setAxisLock(PhysicsServer3D.BodyAxis.ANGULAR_Y, false)
+        self.setAxisLock(PhysicsServer3D.BodyAxis.ANGULAR_Z, false)
         self.gravityScale = 1.0
 
         kanamaScope.launch {

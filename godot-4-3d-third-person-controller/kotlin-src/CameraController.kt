@@ -75,7 +75,7 @@ class CameraController(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObj
     @OnUnhandledInput
     fun unhandledInput(event: GodotObject) {
         val motion = InputEventMouseMotion.from(event)
-        if (motion != null && Input.getMouseMode() == Input.MOUSE_MODE_CAPTURED) {
+        if (motion != null && Input.getMouseMode() == Input.MouseMode.CAPTURED) {
             val relative = motion.getRelative()
             rotationInput = -relative.x.toDouble() * mouseSensitivity
             tiltInput = -relative.y.toDouble() * mouseSensitivity

@@ -29,7 +29,7 @@ class DebugLabel(godotObject: GodotHandle) : KanamaScript<Label>(godotObject, ::
         val online = !self.isOfflineMultiplayer()
         self.text = buildString {
             append("FPS: ").append(Engine.getFramesPerSecond())
-            append("\nVSync: ").append(if (DisplayServer.windowGetVsyncMode() != DisplayServer.VSYNC_DISABLED) "Enabled" else "Disabled")
+            append("\nVSync: ").append(if (DisplayServer.windowGetVsyncMode() != DisplayServer.VSyncMode.DISABLED) "Enabled" else "Disabled")
             append("\nMemory: ").append(twoDecimals(OS.getStaticMemoryUsage() / 1048576.0)).append(" MiB")
             append("\nOnline: ").append(if (online) "Yes" else "No")
             if (online) append("\nMultiplayer ID: ").append(self.multiplayerUniqueId())

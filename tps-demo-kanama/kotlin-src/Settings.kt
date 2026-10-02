@@ -33,24 +33,24 @@ object TpsSettings {
 
     private val defaults = mapOf(
         "video" to mapOf(
-            "display_mode" to Window.MODE_WINDOWED,
-            "vsync" to DisplayServer.VSYNC_ENABLED,
+            "display_mode" to Window.Mode.WINDOWED.value,
+            "vsync" to DisplayServer.VSyncMode.ENABLED.value,
             "max_fps" to 0L,
             "resolution_scale" to 1.0,
             "scale_filter" to if (metalFxSupported) {
-                Viewport.SCALING_3D_MODE_METALFX_TEMPORAL
+                Viewport.Scaling3DMode.METALFX_TEMPORAL.value
             } else {
-                Viewport.SCALING_3D_MODE_FSR2
+                Viewport.Scaling3DMode.FSR2.value
             },
         ),
         "rendering" to mapOf(
             "taa" to false,
-            "msaa" to Viewport.MSAA_DISABLED,
+            "msaa" to Viewport.MSAA.DISABLED.value,
             "fxaa" to false,
             "shadow_mapping" to true,
             "gi_type" to VOXEL_GI,
             "gi_quality" to GI_LOW,
-            "ssao_quality" to RenderingServer.ENV_SSAO_QUALITY_MEDIUM,
+            "ssao_quality" to RenderingServer.EnvironmentSSAOQuality.MEDIUM.value,
             "ssil_quality" to -1L,
             "bloom" to true,
             "volumetric_fog" to true,
@@ -66,9 +66,9 @@ object TpsSettings {
                 }
             }
         }
-        val mode = videoLong("display_mode")
-        if (mode == Window.MODE_FULLSCREEN || mode == Window.MODE_EXCLUSIVE_FULLSCREEN) {
-            configFile.setValue("video", "display_mode", Window.MODE_WINDOWED)
+        val mode = Window.Mode(videoLong("display_mode"))
+        if (mode == Window.Mode.FULLSCREEN || mode == Window.Mode.EXCLUSIVE_FULLSCREEN) {
+            configFile.setValue("video", "display_mode", Window.Mode.WINDOWED.value)
         }
     }
 
@@ -92,17 +92,17 @@ object TpsSettings {
 
     fun applyGraphicsSettings(window: Window?, environment: Environment?, sceneRoot: Node) {
         if (DisplayServer.getName() != "headless") {
-            window?.mode = videoLong("display_mode")
+            window?.mode = Window.Mode(videoLong("display_mode"))
         }
-        DisplayServer.windowSetVsyncMode(videoLong("vsync"))
+        DisplayServer.windowSetVsyncMode(DisplayServer.VSyncMode(videoLong("vsync")))
         Engine.maxFps = videoInt("max_fps")
         window?.scaling3dScale = videoDouble("resolution_scale")
-        window?.scaling3dMode = videoLong("scale_filter")
+        window?.scaling3dMode = Viewport.Scaling3DMode(videoLong("scale_filter"))
 
         window?.useTaa = renderBool("taa")
-        window?.msaa3d = renderLong("msaa")
+        window?.msaa3d = Viewport.MSAA(renderLong("msaa"))
         window?.screenSpaceAa =
-            if (renderBool("fxaa")) Viewport.SCREEN_SPACE_AA_FXAA else Viewport.SCREEN_SPACE_AA_DISABLED
+            if (renderBool("fxaa")) Viewport.ScreenSpaceAA.FXAA else Viewport.ScreenSpaceAA.DISABLED
 
         if (!renderBool("shadow_mapping")) {
             sceneRoot.propagateCall("set", listOf("shadow_enabled", false))
@@ -111,10 +111,10 @@ object TpsSettings {
         val env = environment ?: return
         when (renderLong("ssao_quality")) {
             -1L -> env.ssaoEnabled = false
-            RenderingServer.ENV_SSAO_QUALITY_MEDIUM -> {
+            RenderingServer.EnvironmentSSAOQuality.MEDIUM.value -> {
                 env.ssaoEnabled = true
                 RenderingServer.environmentSetSsaoQuality(
-                    RenderingServer.ENV_SSAO_QUALITY_HIGH,
+                    RenderingServer.EnvironmentSSAOQuality.HIGH,
                     false,
                     0.5,
                     2,
@@ -125,7 +125,7 @@ object TpsSettings {
             else -> {
                 env.ssaoEnabled = true
                 RenderingServer.environmentSetSsaoQuality(
-                    RenderingServer.ENV_SSAO_QUALITY_MEDIUM,
+                    RenderingServer.EnvironmentSSAOQuality.MEDIUM,
                     true,
                     0.5,
                     2,
@@ -137,10 +137,10 @@ object TpsSettings {
 
         when (renderLong("ssil_quality")) {
             -1L -> env.ssilEnabled = false
-            RenderingServer.ENV_SSIL_QUALITY_MEDIUM -> {
+            RenderingServer.EnvironmentSSILQuality.MEDIUM.value -> {
                 env.ssilEnabled = true
                 RenderingServer.environmentSetSsilQuality(
-                    RenderingServer.ENV_SSIL_QUALITY_MEDIUM,
+                    RenderingServer.EnvironmentSSILQuality.MEDIUM,
                     false,
                     0.5,
                     2,
@@ -151,7 +151,7 @@ object TpsSettings {
             else -> {
                 env.ssilEnabled = true
                 RenderingServer.environmentSetSsilQuality(
-                    RenderingServer.ENV_SSIL_QUALITY_HIGH,
+                    RenderingServer.EnvironmentSSILQuality.HIGH,
                     true,
                     0.5,
                     2,
@@ -178,12 +178,12 @@ class Settings(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Nod
         val event = InputEvent(inputEvent.handle)
         if (event.isActionPressed("toggle_fullscreen")) {
             val window = self.getWindow()
-            val mode = window?.mode ?: Window.MODE_WINDOWED
+            val mode = window?.mode ?: Window.Mode.WINDOWED
             window?.mode =
-                if (mode == Window.MODE_EXCLUSIVE_FULLSCREEN || mode == Window.MODE_FULLSCREEN) {
-                    Window.MODE_WINDOWED
+                if (mode == Window.Mode.EXCLUSIVE_FULLSCREEN || mode == Window.Mode.FULLSCREEN) {
+                    Window.Mode.WINDOWED
                 } else {
-                    Window.MODE_EXCLUSIVE_FULLSCREEN
+                    Window.Mode.EXCLUSIVE_FULLSCREEN
                 }
             self.getViewport()?.setInputAsHandled()
         }
