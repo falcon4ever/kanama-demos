@@ -286,7 +286,7 @@ class Player(godotObject: GodotHandle) :
   private fun initiateChangeWeapon(index: Int) {
     weaponIndex = index
     clearTween()
-    tween = self.createTween()?.bindNode(self)?.setEase(Tween.EaseType.OUT_IN)
+    tween = self.createTween().bindNode(self).setEase(Tween.EaseType.OUT_IN)
     tween?.tweenProperty(container, "position", containerOffset - Vector3(0.0, 1.0, 0.0), 0.1)
     tween?.tweenCallback(self, "change_weapon")
   }

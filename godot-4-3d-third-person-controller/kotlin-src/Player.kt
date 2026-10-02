@@ -11,9 +11,11 @@ import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.CanvasItem
 import net.multigesture.kanama.api.CharacterBody3D
+import net.multigesture.kanama.api.ClassDB
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.Input
+import net.multigesture.kanama.api.InputEvent
 import net.multigesture.kanama.api.InputEventKey
 import net.multigesture.kanama.api.InputEventMouseButton
 import net.multigesture.kanama.api.InputMap
@@ -23,6 +25,7 @@ import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.api.MouseButton
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
+import net.multigesture.kanama.api.RefCounted
 import net.multigesture.kanama.api.ShapeCast3D
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.CharacterSkinNames
@@ -333,16 +336,29 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 	}
 
 	private fun registerInputActions() {
-		for ((action, keycode) in INPUT_ACTIONS) {
+		for ((action, binding) in INPUT_ACTIONS) {
 			if (InputMap.hasAction(action)) {
 				continue
 			}
 			InputMap.addAction(action)
-			val inputKey = InputEventKey.create()
-			inputKey.keycode = keycode
-			InputMap.actionAddEvent(action, inputKey)
-			// close what you create (Kanama task 61): InputMap keeps its own reference to the event.
-			inputKey.close()
+			when (binding) {
+				is Key -> {
+					val inputKey = InputEventKey.create()
+					inputKey.keycode = binding
+					InputMap.actionAddEvent(action, inputKey)
+					// close what you create (Kanama task 61): InputMap keeps its own reference to the event.
+					inputKey.close()
+				}
+				is MouseButton -> {
+					// attack / aim are mouse buttons in the original project.godot (button_index 1 / 2).
+					// Built through ClassDB + the dynamic `set` (the typed enum is encoded as INT), which
+					// both backends host; the owned reference is released once InputMap holds its own.
+					val mouseEvent = ClassDB.instantiate("InputEventMouseButton") as? RefCounted ?: continue
+					mouseEvent.set("button_index", binding)
+					InputEvent.fromHandle(mouseEvent.handle)?.let { InputMap.actionAddEvent(action, it) }
+					mouseEvent.close()
+				}
+			}
 		}
 	}
 
@@ -365,10 +381,8 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 			"move_up" to Key.W,
 			"move_down" to Key.S,
 			"jump" to Key.SPACE,
-			// The port registers every fallback action as an InputEventKey, so the two mouse actions
-			// carry the mouse-button index as a keycode, exactly as the untyped constants did.
-			"attack" to Key(MouseButton.LEFT.value),
-			"aim" to Key(MouseButton.RIGHT.value),
+			"attack" to MouseButton.LEFT,
+			"aim" to MouseButton.RIGHT,
 			"swap_weapons" to Key.TAB,
 			"pause" to Key.ESCAPE,
 			"camera_left" to Key.Q,

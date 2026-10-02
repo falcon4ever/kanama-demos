@@ -301,7 +301,7 @@ class Main(godotObject: GodotHandle) :
         grid[piece.gridPosition.x][piece.gridPosition.y] = null
 
         val tween = trackedTween()
-        tween?.tweenProperty(piece.node, "scale", Vector2.ZERO, 0.2)
+        tween.tweenProperty(piece.node, "scale", Vector2.ZERO, 0.2)
         piecesToFree += piece.node
       }
 
@@ -374,8 +374,8 @@ class Main(godotObject: GodotHandle) :
     Input.setCustomMouseCursor(cursorTexture, hotspot = Vector2(16f, 16f))
   }
 
-  private fun trackedTween(): Tween? {
-    val tween = self.createTween() ?: return null
+  private fun trackedTween(): Tween {
+    val tween = self.createTween()
     activeTweens += tween
     tween.signal(Tween.Signals.finished).connect(
       self,

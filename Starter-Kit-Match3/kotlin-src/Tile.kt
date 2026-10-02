@@ -82,14 +82,14 @@ class Tile(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area2
   fun moveTo(targetPosition: Vector2, playSound: Boolean = true) {
     val tween = trackedTween(if (playSound) ::onMoveFinished else null) ?: return
 
-    tween.tweenProperty(self, "position", targetPosition, 0.3)?.let { tweener ->
-      tweener?.setTrans(Tween.TransitionType.BACK)?.setEase(Tween.EaseType.OUT)
+    tween.tweenProperty(self, "position", targetPosition, 0.3).let { tweener ->
+      tweener.setTrans(Tween.TransitionType.BACK).setEase(Tween.EaseType.OUT)
     }
 
     sprite()?.let { sprite ->
       sprite.scale = Vector2(1.2f, 0.8f)
-      tween.tweenProperty(sprite, "scale", Vector2.ONE, 0.3)?.let { tweener ->
-        tweener?.setTrans(Tween.TransitionType.ELASTIC)?.setEase(Tween.EaseType.OUT)
+      tween.tweenProperty(sprite, "scale", Vector2.ONE, 0.3).let { tweener ->
+        tweener.setTrans(Tween.TransitionType.ELASTIC).setEase(Tween.EaseType.OUT)
       }
     }
   }
@@ -121,7 +121,7 @@ class Tile(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area2
   private fun sprite(): Sprite2D? = self.getAsOrNull("Sprite2D", ::Sprite2D)
 
   private fun trackedTween(onFinished: (() -> Unit)? = null): Tween? {
-    val tween = self.createTween()?.setParallel(true) ?: return null
+    val tween = self.createTween().setParallel(true)
     activeTweens += tween
     tween.signal(Tween.Signals.finished).connect(
       self,
