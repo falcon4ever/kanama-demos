@@ -348,7 +348,11 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 				}
 				is MouseButton -> {
 					// attack / aim are mouse buttons in the original project.godot (button_index 1 / 2).
-					val mouseEvent = InputEventMouseButton.create().also { it.buttonIndex = binding }
+					val mouseEvent =
+						InputEventMouseButton.create().also {
+							it.buttonIndex = binding
+							it.device = ALL_DEVICES
+						}
 					InputMap.actionAddEvent(action, mouseEvent)
 					// close what you create (Kanama task 61): InputMap keeps its own reference to the event.
 					mouseEvent.close()
@@ -369,6 +373,10 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 	companion object {
 		private const val GRAVITY = -30.0
 		private const val STUCK_EPSILON = 0.001
+
+		// project.godot binds the attack / aim mouse-button events to every device ("device": -1); its
+		// key events keep the default device 0, as the InputEventKey branch does.
+		private const val ALL_DEVICES = -1
 
 		private val INPUT_ACTIONS = linkedMapOf(
 			"move_left" to Key.A,
