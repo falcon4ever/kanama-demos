@@ -1,8 +1,8 @@
 package thirdperson
 
 import net.multigesture.kanama.annotations.Export
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.Animation
 import net.multigesture.kanama.api.AnimationMixer
@@ -39,7 +39,7 @@ class BeetlebotSkin(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject
         }
     }
 
-    @RegisterFunction("_on_secondary_action_timer_timeout")
+    @GodotName("_on_secondary_action_timer_timeout")
     fun onSecondaryActionTimerTimeout() {
         if (mainStateMachine.getCurrentNode() == States.IDLE) {
             shake()
@@ -47,27 +47,22 @@ class BeetlebotSkin(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject
         secondaryActionTimer.start(GD.randfRange(3.0, 8.0))
     }
 
-    @RegisterFunction
     fun idle() {
         mainStateMachine.travel(States.IDLE)
     }
 
-    @RegisterFunction
     fun walk() {
         mainStateMachine.travel(States.WALK)
     }
 
-    @RegisterFunction
     fun shake() {
         mainStateMachine.travel(States.SHAKE)
     }
 
-    @RegisterFunction
     fun attack() {
         mainStateMachine.travel(States.ATTACK)
     }
 
-    @RegisterFunction("power_off")
     fun powerOff() {
         mainStateMachine.travel(States.POWER_OFF)
         secondaryActionTimer.stop()

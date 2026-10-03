@@ -8,17 +8,15 @@ import net.multigesture.kanama.annotations.OnInput
 import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.PropertyHint
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
 import net.multigesture.kanama.annotations.Signal
 import net.multigesture.kanama.api.AnimatedSprite3D
 import net.multigesture.kanama.api.AudioStreamPlayer
 import net.multigesture.kanama.api.CharacterBody3D
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
-import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Input
+import net.multigesture.kanama.api.InputEvent
 import net.multigesture.kanama.api.InputEventMouseMotion
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Mathf
@@ -50,15 +48,15 @@ import net.multigesture.kanama.types.Vector3
 class Player(godotObject: GodotHandle) :
   KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
 
-  @ExportSubgroup("Properties") @ScriptProperty var movementSpeed: Long = 5
+  @ExportSubgroup("Properties") @Export var movementSpeed: Long = 5
 
   @Export(hint = PropertyHint.RANGE, hintString = "0,100,1") var numberOfJumps: Long = 2
 
-  @ScriptProperty var jumpStrength: Long = 8
+  @Export var jumpStrength: Long = 8
 
-  @ExportSubgroup("Weapons") @ScriptProperty var weapons: List<Weapon> = emptyList()
+  @ExportSubgroup("Weapons") @Export var weapons: List<Weapon> = emptyList()
 
-  @ScriptProperty var crosshair: TextureRect? = null
+  @Export var crosshair: TextureRect? = null
 
   private lateinit var camera: Node3D
   private lateinit var raycast: RayCast3D
@@ -147,7 +145,7 @@ class Player(godotObject: GodotHandle) :
   }
 
   @OnInput
-  fun input(event: GodotObject) {
+  fun input(event: InputEvent) {
     if (!mouseCaptured) return
     val relative = InputEventMouseMotion.from(event)?.getRelative() ?: return
     handleRotation(relative.x.toDouble(), relative.y.toDouble(), isController = false)
@@ -296,7 +294,6 @@ class Player(godotObject: GodotHandle) :
     tween = null
   }
 
-  @RegisterFunction("change_weapon")
   fun changeWeapon() {
     weapon = weapons[weaponIndex]
     val weaponModelScene =
@@ -334,7 +331,6 @@ class Player(godotObject: GodotHandle) :
     }
   }
 
-  @RegisterFunction("damage")
   fun damage(amount: Double) {
     health -= amount.toLong()
     PlayerSignals.healthUpdated(this, health)

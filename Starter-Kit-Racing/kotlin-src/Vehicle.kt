@@ -2,9 +2,9 @@ package racing
 
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.annotations.GlobalClass
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.OnPhysicsProcess
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.GD
@@ -74,7 +74,6 @@ open class Vehicle(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject,
         impactSound = self.requireAs("Container/ImpactSound", ::AudioStreamPlayer3D)
     }
 
-    @RegisterFunction("get_vehicle_position")
     open fun getVehiclePosition(): Vector3 = vehicleModel.globalPosition
 
     @OnPhysicsProcess
@@ -206,7 +205,7 @@ open class Vehicle(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject,
         return xform.withBasis(basis)
     }
 
-    @RegisterFunction("_on_sphere_body_entered")
+    @GodotName("_on_sphere_body_entered")
     open fun onSphereBodyEntered(body: GodotObject) {
         val currentBody = vehicleBody ?: return
         if (!impactSound.isPlaying()) {

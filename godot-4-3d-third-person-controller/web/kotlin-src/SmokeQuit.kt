@@ -1,6 +1,5 @@
 package thirdperson
 
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.GodotObject
@@ -28,7 +27,6 @@ import net.multigesture.kanama.types.Vector3
  */
 @ScriptClass(attachTo = "Node")
 class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
-  @RegisterFunction("smoke_resume")
   fun smokeResume() {
     // The DemoPage boots the tree paused; resume through its own flow so page state stays
     // consistent (falls back to a raw unpause if the page is missing).
@@ -42,14 +40,12 @@ class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::No
     }
   }
 
-  @RegisterFunction("smoke_teardown")
   fun smokeTeardown() {
     DemoScenes.releaseWarmUp()
     val root = self.getParent() ?: error("SmokeQuit has no parent to tear down")
     Node(root.handle).queueFree()
   }
 
-  @RegisterFunction("smoke_combat")
   fun smokeCombat() {
     // The scene's own bots, the two nearest to the player's start so killing them also
     // removes the only AI that could reach the driver's stance mid-run (paths from

@@ -4,10 +4,9 @@ import net.multigesture.kanama.annotations.GlobalClass
 import net.multigesture.kanama.annotations.OnEnterTree
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.Rpc
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.AnimationTree
 import net.multigesture.kanama.api.AudioStreamPlayer
@@ -39,7 +38,7 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
     private var airborneTime = 100.0
     private var orientation = Transform3D.IDENTITY
     private var rootMotion = Transform3D.IDENTITY
-    @ScriptProperty
+    @Export
     var motion = Vector2.ZERO
     private var initialPosition = Vector3.ZERO
     private var ready = false
@@ -56,7 +55,7 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
     private lateinit var soundEffectLand: AudioStreamPlayer
     private lateinit var soundEffectShoot: AudioStreamPlayer
 
-    @ScriptProperty(name = "player_id")
+    @Export(name = "player_id")
     var playerId = 1L
         set(value) {
             field = value
@@ -67,7 +66,7 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 
     // Spelled literal (AnimationState.WALK.id): expression defaults are not portable to the Web
     // proxy, which needs a plain literal it can re-emit.
-    @ScriptProperty(name = "current_animation")
+    @Export(name = "current_animation")
     var currentAnimation = 3L
 
     @OnEnterTree
@@ -107,7 +106,6 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
         }
     }
 
-    @RegisterFunction
     fun animate(anim: Long, delta: Double = 0.0) {
         currentAnimation = anim
         when (anim) {
@@ -195,21 +193,18 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
         bullet.addCollisionExceptionWith(self)
     }
 
-    @RegisterFunction
     @Rpc(callLocal = true)
     fun jump() {
         animate(AnimationState.JUMP_UP.id, 0.0)
         soundEffectJump.play()
     }
 
-    @RegisterFunction
     @Rpc(callLocal = true)
     fun land() {
         animate(AnimationState.JUMP_DOWN.id, 0.0)
         soundEffectLand.play()
     }
 
-    @RegisterFunction
     @Rpc(callLocal = true)
     fun shoot() {
         restartEmitting(shootParticle)
@@ -219,13 +214,11 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
         addCameraShakeTrauma(0.35)
     }
 
-    @RegisterFunction
     @Rpc(callLocal = true)
     fun hit() {
         addCameraShakeTrauma(0.75)
     }
 
-    @RegisterFunction("add_camera_shake_trauma")
     @Rpc(callLocal = true)
     fun addCameraShakeTrauma(amount: Double) {
         playerInput.addCameraShakeTrauma(amount)

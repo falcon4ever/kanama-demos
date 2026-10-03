@@ -3,7 +3,6 @@ package net.multigesture.kanama.demos.bunnymark
 import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
@@ -75,7 +74,6 @@ class BunnymarkV1SpritesKanama(godotObject: GodotHandle) : KanamaScript<Node2D>(
         }
     }
 
-    @RegisterFunction("add_bunny")
     fun addBunny() {
         val sprite = Sprite2D.create()
         sprite.setTexture(bunnyTexture)
@@ -87,7 +85,6 @@ class BunnymarkV1SpritesKanama(godotObject: GodotHandle) : KanamaScript<Node2D>(
         )
     }
 
-    @RegisterFunction("remove_bunny")
     fun removeBunny() {
         if (bunnies.isEmpty()) return
         val bunny = bunnies.removeAt(bunnies.lastIndex)
@@ -95,7 +92,6 @@ class BunnymarkV1SpritesKanama(godotObject: GodotHandle) : KanamaScript<Node2D>(
         bunny.sprite.queueFree()
     }
 
-    @RegisterFunction("finish")
     fun finish() {
         self.emitSignal("benchmark_finished", bunnies.size)
     }

@@ -1,8 +1,8 @@
 package citybuilder
 
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.Process
-import net.multigesture.kanama.annotations.RegisterFunction
+import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.AudioStreamPlayer
 import net.multigesture.kanama.api.GD
@@ -36,7 +36,7 @@ class Audio(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) 
         }
     }
 
-    @RegisterFunction("_on_stream_finished")
+    @GodotName("_on_stream_finished")
     fun onStreamFinished(player: AudioStreamPlayer) {
         available.addLast(player)
     }
@@ -48,7 +48,7 @@ class Audio(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) 
         queue.addLast(QueuedSound(chosen, volumeDb))
     }
 
-    @Process
+    @OnProcess
     fun process(delta: Double) {
         if (queue.isNotEmpty() && available.isNotEmpty()) {
             val item = queue.removeFirst()

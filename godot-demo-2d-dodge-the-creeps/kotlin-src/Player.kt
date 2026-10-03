@@ -2,9 +2,9 @@ package dodge
 
 import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.Signal
 import net.multigesture.kanama.api.AnimatedSprite2D
 import net.multigesture.kanama.api.Area2D
@@ -21,7 +21,7 @@ import net.multigesture.kanama.types.Vector2
 @ScriptClass(attachTo = "Area2D")
 class Player(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area2D) {
     /** How fast the player will move, in pixels per second. */
-    @ScriptProperty
+    @Export
     var speed: Long = 400
 
     /** Emitted when the player is hit by a mob. */
@@ -71,7 +71,6 @@ class Player(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Are
         }
     }
 
-    @RegisterFunction
     fun start(pos: Vector2) {
         self.position = pos
         self.rotation = 0.0
@@ -79,7 +78,7 @@ class Player(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Are
         collisionShape.setDisabled(false)
     }
 
-    @RegisterFunction("_on_body_entered")
+    @GodotName("_on_body_entered")
     fun onBodyEntered(_body: Node2D) {
         self.hide() // Player disappears after being hit.
         PlayerSignals.hit(this)

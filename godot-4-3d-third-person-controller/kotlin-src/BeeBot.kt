@@ -3,9 +3,8 @@ package thirdperson
 import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.AudioStreamPlayer3D
@@ -28,13 +27,13 @@ import kotlinx.coroutines.launch
 class BeeBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::RigidBody3D), KanamaCoroutineOwner {
 	override val kanamaScope = KanamaScope()
 
-	@ScriptProperty
+	@Export
 	var shootTimer: Double = 1.5
 
-	@ScriptProperty
+	@Export
 	var bulletSpeed: Double = 6.0
 
-	@ScriptProperty
+	@Export
 	var coinsCount: Long = 5
 
 	private lateinit var reactionAnimationPlayer: AnimationPlayer
@@ -102,7 +101,6 @@ class BeeBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, 
 		}
 	}
 
-	@RegisterFunction
 	fun damage(impactPoint: Vector3, force: Vector3) {
 		self.applyImpulse(force.limitLength(3.0), impactPoint)
 

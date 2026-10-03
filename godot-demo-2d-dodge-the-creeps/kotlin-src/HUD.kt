@@ -1,6 +1,6 @@
 package dodge
 
-import net.multigesture.kanama.annotations.RegisterFunction
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.Signal
 import net.multigesture.kanama.api.Button
@@ -27,14 +27,12 @@ class HUD(godotObject: GodotHandle) : KanamaScript<CanvasLayer>(godotObject, ::C
     private val startButton: Button get() = self.requireAs("StartButton", ::Button)
     private val messageTimer: Timer get() = self.requireAs("MessageTimer", ::Timer)
 
-    @RegisterFunction("show_message")
     fun showMessage(text: String) {
         messageLabel.text = text
         messageLabel.show()
         messageTimer.start()
     }
 
-    @RegisterFunction("show_game_over")
     fun showGameOver() {
         kanamaScope.launch {
             showMessage("Game Over")
@@ -46,18 +44,17 @@ class HUD(godotObject: GodotHandle) : KanamaScript<CanvasLayer>(godotObject, ::C
         }
     }
 
-    @RegisterFunction("update_score")
     fun updateScore(score: Long) {
         scoreLabel.text = score.toString()
     }
 
-    @RegisterFunction("_on_StartButton_pressed")
+    @GodotName("_on_StartButton_pressed")
     fun onStartButtonPressed() {
         startButton.hide()
         HUDSignals.startGame(this)
     }
 
-    @RegisterFunction("_on_MessageTimer_timeout")
+    @GodotName("_on_MessageTimer_timeout")
     fun onMessageTimerTimeout() {
         messageLabel.hide()
     }

@@ -2,9 +2,9 @@ package citybuilder
 
 import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.Process
+import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.api.Camera3D
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
@@ -35,17 +35,17 @@ import net.multigesture.kanama.types.Vector3i
 @ScriptClass(attachTo = "Node3D")
 class Builder(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
 
-  @ScriptProperty var structures: List<Structure> = emptyList()
+  @Export var structures: List<Structure> = emptyList()
 
-  @ScriptProperty var selector: Node3D? = null
+  @Export var selector: Node3D? = null
 
-  @ScriptProperty var selectorContainer: Node3D? = null
+  @Export var selectorContainer: Node3D? = null
 
-  @ScriptProperty var viewCamera: Camera3D? = null
+  @Export var viewCamera: Camera3D? = null
 
-  @ScriptProperty var gridmap: GridMap? = null
+  @Export var gridmap: GridMap? = null
 
-  @ScriptProperty var cashDisplay: Label? = null
+  @Export var cashDisplay: Label? = null
 
   private lateinit var map: DataMap
   // Owning reference for `map` when we created it via newScriptInstance() (null when `map` was
@@ -91,7 +91,7 @@ class Builder(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::No
     mapOwner = null
   }
 
-  @Process
+  @OnProcess
   fun process(delta: Double) {
     actionRotate()
     actionStructureToggle()

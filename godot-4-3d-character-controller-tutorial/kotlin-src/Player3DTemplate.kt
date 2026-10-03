@@ -14,7 +14,6 @@ import net.multigesture.kanama.api.Camera3D
 import net.multigesture.kanama.api.CharacterBody3D
 import net.multigesture.kanama.api.GPUParticles3D
 import net.multigesture.kanama.api.GodotHandle
-import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.InputEvent
 import net.multigesture.kanama.api.InputEventMouseMotion
@@ -114,8 +113,8 @@ class Player3DTemplate(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>
     }
 
     @OnInput
-    fun input(event: GodotObject) {
-        val inputEvent = InputEvent(event.handle)
+    fun input(event: InputEvent) {
+        val inputEvent = event
         if (inputEvent.isActionPressed("ui_cancel")) {
             Input.setMouseMode(Input.MouseMode.VISIBLE)
         } else if (inputEvent.isActionPressed("left_click")) {
@@ -124,7 +123,7 @@ class Player3DTemplate(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>
     }
 
     @OnUnhandledInput
-    fun unhandledInput(event: GodotObject) {
+    fun unhandledInput(event: InputEvent) {
         val motion = InputEventMouseMotion.from(event) ?: return
         if (Input.getMouseMode() != Input.MouseMode.CAPTURED) return
         val relative = motion.getRelative()

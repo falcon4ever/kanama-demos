@@ -1,9 +1,9 @@
 package squash
 
 import net.multigesture.kanama.annotations.OnPhysicsProcess
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.Signal
 import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.CharacterBody3D
@@ -19,10 +19,10 @@ class Mob(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObject,
   private val animationPlayer by lazy { self.requireAs("AnimationPlayer", ::AnimationPlayer) }
 
   /** Minimum speed of the mob in meters per second. */
-  @ScriptProperty var minSpeed: Long = 10
+  @Export var minSpeed: Long = 10
 
   /** Maximum speed of the mob in meters per second. */
-  @ScriptProperty var maxSpeed: Long = 18
+  @Export var maxSpeed: Long = 18
 
   /** Emitted when the player jumped on the mob. */
   @Signal fun squashed() = Unit
@@ -54,13 +54,12 @@ class Mob(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObject,
     animationPlayer.setSpeedScale(randomSpeed / minSpeed.toDouble())
   }
 
-  @RegisterFunction
   fun squash() {
     MobSignals.squashed(this)
     self.queueFree()
   }
 
-  @RegisterFunction("_on_visible_on_screen_notifier_screen_exited")
+  @GodotName("_on_visible_on_screen_notifier_screen_exited")
   fun onVisibleOnScreenNotifierScreenExited() {
     self.queueFree()
   }

@@ -3,9 +3,8 @@ package net.multigesture.kanama.demos.platformer3d
 import net.multigesture.kanama.annotations.ExportSubgroup
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.annotations.Signal
 import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.AudioStreamPlayer
@@ -26,14 +25,14 @@ import net.multigesture.kanama.api.KanamaScript
 class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
 
 	@ExportSubgroup("Components")
-	@ScriptProperty
+	@Export
 	var view: NodePath = NodePath("../View")
 
 	@ExportSubgroup("Properties")
-	@ScriptProperty
+	@Export
 	var movementSpeed: Long = 250
 
-	@ScriptProperty
+	@Export
 	var jumpStrength: Long = 7
 
 	private var movementVelocity = Vector3.ZERO
@@ -169,7 +168,6 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 		}
 	}
 
-	@RegisterFunction
 	fun collectCoin() {
 		coins += 1
 		PlayerSignals.coinCollected(this, coins)

@@ -1,7 +1,7 @@
 package fps
 
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.CanvasLayer
 import net.multigesture.kanama.api.GodotHandle
@@ -17,7 +17,7 @@ class Hud(godotObject: GodotHandle) : KanamaScript<CanvasLayer>(godotObject, ::C
     healthLabel = self.requireAs("Health", ::Label)
   }
 
-  @RegisterFunction("_on_health_updated")
+  @GodotName("_on_health_updated")
   fun onHealthUpdated(health: Long) {
     healthLabel.text = "$health%"
   }

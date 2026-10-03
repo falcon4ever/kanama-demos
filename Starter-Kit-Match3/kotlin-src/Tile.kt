@@ -1,7 +1,7 @@
 package net.multigesture.kanama.demos.match3
 
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.OnExitTree
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.Signal
 import net.multigesture.kanama.api.Area2D
@@ -32,7 +32,7 @@ class Tile(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area2
   @Signal fun tileReleased(pos: Vector2i) = Unit
 
   // Highlight tile when hovering mouse
-  @RegisterFunction("_on_mouse_entered")
+  @GodotName("_on_mouse_entered")
   fun onMouseEntered() {
     val sprite = sprite() ?: return
     val tween = trackedTween() ?: return
@@ -41,7 +41,7 @@ class Tile(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area2
   }
 
   // Return to default state when mouse exits
-  @RegisterFunction("_on_mouse_exited")
+  @GodotName("_on_mouse_exited")
   fun onMouseExited() {
     val sprite = sprite() ?: return
     val tween = trackedTween() ?: return
@@ -50,21 +50,19 @@ class Tile(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area2
   }
 
   // Set piece type when initializing
-  @RegisterFunction("set_tile_type")
   fun setTileType(id: String, texture: Texture2D) {
     type = id
     sprite()?.texture = texture
   }
 
-  @RegisterFunction("set_grid_position")
   fun setGridPosition(pos: Vector2i) {
     gridPosition = pos
   }
 
-  @RegisterFunction("get_tile_type") fun getTileType(): String = type
+  fun getTileType(): String = type
 
   // Letting the main code know when a tile has been pressed
-  @RegisterFunction("_input_event")
+  @GodotName("_input_event")
   fun inputEvent(viewport: GodotObject, event: GodotObject, shapeIdx: Long) {
     val mouseButton = InputEventMouseButton.from(event) ?: return
     if (
@@ -78,7 +76,6 @@ class Tile(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area2
   }
 
   // Animations when tile is moving
-  @RegisterFunction("move_to")
   fun moveTo(targetPosition: Vector2, playSound: Boolean = true) {
     val tween = trackedTween(if (playSound) ::onMoveFinished else null) ?: return
 
@@ -103,7 +100,7 @@ class Tile(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area2
   }
 
   // Audio that plays after the tile lands on the board
-  @RegisterFunction("_on_move_finished")
+  @GodotName("_on_move_finished")
   fun onMoveFinished() {
     playAudio("res://sounds/tile-land.ogg", false, 1.2 - (gridPosition.y * 0.05), 0.2)
   }

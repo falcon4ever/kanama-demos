@@ -3,9 +3,9 @@ package tps
 import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.Signal
 import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.AnimationTree
@@ -60,20 +60,20 @@ class RedRobot(godotObject: GodotHandle) :
   KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D), KanamaCoroutineOwner {
   override val kanamaScope = KanamaScope()
 
-  @ScriptProperty(name = "test_shoot") var testShoot = false
+  @Export(name = "test_shoot") var testShoot = false
 
-  @ScriptProperty(name = "target_position") var targetPosition = Vector3.ZERO
+  @Export(name = "target_position") var targetPosition = Vector3.ZERO
 
-  @ScriptProperty var health = 5L
+  @Export var health = 5L
 
   // Spelled literal (State.APPROACH.id): expression defaults are not portable to the
   // Web proxy, which needs a plain literal it can re-emit.
-  @ScriptProperty var state = 0L
+  @Export var state = 0L
 
-  @ScriptProperty var dead = false
+  @Export var dead = false
 
   // Spelled literal (AIM_PREPARE_TIME): same Web-proxy literal-default requirement.
-  @ScriptProperty(name = "aim_preparing") var aimPreparing = 0.5
+  @Export(name = "aim_preparing") var aimPreparing = 0.5
 
   private var shootCountdown = SHOOT_WAIT
   private var aimCountdown = AIM_TIME
@@ -136,14 +136,12 @@ class RedRobot(godotObject: GodotHandle) :
     animate(0.0)
   }
 
-  @RegisterFunction("resume_approach")
   fun resumeApproach() {
     state = State.APPROACH.id
     aimPreparing = AIM_PREPARE_TIME
     shootCountdown = SHOOT_WAIT
   }
 
-  @RegisterFunction
   fun hit() {
     if (dead) return
     animationTree.set("parameters/hit${(GD.randi() % 3) + 1}/request", 1L)
@@ -171,7 +169,6 @@ class RedRobot(godotObject: GodotHandle) :
     }
   }
 
-  @RegisterFunction
   fun shoot() {
     val rayOrigin = rayFrom.globalTransform.origin
     val rayDir = rayFrom.globalTransform.basis.y
@@ -326,17 +323,15 @@ class RedRobot(godotObject: GodotHandle) :
     self.globalTransform = self.globalTransform.withBasis(orientation.basis)
   }
 
-  @RegisterFunction("play_shoot")
   fun playShoot() {
     shootAnimation.play("shoot")
   }
 
-  @RegisterFunction("shoot_check")
   fun shootCheck() {
     testShoot = true
   }
 
-  @RegisterFunction("_clip_ray")
+  @GodotName("_clip_ray")
   fun clipRay(length: Double) {
     if (OS.hasFeature("dedicated_server")) return
     val material =
@@ -344,7 +339,7 @@ class RedRobot(godotObject: GodotHandle) :
     material.setShaderParameter("clip", length + rayMesh.position.z)
   }
 
-  @RegisterFunction("_on_area_body_entered")
+  @GodotName("_on_area_body_entered")
   fun onAreaBodyEntered(body: GodotObject) {
     if (exiting || !GD.isInstanceValid(body)) return
     val node = Node3D(body.handle)
@@ -353,7 +348,7 @@ class RedRobot(godotObject: GodotHandle) :
     }
   }
 
-  @RegisterFunction("_on_area_body_exited")
+  @GodotName("_on_area_body_exited")
   fun onAreaBodyExited(body: GodotObject) {
     // Teardown lore: the detection area's body_exited fires while the level is being freed,
     // by which point the body's script is already gone. Nothing to track then.

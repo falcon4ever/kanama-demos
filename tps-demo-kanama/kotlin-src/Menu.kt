@@ -1,8 +1,8 @@
 package tps
 
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.Rpc
 import net.multigesture.kanama.annotations.RpcMode
 import net.multigesture.kanama.annotations.ScriptClass
@@ -225,7 +225,7 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
 
     private fun approximately(value: Double, expected: Double): Boolean = Mathf.abs(value - expected) < 0.0001
 
-    @RegisterFunction("_on_loading_done_timer_timeout")
+    @GodotName("_on_loading_done_timer_timeout")
     fun onLoadingDoneTimerTimeout() {
         GD.print("TPS loading timer fired")
         if (levelSceneChangeStarted) {
@@ -256,7 +256,7 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         }
     }
 
-    @RegisterFunction("_on_play_pressed")
+    @GodotName("_on_play_pressed")
     fun onPlayPressed() {
         main.hide()
         loading.show()
@@ -270,7 +270,7 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         ResourceLoader.loadThreadedRequest(TpsScenes.LEVEL, "", false)
     }
 
-    @RegisterFunction("_on_settings_pressed")
+    @GodotName("_on_settings_pressed")
     fun onSettingsPressed() {
         main.hide()
         settingsMenu.show()
@@ -311,12 +311,12 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         setOneBool("VolumetricFog", TpsSettings.renderBool("volumetric_fog"))
     }
 
-    @RegisterFunction("_on_quit_pressed")
+    @GodotName("_on_quit_pressed")
     fun onQuitPressed() {
         requireNotNull(self.getTree()).quit()
     }
 
-    @RegisterFunction("_on_apply_pressed")
+    @GodotName("_on_apply_pressed")
     fun onApplyPressed() {
         main.show()
         playButton.grabFocus()
@@ -350,7 +350,7 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
     private fun <T> firstPressedValue(prefix: String, values: List<Pair<String, T>>): T? =
         values.firstOrNull { (name, _) -> pressed("$prefix/$name") }?.second
 
-    @RegisterFunction("_on_cancel_pressed")
+    @GodotName("_on_cancel_pressed")
     fun onCancelPressed() {
         if (online.visible) resetOnlinePeer()
         main.show()
@@ -359,7 +359,7 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         online.hide()
     }
 
-    @RegisterFunction("_on_play_online_pressed")
+    @GodotName("_on_play_online_pressed")
     fun onPlayOnlinePressed() {
         resetOnlinePeer()
         setOnlineBusy(false)
@@ -368,7 +368,7 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         main.hide()
     }
 
-    @RegisterFunction("_on_host_pressed")
+    @GodotName("_on_host_pressed")
     fun onHostPressed() {
         if (hostingLobby) {
             if (!lobbyStarting) {
@@ -404,7 +404,7 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         if (autoStartHostedGame && !autoStartAfterPeer) self.callDeferred("_on_host_pressed")
     }
 
-    @RegisterFunction("_on_connect_pressed")
+    @GodotName("_on_connect_pressed")
     fun onConnectPressed() {
         val address = onlineAddress.text.trim()
         val port = onlinePort.value.toInt()
@@ -493,7 +493,6 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         if (lobbyStarting) enterLobbyWhenReady()
     }
 
-    @RegisterFunction("prepare_game")
     @Rpc
     fun prepareGame() {
         joinedLobby = true
@@ -504,7 +503,6 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         onPlayPressed()
     }
 
-    @RegisterFunction("ready_for_game")
     @Rpc(mode = RpcMode.ANY_PEER)
     fun readyForGame() {
         if (!hostingLobby || !lobbyStarting) return
@@ -530,7 +528,6 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         enterGame()
     }
 
-    @RegisterFunction("enter_game")
     @Rpc
     fun enterGame() {
         enterLoadedLevel()

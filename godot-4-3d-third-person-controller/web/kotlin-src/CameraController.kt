@@ -4,9 +4,8 @@ import net.multigesture.kanama.annotations.OnInput
 import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.OnUnhandledInput
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.api.Basis
 import net.multigesture.kanama.api.Camera3D
 import net.multigesture.kanama.api.CharacterBody3D
@@ -14,6 +13,7 @@ import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Input
+import net.multigesture.kanama.api.InputEvent
 import net.multigesture.kanama.api.InputEventMouseMotion
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Mathf
@@ -34,17 +34,17 @@ import net.multigesture.kanama.types.Vector3
  */
 @ScriptClass(attachTo = "Node3D")
 class CameraController(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
-  @ScriptProperty var invertMouseY = false
+  @Export var invertMouseY = false
 
-  @ScriptProperty var mouseSensitivity = 0.25
+  @Export var mouseSensitivity = 0.25
 
-  @ScriptProperty var joystickSensitivity = 2.0
+  @Export var joystickSensitivity = 2.0
 
   // Spelled literals (GD.degToRad(-60.0) and GD.degToRad(60.0)): expression defaults are not
   // portable to the Web proxy, which needs a plain literal it can re-emit.
-  @ScriptProperty var tiltUpperLimit = -1.0471975511965976
+  @Export var tiltUpperLimit = -1.0471975511965976
 
-  @ScriptProperty var tiltLowerLimit = 1.0471975511965976
+  @Export var tiltLowerLimit = 1.0471975511965976
 
   private lateinit var camera: Camera3D
   private lateinit var overShoulderPivot: Node3D
@@ -74,7 +74,7 @@ class CameraController(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObj
 
   @OnInput
   @OnUnhandledInput
-  fun unhandledInput(event: GodotObject) {
+  fun unhandledInput(event: InputEvent) {
     val motion = InputEventMouseMotion.from(event)
     if (motion != null && Input.getMouseMode() == Input.MouseMode.CAPTURED) {
       val relative = motion.getRelative()
@@ -128,7 +128,6 @@ class CameraController(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObj
     tiltInput = 0.0
   }
 
-  @RegisterFunction
   fun setup(anchor: GodotObject) {
     val anchorBody = CharacterBody3D(anchor.handle)
     setupAnchor(anchorBody, anchor.kotlinScriptInstance<Player>())
@@ -156,7 +155,6 @@ class CameraController(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObj
     cameraRaycast.addException(anchorBody)
   }
 
-  @RegisterFunction("set_pivot")
   fun setPivot(pivotType: Long) {
     if (pivotType == currentPivotType) return
 
@@ -173,16 +171,12 @@ class CameraController(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObj
     currentPivotType = pivotType
   }
 
-  @RegisterFunction("get_aim_target")
   fun getAimTarget(): Vector3 = aimTarget
 
-  @RegisterFunction("get_camera_forward")
   fun getCameraForward(): Vector3 = (camera.globalTransform.basis * Vector3.FORWARD).normalized()
 
-  @RegisterFunction("get_camera_global_position")
   fun getCameraGlobalPosition(): Vector3 = camera.globalPosition
 
-  @RegisterFunction("get_aim_collider_instance_id")
   fun getAimColliderInstanceId(): Long =
     aimCollider?.takeIf { GD.isInstanceValid(it) }?.handle?.value?.toLong() ?: 0L
 

@@ -1,7 +1,6 @@
 package tps
 
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.Engine
 import net.multigesture.kanama.api.DisplayServer
@@ -21,14 +20,12 @@ class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
      * swap — so the Web smoke drives play and teardown through it. Declared first so their Web
      * method ids stay stable: [smokeStartGame] is method#1 and [smokeTeardown] is method#2.
      */
-    @RegisterFunction("smoke_start_game")
     fun smokeStartGame() {
         val menu = self.getChildren().firstNotNullOfOrNull { it.kotlinScriptInstance<Menu>() }
             ?: error("TPS smoke could not find the Menu script to start a game")
         menu.onPlayPressed()
     }
 
-    @RegisterFunction("smoke_teardown")
     fun smokeTeardown() {
         // Godot's resource cache keeps the loaded scenes alive past the scene-root free, and the
         // settings ConfigFile is a Kotlin-owned handle: both must be released for the live-handle
@@ -48,7 +45,6 @@ class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         goToMainMenu()
     }
 
-    @RegisterFunction("go_to_main_menu")
     fun goToMainMenu() {
         val menu = TpsScenes.scene(TpsScenes.MENU) ?: return
         self.withMultiplayer { api -> api.getMultiplayerPeer()?.use { it.closeConnection() } }
@@ -57,13 +53,11 @@ class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         changeSceneToPacked(menu)
     }
 
-    @RegisterFunction("replace_main_scene")
     fun replaceMainScene(resource: net.multigesture.kanama.api.PackedScene) {
         GD.print("TPS Main received replace_main_scene")
         self.callDeferred("change_scene_to_packed", resource)
     }
 
-    @RegisterFunction("change_scene_to_packed")
     fun changeSceneToPacked(resource: net.multigesture.kanama.api.PackedScene) {
         GD.print("TPS Main changing scene")
         val node = resource.instantiate() ?: run {
