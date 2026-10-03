@@ -69,7 +69,7 @@ class Bullet(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Nod
         }
     }
 
-    fun launch(newShooter: Node, origin: Vector3, newVelocity: Vector3, newDistanceLimit: Double) {
+    internal fun launch(newShooter: Node, origin: Vector3, newVelocity: Vector3, newDistanceLimit: Double) {
         shooter = newShooter
         timeAlive = 0.0
         distanceLimit = newDistanceLimit

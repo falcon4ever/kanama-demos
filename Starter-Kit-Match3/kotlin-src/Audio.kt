@@ -42,7 +42,7 @@ class Audio(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) 
     available.addLast(player)
   }
 
-  fun play(
+  internal fun play(
     soundPath: String,
     allowOverlap: Boolean = false,
     pitch: Double = 1.0,

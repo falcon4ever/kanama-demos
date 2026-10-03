@@ -41,7 +41,7 @@ class Audio(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) 
         available.addLast(player)
     }
 
-    fun play(soundPath: String, volumeDb: Double = -10.0) {
+    internal fun play(soundPath: String, volumeDb: Double = -10.0) {
         // Path, or multiple paths separated by commas.
         val sounds = soundPath.split(",")
         val chosen = "res://" + sounds[(GD.randi() % sounds.size).toInt()].trim()

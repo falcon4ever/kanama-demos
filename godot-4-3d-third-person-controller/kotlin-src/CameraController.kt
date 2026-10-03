@@ -128,7 +128,7 @@ class CameraController(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObj
         setupAnchor(anchorBody, anchor.kotlinScriptInstance<Player>())
     }
 
-    fun setup(player: Player) {
+    internal fun setup(player: Player) {
         setupAnchor(player.self, player)
     }
 
