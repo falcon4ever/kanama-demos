@@ -13,7 +13,19 @@ Godot demo projects ported from GDScript to Kotlin with
 
 This repository is the companion demo workspace for Kanama. Each project keeps
 the original Godot scenes and assets, while gameplay scripts are ported to
-Kotlin under `kotlin-src/`.
+Kotlin under `kotlin-src/`. Not everything is Kotlin:
+
+- Touch-control glue for mobile, written in GDScript and not part of the upstream
+  projects: `scripts/mobile_controls.gd` (FPS, Racing, the two character-controller
+  demos, Dodge the Creeps, Squash the Creeps, TPS), `scripts/mobile_dpad.gd`
+  (Dodge, Squash) and `scripts/responsive_background.gd` (Match-3).
+- `Starter-Kit-3D-Platformer` keeps its `Audio` autoload (`scripts/audio.gd`) and
+  its main scene script (`scripts/main.gd`) in GDScript on desktop; its Web build
+  overrides the main script with `web/kotlin-src/Main.kt`. The Kotlin scripts call
+  the autoload through `GodotObject.call`, so this demo is also a mixed
+  GDScript/Kotlin example.
+- The Bunnymark GDScript baselines (see Benchmarking) and the
+  `godot-4-3d-character-controller-tutorial/lesson_reference/` lesson scripts.
 
 ## Repository Layout
 
