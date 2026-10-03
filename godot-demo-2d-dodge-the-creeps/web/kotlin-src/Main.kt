@@ -1,5 +1,6 @@
 package dodge
 
+import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.annotations.GodotName
@@ -10,14 +11,17 @@ import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Marker2D
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.api.Node
+import net.multigesture.kanama.api.Node2D
 import net.multigesture.kanama.api.PackedScene
 import net.multigesture.kanama.api.PathFollow2D
 import net.multigesture.kanama.api.RigidBody2D
 import net.multigesture.kanama.api.Timer
-import net.multigesture.kanama.api.instantiateAs
-import net.multigesture.kanama.api.tree
+import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.types.Vector2
 
+// Web copy of kotlin-src/Main.kt in the pre-task-133 lookup style: the Web backend has no node<T>() /
+// script<T>() delegates or instantiateAs<T>() yet (kanama task 133 Web follow-up). Delete this
+// override when it does.
 @ScriptClass(attachTo = "Node")
 class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
     @Export
@@ -25,15 +29,30 @@ class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
 
     private var score: Long = 0
 
-    private val player by script<Player>("Player")
-    private val startPosition by node<Marker2D>("StartPosition")
-    private val mobSpawnLocation by node<PathFollow2D>("MobPath/MobSpawnLocation")
-    private val hud by script<HUD>("HUD")
-    private val scoreTimer by node<Timer>("ScoreTimer")
-    private val mobTimer by node<Timer>("MobTimer")
-    private val startTimer by node<Timer>("StartTimer")
-    private val music by node<AudioStreamPlayer>("Music")
-    private val deathSound by node<AudioStreamPlayer>("DeathSound")
+    private lateinit var player: Player
+    private lateinit var startPosition: Marker2D
+    private lateinit var mobSpawnLocation: PathFollow2D
+    private lateinit var hud: HUD
+    private lateinit var scoreTimer: Timer
+    private lateinit var mobTimer: Timer
+    private lateinit var startTimer: Timer
+    private lateinit var music: AudioStreamPlayer
+    private lateinit var deathSound: AudioStreamPlayer
+
+    @OnReady
+    fun ready() {
+        player = self.requireAs("Player", ::Node).kotlinScriptInstance<Player>()
+            ?: error("Player node is missing Player script")
+        startPosition = self.requireAs("StartPosition", ::Marker2D)
+        mobSpawnLocation = self.requireAs("MobPath/MobSpawnLocation", ::PathFollow2D)
+        hud = self.requireAs("HUD", ::Node).kotlinScriptInstance<HUD>()
+            ?: error("HUD node is missing HUD script")
+        scoreTimer = self.requireAs("ScoreTimer", ::Timer)
+        mobTimer = self.requireAs("MobTimer", ::Timer)
+        startTimer = self.requireAs("StartTimer", ::Timer)
+        music = self.requireAs("Music", ::AudioStreamPlayer)
+        deathSound = self.requireAs("DeathSound", ::AudioStreamPlayer)
+    }
 
     fun gameOver() {
         scoreTimer.stop()
@@ -44,7 +63,7 @@ class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
     }
 
     fun newGame() {
-        self.tree.callGroup("mobs", "queue_free")
+        requireNotNull(self.getTree()).callGroup("mobs", "queue_free")
         score = 0
         player.start(startPosition.position)
         startTimer.start()
@@ -56,7 +75,8 @@ class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
     @GodotName("_on_MobTimer_timeout")
     fun onMobTimerTimeout() {
         // Create a new instance of the Mob scene.
-        val mob = (mobScene ?: error("Main.mob_scene is not assigned")).instantiateAs<RigidBody2D>()
+        val mobNode = mobScene?.instantiate() ?: error("Main.mob_scene is not assigned")
+        val mob = RigidBody2D(mobNode.handle)
 
         // Choose a random location on Path2D.
         mobSpawnLocation.progressRatio = GD.randf()

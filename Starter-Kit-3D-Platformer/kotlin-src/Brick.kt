@@ -1,6 +1,5 @@
 package net.multigesture.kanama.demos.platformer3d
 
-import kotlinx.coroutines.launch
 import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
@@ -8,8 +7,6 @@ import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.CollisionShape3D
 import net.multigesture.kanama.api.GPUParticles3D
 import net.multigesture.kanama.api.GodotHandle
-import net.multigesture.kanama.api.KanamaCoroutineOwner
-import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
@@ -24,8 +21,7 @@ import net.multigesture.kanama.generated.BrickNames
  */
 @ScriptClass(attachTo = "StaticBody3D")
 class Brick(godotObject: GodotHandle) :
-  KanamaScript<StaticBody3D>(godotObject, ::StaticBody3D), KanamaCoroutineOwner {
-  override val kanamaScope = KanamaScope()
+  KanamaScript<StaticBody3D>(godotObject, ::StaticBody3D) {
 
   private var exploded = false
 
@@ -63,7 +59,7 @@ class Brick(godotObject: GodotHandle) :
     collisionShape.setDisabled(true)
     bottomDetector.setDeferred("monitoring", false)
 
-    kanamaScope.launch {
+    launch {
       SceneTree.delaySeconds(1.0)
       self.queueFree()
     }

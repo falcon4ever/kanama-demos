@@ -1,12 +1,9 @@
 package net.multigesture.kanama.demos.match3
 
-import kotlinx.coroutines.launch
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
-import net.multigesture.kanama.api.KanamaCoroutineOwner
-import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.MainThread
 import net.multigesture.kanama.api.Node
@@ -15,13 +12,12 @@ import net.multigesture.kanama.api.kotlinScriptInstance
 
 @ScriptClass(attachTo = "Node")
 class SmokeQuit(godotObject: GodotHandle) :
-  KanamaScript<Node>(godotObject, ::Node), KanamaCoroutineOwner {
-  override val kanamaScope = KanamaScope()
+  KanamaScript<Node>(godotObject, ::Node) {
 
   @OnReady
   fun ready() {
     if (System.getenv("KANAMA_DEMO_SMOKE_QUIT") != "1") return
-    kanamaScope.launch {
+    launch {
       // Task 80 slice 6, desktop half of the differential probe: Web CALLS
       // Main.differential_probe through the bridge; desktop reads this line from the smoke
       // log (kanama scripts/web/differential_diff.py). Sample AFTER the board settles, not

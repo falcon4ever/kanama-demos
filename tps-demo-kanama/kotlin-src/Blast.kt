@@ -7,17 +7,13 @@ import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.CPUParticles3D
 import net.multigesture.kanama.api.Camera3D
-import net.multigesture.kanama.api.KanamaCoroutineOwner
-import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node3D
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 
 @ScriptClass(attachTo = "Node3D")
-class Blast(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D), KanamaCoroutineOwner {
-	override val kanamaScope = KanamaScope()
+class Blast(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
 
 	private lateinit var lightRays: CPUParticles3D
 	private lateinit var animationPlayer: AnimationPlayer
@@ -28,7 +24,7 @@ class Blast(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
 		lightRays = self.requireAs("LightRays", ::CPUParticles3D)
 		animationPlayer = self.requireAs("AnimationPlayer", ::AnimationPlayer)
 		camera = requireNotNull(requireNotNull(self.getTree()).root).getCamera3d()
-		kanamaScope.launch {
+		launch {
 			animationPlayer.signal(net.multigesture.kanama.api.AnimationMixer.Signals.animationFinished)
 				.await(self, argumentCount = 1)
 			self.queueFree()
@@ -44,7 +40,7 @@ class Blast(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
 
 	@OnExitTree
 	fun exitTree() {
-		kanamaScope.cancel()
+		cancelCoroutines()
 		self.setProcess(false)
 		camera = null
 	}
