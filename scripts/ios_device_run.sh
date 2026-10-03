@@ -41,8 +41,14 @@ Optional environment:
       (devicectl --console) into <output-dir>/console.log and FAIL when it shows a crash
       signature (KANAMA_IOS_CONSOLE_FAIL_PATTERN, default: app terminated by a signal / FATAL)
       or when no `[kanama][ios]` line arrived in the window. 0 (default): launch-only, as before.
-      Stopping the stream terminates the app (devicectl sends SIGTERM); the verdict is taken from
-      the log as it stood before that.
+      The verdict is taken from the log as it stood when the window ended, then the stream is stopped
+      and the runner terminates the app itself: it finds the app's pid(s) by executable path
+      (`.../<AppName>.app/<AppName>`) in `devicectl device info processes` and runs
+      `devicectl device process terminate --pid <pid>` (SIGKILL if one survives SIGTERM), logging
+      each step; a cleanup problem is only a warning, never a failure. Stopping the stream alone
+      does not end the app, and neither does the demo's `get_tree().quit()` on iOS (it stops the main
+      loop but not the process; the 2026-10-02 runs left both demos on a grey screen). Launch-only
+      runs (KANAMA_IOS_CONSOLE_SECONDS=0) leave the app running, as before. (119 item 41)
       The window also FAILS on any `[kanama][ios][c] FAULT ` line (the self-test's seven
       deliberate `[kanama][ios][c] FAULT-PROBE ` lines do not match), on any OBJECTCALLS SELFTEST
       summary line whose `faults=` and `expected=` disagree, and on a run whose self-test ran (the
@@ -56,6 +62,13 @@ Self-check:
       the check's own red run is re-executed without a phone: copy a green console.log and add one
       FAULT line (anywhere, including between FAULT-PROBE lines), edit a summary line to faults=8
       expected=7, or delete the two summary lines — each must trip it.
+  scripts/ios_device_run.sh --self-test-app-pids
+      Run the app-pid parser (used to close the app after a run) against built-in samples of the
+      `devicectl device info processes` output; no device needed. Exit 0/1.
+  scripts/ios_device_run.sh --print-app-pids AppName /path/to/processes.json
+      Print the pid(s) the cleanup would terminate for AppName from a saved
+      `xcrun devicectl device info processes --device <udid> --json-output processes.json`
+      (or its table output).
 EOF
 }
 
@@ -129,6 +142,162 @@ check_console_faults() {
   done < <(grep -E 'OBJECTCALLS SELFTEST.*faults=' "$log" 2>/dev/null || true)
   return 0
 }
+
+# Task 119 item 41 — close the demo app after a console run. Godot's `get_tree().quit()` (the
+# demos' SmokeQuit) stops the main loop on iOS but does not end the process, and stopping the
+# `devicectl --console` stream does not reliably kill it either: the 2026-10-02 runs left
+# KanamaMatch3 and KanamaThirdPerson alive on a grey screen. So after the verdict is taken the run
+# finds the app's pid(s) in `devicectl device info processes` and terminates them itself.
+#
+# parse_app_pids <AppName> reads a `devicectl device info processes` listing on stdin and prints
+# the pid of every process whose executable is the app's own binary,
+# `.../<AppName>.app/<AppName>` (so app extensions under <AppName>.app/PlugIns/ and an app whose
+# name merely starts with <AppName> do not match). It reads the --json-output document
+# (result.runningProcesses[] = {executable, processIdentifier}) and also the default table
+# (`<pid>  <executable url>` per row), splitting the JSON into one key per line first so the key
+# order and the pretty-printing do not matter; `\/` escapes are undone. Literal index() matching,
+# no regex built from the name.
+parse_app_pids() {
+  awk -v app="$1" '
+    function is_exe(s,   needle, i, nxt) {
+      needle = "/" app ".app/" app
+      i = index(s, needle)
+      if (!i) return 0
+      nxt = substr(s, i + length(needle), 1)
+      return (nxt == "" || nxt == "\"" || nxt == "," || nxt == " " || nxt == "\t" || nxt == "\r")
+    }
+    function emit(pid) { if (!(pid in seen)) { seen[pid] = 1; print pid } }
+    function reset() { havepid = 0; haveexe = 0; pid = ""; exe_ok = 0 }
+    function field(s,   n, parts, i, p, v) {
+      if (s ~ /^[ \t]*[0-9]+[ \t]/ && is_exe(s)) {          # table row: "<pid>  <executable>"
+        match(s, /[0-9]+/); emit(substr(s, RSTART, RLENGTH)); return
+      }
+      if (s ~ /"processIdentifier"/) {
+        v = s; sub(/^.*"processIdentifier"[ \t]*:[ \t]*/, "", v); sub(/[^0-9].*$/, "", v)
+        if (v != "") { pid = v; havepid = 1 }
+      } else if (s ~ /"executable"/) {
+        exe_ok = is_exe(s); haveexe = 1
+      } else if (s ~ /\{/) {
+        reset()
+      }
+      if (havepid && haveexe) { if (exe_ok) emit(pid); reset() }
+    }
+    BEGIN { reset() }
+    {
+      line = $0
+      gsub(/\\\//, "/", line)
+      gsub(/[{}]/, "\n&\n", line)
+      gsub(/,[ \t]*"/, ",\n\"", line)
+      n = split(line, parts, "\n")
+      for (i = 1; i <= n; i++) field(parts[i])
+    }
+  '
+}
+
+# Never fails the run: every step is best effort and the function always returns 0.
+terminate_demo_app() {
+  local list_file="$OUTPUT_DIR/processes.json" listing pids pid
+  device_process_listing() {
+    rm -f "$list_file"
+    if DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device info processes --device "$DEVICE_ID" \
+        --timeout 30 --json-output "$list_file" >/dev/null 2>&1 && [[ -s "$list_file" ]]; then
+      cat "$list_file"
+    else
+      DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device info processes --device "$DEVICE_ID" \
+        --timeout 30 2>/dev/null || true
+    fi
+  }
+  listing="$(device_process_listing)"
+  pids="$(printf '%s\n' "$listing" | parse_app_pids "$APP_NAME" || true)"
+  if [[ -z "$pids" ]]; then
+    echo "[ios_device_run] cleanup: no running $APP_NAME process on the device (nothing to terminate)"
+    return 0
+  fi
+  for pid in $pids; do
+    if DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device process terminate --device "$DEVICE_ID" \
+        --pid "$pid" --timeout 30 >/dev/null 2>&1; then
+      echo "[ios_device_run] cleanup: terminated $APP_NAME (pid $pid)"
+    else
+      echo "[ios_device_run] cleanup: WARNING: could not terminate $APP_NAME (pid $pid); continuing" >&2
+    fi
+  done
+  # A Godot app that already quit its main loop can sit through SIGTERM; check, and SIGKILL what is left.
+  sleep 2
+  listing="$(device_process_listing)"
+  pids="$(printf '%s\n' "$listing" | parse_app_pids "$APP_NAME" || true)"
+  for pid in $pids; do
+    if DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device process terminate --device "$DEVICE_ID" \
+        --pid "$pid" --kill --timeout 30 >/dev/null 2>&1; then
+      echo "[ios_device_run] cleanup: $APP_NAME (pid $pid) survived SIGTERM; killed it"
+    else
+      echo "[ios_device_run] cleanup: WARNING: $APP_NAME (pid $pid) is still running and could not be killed; continuing" >&2
+    fi
+  done
+  rm -f "$list_file"
+  return 0
+}
+
+# Device-free self-test of the pid parser against captured-format samples (`devicectl device info
+# processes --json-output` shape, key order varied, one compact one-line document, `\/` escapes,
+# and the default table). Exit 0/1.
+self_test_app_pids() {
+  local failures=0 got
+  expect() {  # <label> <expected pids, space separated> <app> <sample text>
+    got="$(printf '%s\n' "$4" | parse_app_pids "$3" | tr '\n' ' ' | sed 's/ $//')"
+    if [[ "$got" == "$2" ]]; then
+      echo "[ios_device_run] self-test ok:   $1 -> '${got}'"
+    else
+      echo "[ios_device_run] self-test FAIL: $1 -> '${got}' (expected '$2')"
+      failures=$((failures + 1))
+    fi
+  }
+  local json='{
+  "info" : { "commandType" : "device.info.processes", "outcome" : "success" },
+  "result" : {
+    "deviceIdentifier" : "00008101-000E109E3C63001E",
+    "runningProcesses" : [
+      { "executable" : "file:///sbin/launchd", "processIdentifier" : 1 },
+      { "processIdentifier" : 7 },
+      { "executable" : "file:///private/var/containers/Bundle/Application/AAAA-1111/KanamaMatch3.app/KanamaMatch3", "processIdentifier" : 4321 },
+      { "processIdentifier" : 4400, "executable" : "file:///private/var/containers/Bundle/Application/AAAA-1111/KanamaMatch3.app/PlugIns/Ext.appex/Ext" },
+      { "executable" : "file:///private/var/containers/Bundle/Application/BBBB-2222/KanamaMatch3Other.app/KanamaMatch3Other", "processIdentifier" : 4500 },
+      { "processIdentifier" : 4999, "executable" : "file:///private/var/containers/Bundle/Application/CCCC-3333/KanamaMatch3.app/KanamaMatch3" },
+      { "executable" : "file:///private/var/containers/Bundle/Application/DDDD-4444/KanamaThirdPerson.app/KanamaThirdPerson", "processIdentifier" : 4322 }
+    ]
+  }
+}'
+  expect "json, two instances, extension and look-alike skipped" "4321 4999" KanamaMatch3 "$json"
+  expect "json, other app" "4322" KanamaThirdPerson "$json"
+  expect "json, app not running" "" KanamaFPS "$json"
+  expect "json, process without executable does not steal the next pid" "" Ext "$json"
+  expect "json, compact one-line document with escaped slashes" "88" KanamaMatch3 \
+    '{"result":{"runningProcesses":[{"processIdentifier":5,"executable":"file:\/\/\/sbin\/launchd"},{"executable":"file:\/\/\/private\/var\/containers\/Bundle\/Application\/X\/KanamaMatch3.app\/KanamaMatch3","processIdentifier":88}]}}'
+  expect "default table" "4321" KanamaMatch3 \
+    'Process ID   Executable
+-----------  ----------------------------------------------------------------------------------
+1            file:///sbin/launchd
+4321         file:///private/var/containers/Bundle/Application/AAAA-1111/KanamaMatch3.app/KanamaMatch3
+4400         file:///private/var/containers/Bundle/Application/AAAA-1111/KanamaMatch3.app/PlugIns/Ext.appex/Ext'
+  expect "empty listing" "" KanamaMatch3 ""
+  if (( failures > 0 )); then
+    echo "[ios_device_run] app pid parser self-test: FAIL ($failures)"
+    return 1
+  fi
+  echo "[ios_device_run] app pid parser self-test: PASS"
+}
+
+if [[ "${1:-}" == "--self-test-app-pids" ]]; then
+  self_test_app_pids && exit 0
+  exit 1
+fi
+if [[ "${1:-}" == "--print-app-pids" ]]; then
+  if [[ $# -ne 3 || ! -f "$3" ]]; then
+    echo "usage: scripts/ios_device_run.sh --print-app-pids AppName /path/to/devicectl-processes-output" >&2
+    exit 2
+  fi
+  parse_app_pids "$2" <"$3"
+  exit 0
+fi
 
 if [[ "${1:-}" == "--check-console-faults" ]]; then
   if [[ $# -ne 2 || ! -f "$2" ]]; then
@@ -370,7 +539,7 @@ if [[ "$CONSOLE_SECONDS" -eq 0 ]]; then
 else
   # Task 105: `--console` streams the device's stdout/stderr to the host and blocks until the app
   # exits (the demos never self-quit), so run it in the background, watch the log for the window,
-  # then stop the stream; the app keeps running. A crash inside the window shows up as devicectl's
+  # then stop the stream and terminate the app explicitly (terminate_demo_app). A crash inside the window shows up as devicectl's
   # "App terminated due to signal N" (or the runtime's own FATAL line) and fails the step; a
   # window with no `[kanama][ios]` line at all means the runtime never came up.
   CONSOLE_LOG="$OUTPUT_DIR/console.log"
@@ -423,6 +592,9 @@ else
   head -n "$console_lines" "$CONSOLE_LOG" >"$VERDICT_LOG"
   kill "$console_pid" >/dev/null 2>&1 || true
   wait "$console_pid" >/dev/null 2>&1 || true
+  # The verdict is already on disk; now close the app (item 41) — it would otherwise stay open on a
+  # grey screen after the demo's quit. Best effort, never changes the outcome.
+  terminate_demo_app || true
   if grep -q -E "$CONSOLE_FAIL_PATTERN" "$VERDICT_LOG"; then
     echo "[ios_device_run] console: crash signature within ${waited}s (${console_lines} lines): $CONSOLE_LOG"
     grep -n -E "$CONSOLE_FAIL_PATTERN" "$VERDICT_LOG" | head -5 | sed 's/^/[ios_device_run]   /'
