@@ -126,7 +126,7 @@ class DemoPage(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Nod
         Input.setMouseMode(Input.MouseMode.VISIBLE)
     }
 
-    private fun resumeDemo() {
+    internal fun resumeDemo() {
         requireNotNull(self.getTree()).setPaused(false)
         clearPageTween()
         hideAfterTween = false
@@ -203,11 +203,6 @@ class DemoPage(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Nod
         }
         pageTween = null
         hideAfterTween = false
-    }
-
-    /** Harness entry: the Web smoke presses Resume the same way the button does. */
-    internal fun resumeFromSmoke() {
-        resumeDemo()
     }
 
     private fun enableDeferredLightingAfterResume() {
