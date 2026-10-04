@@ -46,11 +46,11 @@ class VehicleMotorcycle(godotObject: GodotHandle) : Vehicle(godotObject) {
         calculatedLean = GD.lerpAngle(calculatedLean, targetLean, delta * 5.0)
 
         motorcycle.rotation = motorcycle.rotation.withZ(
-            GD.lerpAngle(motorcycle.rotation.z.toDouble(), input.x * linearSpeed, delta * 3.0),
+            GD.lerpAngle(motorcycle.rotation.z, input.x * linearSpeed, delta * 3.0),
         )
         vehicleBody?.let { body ->
             body.rotation = body.rotation.withX(
-                GD.lerpAngle(body.rotation.x.toDouble(), -(linearSpeed - acceleration) / 6.0, delta * 10.0),
+                GD.lerpAngle(body.rotation.x, -(linearSpeed - acceleration) / 6.0, delta * 10.0),
             )
         }
     }
@@ -61,10 +61,10 @@ class VehicleMotorcycle(godotObject: GodotHandle) : Vehicle(godotObject) {
         }
 
         fork.rotation = fork.rotation.withY(
-            GD.lerpAngle(fork.rotation.y.toDouble(), -input.x / 1.5, delta * 5.0),
+            GD.lerpAngle(fork.rotation.y, -input.x / 1.5, delta * 5.0),
         )
         wheelFront.rotation = wheelFront.rotation.withY(
-            GD.lerpAngle(wheelFront.rotation.y.toDouble(), -input.x / 1.5, delta * 10.0),
+            GD.lerpAngle(wheelFront.rotation.y, -input.x / 1.5, delta * 10.0),
         )
     }
 }

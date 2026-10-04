@@ -47,9 +47,7 @@ class Mob(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObject,
     val randomSpeed = GD.randfRange(minSpeed.toDouble(), maxSpeed.toDouble())
     var velocity = Vector3.FORWARD * randomSpeed
     // We then rotate the vector based on the mob's Y rotation to move in the direction it's looking.
-    // .toDouble() keeps the spelling portable: desktop Vector3 fields are single-precision
-    // (real_t, structural for the FFM layout) while the Web fields are Double.
-    velocity = velocity.rotated(Vector3.UP, self.rotation.y.toDouble())
+    velocity = velocity.rotated(Vector3.UP, self.rotation.y)
     self.velocity = velocity
     animationPlayer.setSpeedScale(randomSpeed / minSpeed.toDouble())
   }

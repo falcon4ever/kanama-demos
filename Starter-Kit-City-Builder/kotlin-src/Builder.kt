@@ -108,9 +108,9 @@ class Builder(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::No
       ) ?: return
     val gridmapPosition =
       Vector3i(
-        worldPosition.x.toDouble().let { Mathf.roundToInt(it).toInt() },
+        Mathf.roundToInt(worldPosition.x).toInt(),
         0,
-        worldPosition.z.toDouble().let { Mathf.roundToInt(it).toInt() },
+        Mathf.roundToInt(worldPosition.z).toInt(),
       )
 
     val selectorNode = requireSelector()
@@ -208,7 +208,7 @@ class Builder(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::No
     container.addChild(Node(model.handle))
     if (model.isClass("Node3D")) {
       val model3d = Node3D(model.handle)
-      model3d.position = model3d.position.withY(model3d.position.y.toDouble() + 0.25)
+      model3d.position = model3d.position.withY(model3d.position.y + 0.25)
     }
   }
 

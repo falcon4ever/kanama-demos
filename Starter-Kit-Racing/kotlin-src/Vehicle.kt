@@ -82,7 +82,7 @@ open class Vehicle(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject,
 
         var direction = GD.signf(linearSpeed)
         if (direction == 0.0) {
-            direction = if (Mathf.abs(input.z) > 0.1f) GD.signf(input.z.toDouble()) else 1.0
+            direction = if (Mathf.abs(input.z) > 0.1) GD.signf(input.z) else 1.0
         }
 
         val steeringGrip = GD.clampf(Mathf.abs(linearSpeed), 0.2, 1.0)
@@ -92,8 +92,8 @@ open class Vehicle(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject,
 
         if (raycast.isColliding()) {
             if (!colliding) {
-                vehicleBody?.position = Vector3(0f, 0.1f, 0f)
-                input = input.withZ(0f)
+                vehicleBody?.position = Vector3(0.0, 0.1, 0.0)
+                input = input.withZ(0.0)
             }
 
             normal = raycast.getCollisionNormal()
@@ -107,7 +107,7 @@ open class Vehicle(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject,
 
         colliding = raycast.isColliding()
 
-        val targetSpeed = input.z.toDouble()
+        val targetSpeed = input.z
         linearSpeed = if (targetSpeed < 0.0 && linearSpeed > 0.01) {
             GD.lerpf(linearSpeed, 0.0, delta * 8.0)
         } else if (targetSpeed < 0.0) {
@@ -152,9 +152,9 @@ open class Vehicle(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject,
 
         vehicleBody?.let { body ->
             body.rotation = body.rotation
-                .withX(GD.lerpAngle(body.rotation.x.toDouble(), -(linearSpeed - acceleration) / 6.0, delta * 10.0))
+                .withX(GD.lerpAngle(body.rotation.x, -(linearSpeed - acceleration) / 6.0, delta * 10.0))
                 .withZ(calculatedLean)
-            body.position = body.position.lerp(Vector3(0f, 0.2f, 0f), delta * 5.0)
+            body.position = body.position.lerp(Vector3(0.0, 0.2, 0.0), delta * 5.0)
         }
     }
 
@@ -165,13 +165,13 @@ open class Vehicle(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject,
             }
         }
 
-        wheelFl?.let { it.rotation = it.rotation.withY(GD.lerpAngle(it.rotation.y.toDouble(), -input.x / 1.5, delta * 10.0)) }
-        wheelFr?.let { it.rotation = it.rotation.withY(GD.lerpAngle(it.rotation.y.toDouble(), -input.x / 1.5, delta * 10.0)) }
+        wheelFl?.let { it.rotation = it.rotation.withY(GD.lerpAngle(it.rotation.y, -input.x / 1.5, delta * 10.0)) }
+        wheelFr?.let { it.rotation = it.rotation.withY(GD.lerpAngle(it.rotation.y, -input.x / 1.5, delta * 10.0)) }
     }
 
     private fun effectEngine(delta: Double) {
         val speedFactor = GD.clampf(Mathf.abs(linearSpeed), 0.0, 1.0)
-        val throttleFactor = GD.clampf(Mathf.abs(input.z.toDouble()), 0.0, 1.0)
+        val throttleFactor = GD.clampf(Mathf.abs(input.z), 0.0, 1.0)
 
         val targetVolume = GD.remap(speedFactor + (throttleFactor * 0.5), 0.0, 1.5, -15.0, -5.0)
         engineSound.setVolumeDb(GD.lerpf(engineSound.getVolumeDb(), targetVolume, delta * 5.0))
