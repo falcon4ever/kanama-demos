@@ -10,11 +10,37 @@ import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.SceneMultiplayer
 import net.multigesture.kanama.api.Window
+import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.LevelNames
 import net.multigesture.kanama.generated.MenuNames
 
+/**
+ * Web variant of [Main]: the gameplay is identical, plus the browser smoke's entry points. The Web
+ * driver binds to the `.Main` script (tpsMainHandle) and calls these by method id, so the harness
+ * hooks live in this override and the desktop gameplay class stays free of smoke API.
+ */
 @ScriptClass(attachTo = "Node")
 class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
+    /**
+     * Browser-harness entry points. Main is the persistent scene root — it outlives the menu/level
+     * swap — so the Web smoke drives play and teardown through it. Declared first so their Web
+     * method ids stay stable: [smokeStartGame] is method#1 and [smokeTeardown] is method#2.
+     */
+    fun smokeStartGame() {
+        val menu = self.getChildren().firstNotNullOfOrNull { it.kotlinScriptInstance<Menu>() }
+            ?: error("TPS smoke could not find the Menu script to start a game")
+        menu.onPlayPressed()
+    }
+
+    fun smokeTeardown() {
+        // Godot's resource cache keeps the loaded scenes alive past the scene-root free, and the
+        // settings ConfigFile is a Kotlin-owned handle: both must be released for the live-handle
+        // count to drain to zero.
+        TpsScenes.releaseCachedScenes()
+        TpsSettings.configFile.close()
+        self.queueFree()
+    }
+
     @OnReady
     fun ready() {
         if (DisplayServer.getName() == "headless") {
