@@ -56,10 +56,8 @@ class BeeBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, 
 			?: error("MeshRoot/bee_root is missing BeeRoot script instance")
 		defeatSound = self.requireAs("DefeatSound", ::AudioStreamPlayer3D)
 
-		bodyEnteredConnection = detectionArea.signal(Area3D.Signals.bodyEntered)
-			.connectObject(self) { body -> onBodyEntered(Node3D(body.handle)) }
-		bodyExitedConnection = detectionArea.signal(Area3D.Signals.bodyExited)
-			.connectObject(self) { body -> onBodyExited(Node3D(body.handle)) }
+		bodyEnteredConnection = detectionArea.bodyEntered.connect { body -> onBodyEntered(body) }
+		bodyExitedConnection = detectionArea.bodyExited.connect { body -> onBodyExited(body) }
 
 		beeRoot.playIdle()
 	}

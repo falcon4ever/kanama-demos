@@ -101,7 +101,7 @@ class Main(godotObject: GodotHandle) :
     launch { processBoardState() }
 
     centerGridOnScreen()
-    self.getViewport()?.signal("size_changed")?.connect(self, "center_grid_on_screen")
+    self.getViewport()?.sizeChanged?.connect(self, "center_grid_on_screen")
   }
 
   @OnExitTree
@@ -372,11 +372,7 @@ class Main(godotObject: GodotHandle) :
   private fun trackedTween(): Tween {
     val tween = self.createTween()
     activeTweens += tween
-    tween.signal(Tween.Signals.finished).connect(
-      self,
-      argumentCount = 0,
-      flags = GodotObject.ConnectFlags.ONE_SHOT,
-    ) {
+    tween.finished.connect(GodotObject.ConnectFlags.ONE_SHOT) {
       releaseTween(tween)
     }
     return tween

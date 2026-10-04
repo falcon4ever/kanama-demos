@@ -22,7 +22,6 @@ import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.RenderingServer
 import net.multigesture.kanama.api.ResourceLoader
-import net.multigesture.kanama.api.Timer
 import net.multigesture.kanama.api.WorldEnvironment
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.Autoloads
@@ -69,10 +68,8 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
                 addPlayer(id.toLong(), spawnPoints.getOrNull(index + 1))
             }
             self.withMultiplayer { api ->
-                api.signal(net.multigesture.kanama.api.MultiplayerAPI.Signals.peerConnected)
-                    .connect(self, argumentCount = 1) { args -> addPlayer((args.firstOrNull() as Number).toLong(), null) }
-                api.signal(net.multigesture.kanama.api.MultiplayerAPI.Signals.peerDisconnected)
-                    .connect(self, argumentCount = 1) { args -> delPlayer((args.firstOrNull() as Number).toLong()) }
+                api.peerConnected.connect { id -> addPlayer(id, null) }
+                api.peerDisconnected.connect { id -> delPlayer(id) }
             }
             if (!shouldQuitAfterReady) {
                 runSmokeRobotDeathCheckIfRequested()
@@ -81,7 +78,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         GD.print("TPS Level ready: complete")
         if (shouldQuitAfterReady) {
             launch {
-                requireNotNull(self.getTree()).createTimer(5.0).signal(Timer.Signals.timeout).await(self, argumentCount = 0)
+                wait(5.0)
                 if (!self.isQueuedForDeletion() && self.isInsideTree()) {
                     GD.print("TPS smoke second level ready; quitting")
                     requireNotNull(self.getTree()).quit()
@@ -137,7 +134,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         launch {
             repeat(robotCount) { index ->
                 if (index > 0) {
-                    requireNotNull(self.getTree()).createTimer(delayBetweenKills).signal(Timer.Signals.timeout).await(self, argumentCount = 0)
+                    wait(delayBetweenKills)
                 }
                 if (exiting || self.isQueuedForDeletion() || !self.isInsideTree()) return@launch
                 MainThread.postNextFrame {
@@ -163,10 +160,10 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
                                     }
                                 }
                                 if (shot < 4) {
-                                    requireNotNull(self.getTree()).createTimer(0.35).signal(Timer.Signals.timeout).await(self, argumentCount = 0)
+                                    wait(0.35)
                                 }
                             }
-                            requireNotNull(self.getTree()).createTimer(2.0).signal(Timer.Signals.timeout).await(self, argumentCount = 0)
+                            wait(2.0)
                             GD.print("TPS smoke robot death complete ${index + 1}/$robotCount")
                         }
                     } else {
@@ -182,7 +179,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
                     }
                 }
                 if (index == 0 && System.getenv("KANAMA_TPS_SMOKE_RETURN_TO_MENU_AFTER_FIRST_KILL") == "1") {
-                    requireNotNull(self.getTree()).createTimer(1.0).signal(Timer.Signals.timeout).await(self, argumentCount = 0)
+                    wait(1.0)
                     if (!exiting && !self.isQueuedForDeletion() && self.isInsideTree()) {
                         GD.print("TPS smoke returning to menu after first kill")
                         self.emitSignal("quit")
@@ -259,7 +256,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
     @GodotName("_respawn_robot")
     fun respawnRobot(spawnPoint: Node3D) {
         launch {
-            requireNotNull(self.getTree()).createTimer(15.0).signal(Timer.Signals.timeout).await(self, argumentCount = 0)
+            wait(15.0)
             if (exiting || self.isQueuedForDeletion() || !self.isInsideTree()) return@launch
             spawnRobot(spawnPoint)
         }

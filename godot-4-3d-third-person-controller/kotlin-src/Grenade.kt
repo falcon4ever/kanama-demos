@@ -37,7 +37,7 @@ class Grenade(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(
         explosionSound = self.requireAs("ExplosionSound", ::AudioStreamPlayer3D)
         explosionStartTimer = self.requireAs("ExplosionStartTimer", ::Timer)
 
-        explosionStartTimer.signal(Timer.Signals.timeout).connect(self, argumentCount = 0) { explode() }
+        explosionStartTimer.timeout.connect { explode() }
     }
 
     @OnPhysicsProcess
@@ -81,8 +81,7 @@ class Grenade(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(
 
         self.hide()
         launch {
-            explosionSound.signal(AudioStreamPlayer3D.Signals.finished)
-                .await(self, argumentCount = 0)
+            explosionSound.finished.await()
             self.queueFree()
         }
     }

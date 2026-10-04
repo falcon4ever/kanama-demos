@@ -16,7 +16,7 @@ class Flag3D(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Nod
   fun ready() {
     val area = self.requireAs("Area3D", ::Area3D)
     val events = Autoloads.Events.self
-    area.signal(Area3D.Signals.bodyEntered).connect(self, argumentCount = 1) {
+    area.bodyEntered.connect {
       events.emitSignal(EventsNames.Signals.flagReached)
     }
   }

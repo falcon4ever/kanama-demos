@@ -14,7 +14,7 @@ class KillPlane3D(godotObject: GodotHandle) : KanamaScript<Area3D>(godotObject, 
 
     @OnReady
     fun ready() {
-        self.signal(Area3D.Signals.bodyEntered).connectObject(self) { body ->
+        self.bodyEntered.connect { body ->
             launch {
                 MainThread.awaitNextFrame()
                 Autoloads.Events.self.emitSignal(EventsNames.Signals.killPlaneTouched, body)

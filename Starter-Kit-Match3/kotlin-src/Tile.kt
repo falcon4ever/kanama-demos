@@ -119,11 +119,7 @@ class Tile(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area2
   private fun trackedTween(onFinished: (() -> Unit)? = null): Tween? {
     val tween = self.createTween().setParallel(true)
     activeTweens += tween
-    tween.signal(Tween.Signals.finished).connect(
-      self,
-      argumentCount = 0,
-      flags = GodotObject.ConnectFlags.ONE_SHOT,
-    ) {
+    tween.finished.connect(GodotObject.ConnectFlags.ONE_SHOT) {
       releaseTween(tween)
       onFinished?.let { it() }
     }

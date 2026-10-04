@@ -20,7 +20,7 @@ class CoinsContainer(godotObject: GodotHandle) : KanamaScript<Control>(godotObje
     fun ready() {
         displayTimer = self.requireAs("Timer", ::Timer)
         coinsLabel = self.requireAs("CoinsLabel", ::Label)
-        displayTimer.signal(Timer.Signals.timeout).connect(self, argumentCount = 0) {
+        displayTimer.timeout.connect {
             onTimeout()
         }
     }

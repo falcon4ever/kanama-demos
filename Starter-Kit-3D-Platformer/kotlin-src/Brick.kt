@@ -36,7 +36,7 @@ class Brick(godotObject: GodotHandle) :
     particles = self.requireAs("Particles", ::GPUParticles3D)
     collisionShape = self.requireAs("CollisionShape3D", ::CollisionShape3D)
 
-    bottomDetector.signal(Area3D.Signals.bodyEntered).connect(self, BrickNames.Methods.onBottomHit)
+    bottomDetector.bodyEntered.connect(self, BrickNames.Methods.onBottomHit)
   }
 
   @GodotName("_on_bottom_hit")

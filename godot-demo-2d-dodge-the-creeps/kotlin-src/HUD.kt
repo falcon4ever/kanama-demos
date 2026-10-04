@@ -31,7 +31,7 @@ class HUD(godotObject: GodotHandle) : KanamaScript<CanvasLayer>(godotObject, ::C
     fun showGameOver() {
         launch {
             showMessage("Game Over")
-            messageTimer.signal(Timer.Signals.timeout).await(self)
+            messageTimer.timeout.await()
             messageLabel.text = "Dodge the\nCreeps"
             messageLabel.show()
             wait(1.0)

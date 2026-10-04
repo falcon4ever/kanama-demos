@@ -54,8 +54,8 @@ class Bullet(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Nod
         bulletVisuals = self.requireAs("Bullet", ::Node3D)
         projectileSound = self.requireAs("ProjectileSound", ::AudioStreamPlayer3D)
 
-        area.signal(Area3D.Signals.bodyEntered).connectObject(self) { body ->
-            onBodyEntered(Node3D(body.handle))
+        area.bodyEntered.connect { body ->
+            onBodyEntered(body)
         }
 
         isReady = true
