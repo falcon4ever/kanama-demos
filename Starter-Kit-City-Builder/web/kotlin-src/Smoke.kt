@@ -18,7 +18,8 @@ class Smoke(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) 
     // Structure resources persist in Godot's cache; release their hydrated PackedScene
     // handles so the live-handle count can drain to zero.
     self.getNodeOrNull("../Builder")?.kotlinScriptInstance<Builder>()?.structures?.forEach {
-      it.releaseHydratedAssets()
+      it.model?.close()
+      it.model = null
     }
     self.getNodeOrNull("/root/Audio")?.let { audio ->
       audio.kotlinScriptInstance<Audio>()?.stopAll()

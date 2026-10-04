@@ -15,7 +15,6 @@ import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
-import net.multigesture.kanama.types.NodePath
 import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector3
 import net.multigesture.kanama.generated.PlayerSignals
@@ -26,7 +25,7 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 
 	@ExportSubgroup("Components")
 	@Export
-	var view: NodePath = NodePath("../View")
+	var view: Node3D? = null
 
 	@ExportSubgroup("Properties")
 	@Export
@@ -57,8 +56,7 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 
 	@OnReady
 	fun ready() {
-		if (view.path.isEmpty()) view = NodePath("../View")
-		viewNode = self.getAsOrNull(view, ::Node3D) ?: error("Player requires view node at $view")
+		viewNode = view ?: error("Player requires its view export (Components/View)")
 		particlesTrail = self.requireAs("ParticlesTrail", ::GPUParticles3D)
 		soundFootsteps = self.requireAs("SoundFootsteps", ::AudioStreamPlayer)
 		model = self.requireAs("Character", ::Node3D)

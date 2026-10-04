@@ -10,7 +10,6 @@ import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.api.Node3D
-import net.multigesture.kanama.types.NodePath
 import net.multigesture.kanama.types.Vector3
 import net.multigesture.kanama.api.KanamaScript
 
@@ -19,7 +18,7 @@ class View(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3
 
 	@ExportGroup("Properties")
 	@Export
-	var target: NodePath = NodePath("../Player")
+	var target: Node3D? = null
 
 	@ExportGroup("Zoom")
 	@Export
@@ -43,8 +42,7 @@ class View(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3
 
 	@OnReady
 	fun ready() {
-		if (target.path.isEmpty()) target = NodePath("../Player")
-		targetNode = self.getAsOrNull(target, ::Node3D) ?: error("View requires target node at $target")
+		targetNode = target ?: error("View requires its target export (Properties/Target)")
 		camera = self.requireAs("Camera", ::Camera3D)
 		cameraRotation = self.rotationDegrees
 	}

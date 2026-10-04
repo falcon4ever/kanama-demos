@@ -9,6 +9,7 @@ import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.SceneMultiplayer
+import net.multigesture.kanama.api.Window
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.LevelNames
 import net.multigesture.kanama.generated.MenuNames
@@ -42,6 +43,7 @@ class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         }
         self.withMultiplayer { SceneMultiplayer.fromApi(it)?.serverRelay = false }
         net.multigesture.kanama.api.GD.randomize()
+        self.getWindow()?.mode = Window.Mode(TpsSettings.videoLong("display_mode"))
         goToMainMenu()
     }
 
