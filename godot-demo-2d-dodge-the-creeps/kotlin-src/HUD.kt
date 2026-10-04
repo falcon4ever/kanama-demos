@@ -10,6 +10,7 @@ import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Label
 import net.multigesture.kanama.api.Timer
 import net.multigesture.kanama.generated.HUDSignals
+import net.multigesture.kanama.generated.startGame
 
 @ScriptClass(attachTo = "CanvasLayer")
 class HUD(godotObject: GodotHandle) : KanamaScript<CanvasLayer>(godotObject, ::CanvasLayer) {
@@ -46,7 +47,7 @@ class HUD(godotObject: GodotHandle) : KanamaScript<CanvasLayer>(godotObject, ::C
     @GodotName("_on_StartButton_pressed")
     fun onStartButtonPressed() {
         startButton.hide()
-        HUDSignals.startGame(this)
+        startGame.emit()
     }
 
     @GodotName("_on_MessageTimer_timeout")

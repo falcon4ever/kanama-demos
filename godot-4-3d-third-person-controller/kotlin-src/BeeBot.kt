@@ -19,6 +19,7 @@ import net.multigesture.kanama.api.SignalConnection
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.SmokePuffNames
 import net.multigesture.kanama.types.Vector3
+import net.multigesture.kanama.generated.SmokePuffSignals
 
 @ScriptClass(attachTo = "RigidBody3D")
 class BeeBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::RigidBody3D) {
@@ -122,7 +123,7 @@ class BeeBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, 
 			if (puff != null) {
 				self.getParent()?.addChild(puff)
 				Node3D(puff.handle).globalPosition = self.globalPosition
-				puff.signal(SmokePuffNames.Signals.full).await(self, argumentCount = 0)
+				SmokePuffSignals.full(puff).await()
 			}
 
 			repeat(coinsCount.toInt()) {

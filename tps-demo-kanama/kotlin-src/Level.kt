@@ -26,6 +26,7 @@ import net.multigesture.kanama.api.WorldEnvironment
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.Autoloads
 import net.multigesture.kanama.generated.RedRobotNames
+import net.multigesture.kanama.generated.RedRobotSignals
 
 @ScriptClass(attachTo = "Node3D")
 class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
@@ -249,7 +250,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         val robotNode = TpsScenes.instantiate(TpsScenes.RED_ROBOT) ?: return
         val robot = Node3D(robotNode.handle)
         robot.transform = spawnPoint.transform
-        robot.signal(RedRobotNames.Signals.exploded).connect(self, argumentCount = 0) { respawnRobot(spawnPoint) }
+        RedRobotSignals.exploded(robot).connect { respawnRobot(spawnPoint) }
         spawnedNodes.addChild(robotNode, true)
     }
 

@@ -29,6 +29,7 @@ import net.multigesture.kanama.generated.MainNames
 import net.multigesture.kanama.generated.TileNames
 import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector2i
+import net.multigesture.kanama.generated.tilePressed
 
 @ScriptClass(attachTo = "Node2D")
 class Main(godotObject: GodotHandle) :
@@ -156,9 +157,7 @@ class Main(godotObject: GodotHandle) :
     container.addChild(createdPiece)
 
     createdTile.setTileType(randomIndex.toString(), textures[randomIndex])
-    createdPiece
-      .signal(TileNames.Signals.tilePressed)
-      .connect(self, MainNames.Methods.onTilePressed)
+    createdTile.tilePressed.connect(self, MainNames.Methods.onTilePressed)
     createdTile.setGridPosition(Vector2i(x, y))
     createdPiece.position = gridToPixel(x, y)
 

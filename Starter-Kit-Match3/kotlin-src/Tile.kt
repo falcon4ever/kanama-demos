@@ -19,6 +19,8 @@ import net.multigesture.kanama.generated.TileSignals
 import net.multigesture.kanama.types.Color
 import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector2i
+import net.multigesture.kanama.generated.tilePressed
+import net.multigesture.kanama.generated.tileReleased
 
 @ScriptClass(attachTo = "Area2D")
 class Tile(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area2D) {
@@ -69,9 +71,9 @@ class Tile(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area2
       mouseButton.getButtonIndex() == MouseButton.LEFT &&
         mouseButton.isPressed()
     ) {
-      TileSignals.tilePressed(this, gridPosition)
+      tilePressed.emit(gridPosition)
     } else if (mouseButton.isReleased()) {
-      TileSignals.tileReleased(this, gridPosition)
+      tileReleased.emit(gridPosition)
     }
   }
 

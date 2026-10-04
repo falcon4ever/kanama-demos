@@ -14,6 +14,8 @@ import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.Autoloads
 import net.multigesture.kanama.generated.LevelNames
 import net.multigesture.kanama.generated.MenuNames
+import net.multigesture.kanama.generated.LevelSignals
+import net.multigesture.kanama.generated.MenuSignals
 
 @ScriptClass(attachTo = "Node")
 class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
@@ -74,12 +76,11 @@ class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         self.addChild(node)
         GD.print("TPS Main added scene root: ${node.getName()}")
         if (node.hasSignal(LevelNames.Signals.quit)) {
-            node.signal(LevelNames.Signals.quit).connect(self, argumentCount = 0) { goToMainMenu() }
+            LevelSignals.quit(node).connect { goToMainMenu() }
         }
         if (node.hasSignal(MenuNames.Signals.replaceMainScene)) {
-            // The emitted PackedScene rides back through call_deferred so each backend types it
-            // itself (the Web object-signal channel delivers a plain handle).
-            node.signal(MenuNames.Signals.replaceMainScene).connectObject(self) { emitted ->
+            // The emitted PackedScene rides back through call_deferred.
+            MenuSignals.replaceMainScene(node).connect { emitted ->
                 GD.print("TPS Main received replace_main_scene")
                 self.callDeferred("change_scene_to_packed", emitted)
             }

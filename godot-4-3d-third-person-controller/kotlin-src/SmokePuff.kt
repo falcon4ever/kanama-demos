@@ -11,6 +11,7 @@ import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.generated.SmokePuffSignals
+import net.multigesture.kanama.generated.full
 
 @ScriptClass(attachTo = "Node3D")
 class SmokePuff(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
@@ -35,6 +36,6 @@ class SmokePuff(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::
     }
 
     fun smokeAtFullDensity() {
-        SmokePuffSignals.full(this)
+        full.emit()
     }
 }

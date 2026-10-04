@@ -25,6 +25,8 @@ import net.multigesture.kanama.generated.Autoloads
 import net.multigesture.kanama.generated.EventsNames
 import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector3
+import net.multigesture.kanama.generated.flagReached
+import net.multigesture.kanama.generated.killPlaneTouched
 
 @ScriptClass(attachTo = "CharacterBody3D")
 class Player3DTemplate(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
@@ -80,14 +82,14 @@ class Player3DTemplate(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>
         lastInputDirection = self.globalBasis.z
         startPosition = self.globalPosition
 
-        val events = Autoloads.Events.self
-        events.signal(EventsNames.Signals.killPlaneTouched).connectObject(self) {
+        val events = Autoloads.Events
+        events.killPlaneTouched.connect {
             self.globalPosition = startPosition
             self.velocity = Vector3.ZERO
             skin.idle()
             self.setPhysicsProcess(true)
         }
-        events.signal(EventsNames.Signals.flagReached).connect(self, argumentCount = 0) {
+        events.flagReached.connect {
             self.setPhysicsProcess(false)
             skin.idle()
             dustParticles.setEmitting(false)
