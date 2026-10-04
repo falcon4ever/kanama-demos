@@ -39,7 +39,7 @@ env:
   # checkout lets an unrelated Kanama commit redden every demos PR. Bump it
   # deliberately when either guardrail script changes, and whenever the demos are
   # moved to a newer Kanama runtime (see AGENTS.md, "Update For A New Kanama Release").
-  KANAMA_REF: 3941fd35713992e57bde3a5af81cdc0678485dd0
+  KANAMA_REF: 3d57cb390791dd1cc77a605ee3a91d4699cb560b
 
 jobs:
   check:
