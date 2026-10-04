@@ -48,14 +48,18 @@ assert_no_hard_log_errors() {
   local phase="$2"
   local log_file="$3"
 
+  # Task 118: this returned (check skipped, run green) when the log was missing. Every caller passes a log the
+  # run was told to write, so a missing one means the run did not happen the way it was asked to.
   if [ ! -f "$log_file" ]; then
-    return
+    echo "[desktop_smoke_all] expected log is missing, so the hard-error check cannot run ($phase): $log_file" >&2
+    exit 1
   fi
 
   local error_pattern='Condition "!is_inside_tree\(\)" is true|Failed loading resource:|Failed loading scene:|Parse Error:|Cannot open file|Unable to open file'
   if grep -Eq "$error_pattern" "$log_file"; then
     echo "[desktop_smoke_all] Godot logged hard errors during $phase: $folder" >&2
     echo "[desktop_smoke_all] log: $log_file" >&2
+    # justified: diagnostics; the exit 1 on the next line is the verdict.
     grep -En "$error_pattern" "$log_file" >&2 || true
     exit 1
   fi
@@ -82,9 +86,11 @@ assert_no_per_tick_leaks() {
   local log_file="$2"
 
   if [ ! -f "$log_file" ]; then
-    return
+    echo "[desktop_smoke_all] expected console log is missing, so the leak check cannot run: $log_file" >&2
+    exit 1
   fi
   local leaks
+  # justified: grep exits 1 when there are no leaked instances, which is the clean case.
   leaks="$(grep -F 'Leaked instance: ' "$log_file" || true)"
   if [ -z "$leaks" ]; then
     return

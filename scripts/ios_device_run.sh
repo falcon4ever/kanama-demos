@@ -110,6 +110,7 @@ check_console_faults() {
   local log="$1"
 
   local first
+  # justified: awk exits non-zero only when the log is unreadable, and the callers have just written or checked it.
   first="$(awk -v m="$FAULT_LINE_MARKER" 'index($0, m) { print; exit }' "$log" 2>/dev/null || true)"
   if [[ -n "$first" ]]; then
     echo "[ios_device_run] console: the iOS bridge reported a FAULT — a call did not reach Godot: $log"
@@ -119,6 +120,7 @@ check_console_faults() {
   fi
 
   local ran summaries
+  # justified: grep -c prints 0 and exits 1 when nothing matches, which is the answer, not an error.
   ran="$(grep -c -F "$SELFTEST_RAN_MARKER" "$log" 2>/dev/null || true)"
   summaries="$(grep -c -E 'OBJECTCALLS SELFTEST.*faults=' "$log" 2>/dev/null || true)"
   : "${ran:=0}" "${summaries:=0}"
@@ -139,6 +141,7 @@ check_console_faults() {
       echo "[ios_device_run]   line: $line"
       return 1
     fi
+  # justified: no summary line is the empty loop; the "ran but printed no summary" case was already failed above.
   done < <(grep -E 'OBJECTCALLS SELFTEST.*faults=' "$log" 2>/dev/null || true)
   return 0
 }
@@ -194,28 +197,30 @@ parse_app_pids() {
   '
 }
 
-# Never fails the run: every step is best effort and the function always returns 0.
+# Never fails the run: every step is best effort and the function always returns 0. Justified: it runs after
+# the verdict is on disk and only closes the app; each `|| true` / `2>/dev/null` below is that cleanup. A pid
+# that could not be terminated prints a WARNING.
 terminate_demo_app() {
   local list_file="$OUTPUT_DIR/processes.json" listing pids pid
   device_process_listing() {
     rm -f "$list_file"
     if DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device info processes --device "$DEVICE_ID" \
-        --timeout 30 --json-output "$list_file" >/dev/null 2>&1 && [[ -s "$list_file" ]]; then
+        --timeout 30 --json-output "$list_file" >/dev/null 2>&1 && [[ -s "$list_file" ]]; then  # justified: cleanup after the verdict; falls back to the table listing below
       cat "$list_file"
     else
       DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device info processes --device "$DEVICE_ID" \
-        --timeout 30 2>/dev/null || true
+        --timeout 30 2>/dev/null || true  # justified: cleanup after the verdict; an empty listing means nothing to terminate
     fi
   }
   listing="$(device_process_listing)"
-  pids="$(printf '%s\n' "$listing" | parse_app_pids "$APP_NAME" || true)"
+  pids="$(printf '%s\n' "$listing" | parse_app_pids "$APP_NAME" || true)"  # justified: cleanup after the verdict; an empty result means nothing to terminate
   if [[ -z "$pids" ]]; then
     echo "[ios_device_run] cleanup: no running $APP_NAME process on the device (nothing to terminate)"
     return 0
   fi
   for pid in $pids; do
     if DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device process terminate --device "$DEVICE_ID" \
-        --pid "$pid" --timeout 30 >/dev/null 2>&1; then
+        --pid "$pid" --timeout 30 >/dev/null 2>&1; then  # justified: cleanup after the verdict; failure prints a WARNING in the else branch
       echo "[ios_device_run] cleanup: terminated $APP_NAME (pid $pid)"
     else
       echo "[ios_device_run] cleanup: WARNING: could not terminate $APP_NAME (pid $pid); continuing" >&2
@@ -224,10 +229,10 @@ terminate_demo_app() {
   # A Godot app that already quit its main loop can sit through SIGTERM; check, and SIGKILL what is left.
   sleep 2
   listing="$(device_process_listing)"
-  pids="$(printf '%s\n' "$listing" | parse_app_pids "$APP_NAME" || true)"
+  pids="$(printf '%s\n' "$listing" | parse_app_pids "$APP_NAME" || true)"  # justified: cleanup after the verdict; an empty result means nothing to terminate
   for pid in $pids; do
     if DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device process terminate --device "$DEVICE_ID" \
-        --pid "$pid" --kill --timeout 30 >/dev/null 2>&1; then
+        --pid "$pid" --kill --timeout 30 >/dev/null 2>&1; then  # justified: cleanup after the verdict; failure prints a WARNING in the else branch
       echo "[ios_device_run] cleanup: $APP_NAME (pid $pid) survived SIGTERM; killed it"
     else
       echo "[ios_device_run] cleanup: WARNING: $APP_NAME (pid $pid) is still running and could not be killed; continuing" >&2
@@ -408,6 +413,7 @@ fi
 # carry none of its @ScriptProperty values, which is invisible until the app crashes on device.
 if grep -q 'ResourceFormatLoader\._load bound kotlinClass= ' "$EXPORT_LOG"; then
   echo "[ios_device_run] export-time editor bound no Kotlin class to a project script:" >&2
+  # justified: diagnostics; the exit 1 on the next lines is the verdict.
   grep -B1 'ResourceFormatLoader\._load bound kotlinClass= ' "$EXPORT_LOG" | grep '_load path=' >&2 || true
   echo "[ios_device_run] scene-stored @ScriptProperty values would be dropped from this export; refusing to build it." >&2
   exit 1
@@ -421,8 +427,14 @@ if [[ -f "$SCENE_PARITY_CHECK" ]]; then
     echo "[ios_device_run] exported scenes lost script properties (see [check_exported_scenes] lines above); refusing to build it." >&2
     exit 1
   fi
+elif [[ "${KANAMA_IOS_ALLOW_MISSING_SCENE_CHECK:-0}" == "1" ]]; then
+  echo "SKIP: exported-scene parity check (task 112): $SCENE_PARITY_CHECK not found in KANAMA_ROOT and KANAMA_IOS_ALLOW_MISSING_SCENE_CHECK=1 was set"
 else
-  echo "[ios_device_run] WARNING: $SCENE_PARITY_CHECK not found in KANAMA_ROOT; skipping the exported-scene parity check (task 112)" >&2
+  # Task 118: this was a WARNING and the run went on to build and launch an app whose scenes were never
+  # compared with their sources. A KANAMA_ROOT that predates the check must be opted out of by name.
+  echo "[ios_device_run] $SCENE_PARITY_CHECK not found in KANAMA_ROOT: the exported-scene parity check (task 112) cannot run." >&2
+  echo "[ios_device_run] Use a KANAMA_ROOT that has it, or set KANAMA_IOS_ALLOW_MISSING_SCENE_CHECK=1 to skip it explicitly." >&2
+  exit 1
 fi
 
 if [[ ! -d "$XCODE_PROJECT" ]]; then
@@ -513,20 +525,27 @@ snapshot_crash_reports() {
   local dest="$1"
   rm -rf "$dest"
   mkdir -p "$dest"
+  local copy_log="$dest.copy.log"
   if DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device copy from --device "$DEVICE_ID" \
-      --domain-type systemCrashLogs --source . --destination "$dest" >/dev/null 2>&1; then
+      --domain-type systemCrashLogs --source . --destination "$dest" >"$copy_log" 2>&1; then
     local f
     for f in "$dest/$APP_NAME"-*.ips "$dest/$APP_NAME".*.ips; do
       if [[ -e "$f" ]]; then basename "$f"; fi
     done
   else
-    echo "[ios_device_run] WARNING: could not copy the device's crash logs (before/after diff disabled for this step)" >&2
+    # Task 118: this was a WARNING and the step went on without its crash-report check, which is a green
+    # for a check that did not run. Fail with devicectl's own output; KANAMA_IOS_CRASH_REPORTS=0 opts out.
+    echo "[ios_device_run] could not copy the device's crash logs (the crash-report check cannot run; KANAMA_IOS_CRASH_REPORTS=0 skips it explicitly):" >&2
+    tail -n 20 "$copy_log" >&2
+    return 1
   fi
   return 0  # a no-match glob must not fail the caller under set -e
 }
 crashes_before=""
 if [[ "$CRASH_REPORTS" == "1" ]]; then
-  crashes_before="$(snapshot_crash_reports "$OUTPUT_DIR/crashes.before")"
+  crashes_before="$(snapshot_crash_reports "$OUTPUT_DIR/crashes.before")" || exit 1
+else
+  echo "SKIP: device crash-report check: KANAMA_IOS_CRASH_REPORTS=$CRASH_REPORTS"
 fi
 
 echo "[ios_device_run] launching app: $BUNDLE_ID"
@@ -564,13 +583,15 @@ else
   while :; do
     sleep 2
     waited=$((waited + 2))
+    # justified (this loop's `2>/dev/null` probes): the console log is created empty before the loop and kill -0
+    # is a liveness test; the verdict is read from $VERDICT_LOG after the loop.
     if grep -q -E "$CONSOLE_FAIL_PATTERN" "$CONSOLE_LOG" 2>/dev/null; then
       break
     fi
     if ! kill -0 "$console_pid" 2>/dev/null; then
       break  # the stream ended on its own: the app exited
     fi
-    if [[ -z "$launched_at" ]] && grep -q '\[kanama\]\[ios\]' "$CONSOLE_LOG" 2>/dev/null; then
+    if [[ -z "$launched_at" ]] && grep -q '\[kanama\]\[ios\]' "$CONSOLE_LOG" 2>/dev/null; then  # justified: poll of the log being written; the verdict is read from the window copy afterwards
       launched_at="$waited"
       echo "[ios_device_run] console: runtime reported after ${launched_at}s; watching ${CONSOLE_SECONDS}s more"
     fi
@@ -580,7 +601,7 @@ else
       [[ $((waited - launched_at)) -ge "$CONSOLE_SECONDS" ]] && break
     fi
   done
-  if [[ "$smoke_active" -eq 1 ]] && grep -q -E "$SMOKE_COMPLETE_PATTERN" "$CONSOLE_LOG" 2>/dev/null; then
+  if [[ "$smoke_active" -eq 1 ]] && grep -q -E "$SMOKE_COMPLETE_PATTERN" "$CONSOLE_LOG" 2>/dev/null; then  # justified: only decides whether to wait 3 s more before the verdict is taken from the window copy
     # Give the quit a moment so a crash inside SceneTree.quit() / teardown still lands in the log.
     sleep 3
   fi
@@ -590,6 +611,7 @@ else
   console_lines="$(wc -l <"$CONSOLE_LOG" | tr -d ' ')"
   VERDICT_LOG="$OUTPUT_DIR/console.window.log"
   head -n "$console_lines" "$CONSOLE_LOG" >"$VERDICT_LOG"
+  # justified: stopping our own console stream after the window; the verdict was copied to $VERDICT_LOG above.
   kill "$console_pid" >/dev/null 2>&1 || true
   wait "$console_pid" >/dev/null 2>&1 || true
   # The verdict is already on disk; now close the app (item 41) — it would otherwise stay open on a
@@ -628,11 +650,12 @@ else
 fi
 
 if [[ "$CRASH_REPORTS" == "1" ]]; then
-  crashes_after="$(snapshot_crash_reports "$OUTPUT_DIR/crashes.after")"
+  crashes_after="$(snapshot_crash_reports "$OUTPUT_DIR/crashes.after")" || { echo "[ios_device_run] FAIL"; exit 1; }
   new_crashes="$(comm -13 <(printf '%s\n' "$crashes_before" | sort -u) <(printf '%s\n' "$crashes_after" | sort -u) | sed '/^$/d')"
   if [[ -n "$new_crashes" ]]; then
     mkdir -p "$OUTPUT_DIR/crashes"
     while IFS= read -r ips; do
+      # justified: keeping a copy of the report for humans; the step exits 1 below because of the NEW report either way.
       cp "$OUTPUT_DIR/crashes.after/$ips" "$OUTPUT_DIR/crashes/" 2>/dev/null || true
       echo "[ios_device_run] crash report: NEW $ips -> $OUTPUT_DIR/crashes/$ips"
     done <<<"$new_crashes"

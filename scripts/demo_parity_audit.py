@@ -152,6 +152,8 @@ def audit_file(path: Path, root: Path) -> list[Finding]:
             offset = text.find("companion object")
             add_finding(findings, rel, text, offset, "companion-object singleton facades are not allowed in gameplay scripts")
 
+    # justified (every `if smoke: continue` and allowlist `continue` in the loops below): Smoke*.kt scripts and the
+    # explicit ALLOWED_* tables are exempt from these rules by design; a new exemption is a reviewed diff to the table.
     for match in CALL_RE.finditer(text):
         method = match.group(1)
         if smoke:
@@ -217,10 +219,13 @@ def main() -> int:
 
     root = args.root.resolve()
     files = sorted(root.glob("**/kotlin-src/**/*.kt"))
+    if not files:
+        print(f"demo parity audit: no kotlin-src/**/*.kt under {root}; refusing a vacuous pass", file=sys.stderr)
+        return 2
     findings: list[Finding] = []
     for path in files:
         if "/build/" in path.as_posix():
-            continue
+            continue  # justified: generated build output is not demo source
         findings.extend(audit_file(path, root))
 
     if findings:
