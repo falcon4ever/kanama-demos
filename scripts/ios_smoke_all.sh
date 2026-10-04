@@ -74,7 +74,9 @@ for demo in "${demos[@]}"; do
 
   echo "[ios_smoke_all] start: $folder"
 
-  if [[ "${KANAMA_IOS_SKIP_PROBES:-0}" != "1" ]]; then
+  if [[ "${KANAMA_IOS_SKIP_PROBES:-0}" == "1" ]]; then
+    echo "SKIP: ios probe validation for $folder: KANAMA_IOS_SKIP_PROBES=1 was set"
+  else
     echo "[ios_smoke_all] probe: $folder ($probe_flag)"
     "$SMOKE_SCRIPT" \
       --godot "$GODOT_BIN" \
