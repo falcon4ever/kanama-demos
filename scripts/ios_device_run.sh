@@ -122,6 +122,7 @@ check_console_faults() {
   local ran summaries
   # justified: grep -c prints 0 and exits 1 when nothing matches, which is the answer, not an error.
   ran="$(grep -c -F "$SELFTEST_RAN_MARKER" "$log" 2>/dev/null || true)"
+  # justified: grep -c prints 0 and exits 1 when nothing matches, which is the answer, not an error.
   summaries="$(grep -c -E 'OBJECTCALLS SELFTEST.*faults=' "$log" 2>/dev/null || true)"
   : "${ran:=0}" "${summaries:=0}"
   if (( ran > 0 && summaries == 0 )); then
@@ -534,8 +535,12 @@ snapshot_crash_reports() {
     done
   else
     # Task 118: this was a WARNING and the step went on without its crash-report check, which is a green
-    # for a check that did not run. Fail with devicectl's own output; KANAMA_IOS_CRASH_REPORTS=0 opts out.
-    echo "[ios_device_run] could not copy the device's crash logs (the crash-report check cannot run; KANAMA_IOS_CRASH_REPORTS=0 skips it explicitly):" >&2
+    # for a check that did not run. It fails now, and says how to opt out and what that costs.
+    echo "[ios_device_run] FAIL: could not copy the device's crash logs (devicectl output below)." >&2
+    echo "[ios_device_run]   This step compares the device's crash reports before and after the launch to catch a crash" >&2
+    echo "[ios_device_run]   the console window missed; without them that check is blind, so the step fails instead of" >&2
+    echo "[ios_device_run]   passing quietly. To run without it, set KANAMA_IOS_CRASH_REPORTS=0 (the step then prints" >&2
+    echo "[ios_device_run]   'SKIP: device crash-report check'). Usual causes: a locked device, a dropped connection." >&2
     tail -n 20 "$copy_log" >&2
     return 1
   fi
@@ -613,9 +618,11 @@ else
   head -n "$console_lines" "$CONSOLE_LOG" >"$VERDICT_LOG"
   # justified: stopping our own console stream after the window; the verdict was copied to $VERDICT_LOG above.
   kill "$console_pid" >/dev/null 2>&1 || true
+  # justified: reaping our own console stream; its exit status says nothing about the app.
   wait "$console_pid" >/dev/null 2>&1 || true
   # The verdict is already on disk; now close the app (item 41) — it would otherwise stay open on a
   # grey screen after the demo's quit. Best effort, never changes the outcome.
+  # justified: terminate_demo_app is documented never to fail the run (it only closes the app after the verdict).
   terminate_demo_app || true
   if grep -q -E "$CONSOLE_FAIL_PATTERN" "$VERDICT_LOG"; then
     echo "[ios_device_run] console: crash signature within ${waited}s (${console_lines} lines): $CONSOLE_LOG"
@@ -663,7 +670,7 @@ if [[ "$CRASH_REPORTS" == "1" ]]; then
     exit 1
   fi
   echo "[ios_device_run] crash reports: no new $APP_NAME report on the device"
-  rm -rf "$OUTPUT_DIR/crashes.before" "$OUTPUT_DIR/crashes.after"
+  rm -rf "$OUTPUT_DIR/crashes.before" "$OUTPUT_DIR/crashes.after" "$OUTPUT_DIR/crashes.before.copy.log" "$OUTPUT_DIR/crashes.after.copy.log"
 fi
 
 echo "[ios_device_run] PASS"

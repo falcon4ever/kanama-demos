@@ -151,7 +151,9 @@ run_smoke() {
     fi
   fi
   echo "[desktop_smoke_all] start: $folder"
-  if [[ "${KANAMA_DESKTOP_SMOKE_SKIP_IMPORT:-0}" != "1" ]]; then
+  if [[ "${KANAMA_DESKTOP_SMOKE_SKIP_IMPORT:-0}" == "1" ]]; then
+    echo "SKIP: godot import step for $folder: KANAMA_DESKTOP_SMOKE_SKIP_IMPORT=1 was set"
+  else
     local import_command=(
       "$GODOT_BIN"
       --headless
