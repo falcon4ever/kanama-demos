@@ -34,13 +34,16 @@ UNLOAD_THEN_SCOPED_LAUNCH_RE = re.compile(
 # GAMEPLAY_RESOURCE_CLOSE_RE — taught the opposite of the docs and forced real leaks).
 # What it still rejects is the two cases the docs forbid:
 #   - closing a *borrowed view* the script minted itself over a handle it already had
-#     (Resource.fromHandle / X.fromObject), which releases a reference never taken;
+#     (Resource.fromHandle), which releases nothing since Kanama task 132 and was a
+#     reference never taken before. The `from*` downcasts (X.fromObject, X.fromResource)
+#     are no longer borrowed: since task 132 each takes a reference of its own, so closing
+#     one is correct and is not flagged;
 #   - closing a *live Tween* (createTween(), or a field named after one), which must be
 #     kill()ed through the Godot lifecycle instead. A Tweener is not a Tween: the
 #     PropertyTweener/CallbackTweener a tweenProperty()/tweenCallback() call hands back is
 #     an owned return and closing it is correct.
 BORROWED_VIEW_CLOSE_RE = re.compile(
-    r"\.from(?:Handle|Object)\s*\((?:[^()]|\([^()]*\))*\)\s*\??\s*\.\s*(?:use\s*\{|close\s*\()",
+    r"\.fromHandle\s*\((?:[^()]|\([^()]*\))*\)\s*\??\s*\.\s*(?:use\s*\{|close\s*\()",
     re.DOTALL,
 )
 LIVE_TWEEN_CLOSE_RE = re.compile(
@@ -195,7 +198,7 @@ def audit_file(path: Path, root: Path) -> list[Finding]:
             rel,
             text,
             match.start(),
-            "fromHandle()/fromObject() mint a borrowed view over a handle you already hold; closing it releases a reference you never took (kanama docs/game-dev/godot-api.md#resource-ownership)",
+            "fromHandle() mints a borrowed view over a handle you already hold; closing it releases nothing (kanama docs/game-dev/godot-api.md#resource-ownership)",
         )
 
     for match in LIVE_TWEEN_CLOSE_RE.finditer(text):
