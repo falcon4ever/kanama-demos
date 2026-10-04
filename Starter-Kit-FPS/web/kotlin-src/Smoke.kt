@@ -1,6 +1,5 @@
 package fps
 
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
@@ -19,7 +18,6 @@ import net.multigesture.kanama.api.kotlinScriptInstance
  */
 @ScriptClass(attachTo = "Node3D")
 class Smoke(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
-  @RegisterFunction("smoke_teardown")
   fun smokeTeardown() {
     // Weapon resources persist in Godot's cache; release their hydrated asset handles so
     // the live-handle count can drain to zero.

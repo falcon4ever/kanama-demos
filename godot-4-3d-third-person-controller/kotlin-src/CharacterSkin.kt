@@ -2,9 +2,9 @@ package thirdperson
 
 import net.multigesture.kanama.annotations.GlobalClass
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.Signal
 import net.multigesture.kanama.api.AnimationMixer
 import net.multigesture.kanama.api.AnimationNodeStateMachinePlayback
@@ -21,7 +21,7 @@ import net.multigesture.kanama.generated.CharacterSkinSignals
 @ScriptClass(attachTo = "Node3D")
 class CharacterSkin(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
 
-    @ScriptProperty
+    @Export
     var mainAnimationPlayer: AnimationPlayer? = null
 
     private lateinit var animationTree: AnimationMixer
@@ -38,34 +38,29 @@ class CharacterSkin(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject
         stateMachine = animationTree.getStateMachinePlayback(STATE_MACHINE_PLAYBACK)
     }
 
-    @RegisterFunction
     fun setMoving(value: Boolean) {
         moving = value
         stateMachine.travel(if (moving) States.MOVE else States.IDLE)
     }
 
-    @RegisterFunction
     fun setMovingSpeed(value: Double) {
         moveSpeed = value.coerceIn(0.0, 1.0)
         animationTree.setParameter(MOVING_BLEND_PATH, moveSpeed)
     }
 
-    @RegisterFunction
     fun jump() {
         stateMachine.travel(States.JUMP)
     }
 
-    @RegisterFunction
     fun fall() {
         stateMachine.travel(States.FALL)
     }
 
-    @RegisterFunction
     fun punch() {
         animationTree.setParameter(PUNCH_REQUEST_PATH, ONE_SHOT_REQUEST_FIRE)
     }
 
-    @RegisterFunction("_step")
+    @GodotName("_step")
     fun step() {
         CharacterSkinSignals.stepped(this)
     }

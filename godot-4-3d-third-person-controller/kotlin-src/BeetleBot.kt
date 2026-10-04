@@ -4,9 +4,8 @@ import kotlinx.coroutines.launch
 import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.AudioStreamPlayer3D
@@ -31,10 +30,10 @@ import net.multigesture.kanama.types.Vector3
 class BeetleBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::RigidBody3D), KanamaCoroutineOwner {
     override val kanamaScope = KanamaScope()
 
-    @ScriptProperty
+    @Export
     var coinsCount: Long = 5
 
-    @ScriptProperty
+    @Export
     var stoppingDistance: Double = 0.0
 
     private lateinit var reactionAnimationPlayer: AnimationPlayer
@@ -114,7 +113,6 @@ class BeetleBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObjec
         }
     }
 
-    @RegisterFunction
     fun damage(impactPoint: Vector3, force: Vector3) {
         self.lockRotation = false
         self.applyImpulse(force.limitLength(3.0), impactPoint)

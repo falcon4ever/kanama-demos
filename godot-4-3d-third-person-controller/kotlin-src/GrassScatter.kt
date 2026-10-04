@@ -4,7 +4,7 @@ import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.ArrayMesh
@@ -22,7 +22,7 @@ class GrassScatter(godotObject: GodotHandle) : KanamaScript<MultiMeshInstance3D>
     godotObject,
     ::MultiMeshInstance3D,
 ) {
-    @ScriptProperty
+    @Export
     var targetMeshPath: NodePath = NodePath("")
 
     private val triangles = mutableListOf<Int>()

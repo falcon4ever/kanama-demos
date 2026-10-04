@@ -1,6 +1,5 @@
 package thirdperson
 
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.Control
 import net.multigesture.kanama.api.GodotHandle
@@ -19,7 +18,6 @@ class WeaponUi(godotObject: GodotHandle) : KanamaScript<Control>(godotObject, ::
 
     private var selectedNode = ""
 
-    @RegisterFunction("switch_to")
     fun switchTo(nodeName: String) {
         if (nodeName == selectedNode) return
 

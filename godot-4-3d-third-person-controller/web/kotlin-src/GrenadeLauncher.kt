@@ -2,9 +2,8 @@ package thirdperson
 
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.api.CharacterBody3D
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
@@ -26,15 +25,15 @@ import net.multigesture.kanama.types.Vector3
  */
 @ScriptClass(attachTo = "Node3D")
 class GrenadeLauncher(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
-  @ScriptProperty var minThrowDistance: Double = 7.0
+  @Export var minThrowDistance: Double = 7.0
 
-  @ScriptProperty var maxThrowDistance: Double = 16.0
+  @Export var maxThrowDistance: Double = 16.0
 
-  @ScriptProperty var gravity: Double = 16.0
+  @Export var gravity: Double = 16.0
 
-  @ScriptProperty var fromLookPosition: Vector3 = Vector3.ZERO
+  @Export var fromLookPosition: Vector3 = Vector3.ZERO
 
-  @ScriptProperty var throwDirection: Vector3 = Vector3.ZERO
+  @Export var throwDirection: Vector3 = Vector3.ZERO
 
   private lateinit var snapMesh: Node3D
   private lateinit var raycast: ShapeCast3D
@@ -63,7 +62,6 @@ class GrenadeLauncher(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObje
     updateThrowVelocity()
   }
 
-  @RegisterFunction("throw_grenade")
   fun throwGrenade(): Boolean {
     if (!self.isVisible()) return false
     val parent = self.getParent() ?: return false

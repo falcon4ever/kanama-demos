@@ -1,9 +1,9 @@
 package net.multigesture.kanama.demos.bunnymark
 
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
@@ -37,7 +37,7 @@ class BunnymarkV1DrawTextureKanama(godotObject: GodotHandle) : KanamaScript<Node
         bunnyTexture = null
     }
 
-    @RegisterFunction("_draw")
+    @GodotName("_draw")
     fun draw() {
         val texture = bunnyTexture ?: return
         for (bunny in bunnies) {
@@ -85,7 +85,6 @@ class BunnymarkV1DrawTextureKanama(godotObject: GodotHandle) : KanamaScript<Node
         self.queueRedraw()
     }
 
-    @RegisterFunction("add_bunny")
     fun addBunny() {
         bunnies += Bunny(
             Vector2(screenSize.x / 2.0, screenSize.y / 2.0),
@@ -93,13 +92,11 @@ class BunnymarkV1DrawTextureKanama(godotObject: GodotHandle) : KanamaScript<Node
         )
     }
 
-    @RegisterFunction("remove_bunny")
     fun removeBunny() {
         if (bunnies.isEmpty()) return
         bunnies.removeAt(bunnies.lastIndex)
     }
 
-    @RegisterFunction("finish")
     fun finish() {
         self.emitSignal("benchmark_finished", bunnies.size)
     }

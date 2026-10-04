@@ -4,7 +4,7 @@ import net.multigesture.kanama.annotations.ExportGroup
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.api.Camera3D
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.Input
@@ -18,21 +18,21 @@ import net.multigesture.kanama.api.KanamaScript
 class View(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
 
 	@ExportGroup("Properties")
-	@ScriptProperty
+	@Export
 	var target: NodePath = NodePath("../Player")
 
 	@ExportGroup("Zoom")
-	@ScriptProperty
+	@Export
 	var zoomMinimum: Long = 16
 
-	@ScriptProperty
+	@Export
 	var zoomMaximum: Long = 4
 
-	@ScriptProperty
+	@Export
 	var zoomSpeed: Long = 10
 
 	@ExportGroup("Rotation")
-	@ScriptProperty
+	@Export
 	var rotationSpeed: Long = 120
 
 	private var cameraRotation: Vector3 = Vector3.ZERO

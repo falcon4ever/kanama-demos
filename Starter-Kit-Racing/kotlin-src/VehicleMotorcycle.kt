@@ -1,9 +1,9 @@
 package racing
 
 import net.multigesture.kanama.annotations.GlobalClass
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.OnPhysicsProcess
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
@@ -29,7 +29,6 @@ class VehicleMotorcycle(godotObject: GodotHandle) : Vehicle(godotObject) {
         vehicleBody = self.requireAs("Container/Model/motorcycle/body", ::Node3D)
     }
 
-    @RegisterFunction("get_vehicle_position")
     override fun getVehiclePosition(): Vector3 = super.getVehiclePosition()
 
     @OnPhysicsProcess
@@ -37,7 +36,7 @@ class VehicleMotorcycle(godotObject: GodotHandle) : Vehicle(godotObject) {
         super.physicsProcess(delta)
     }
 
-    @RegisterFunction("_on_sphere_body_entered")
+    @GodotName("_on_sphere_body_entered")
     override fun onSphereBodyEntered(body: GodotObject) {
         super.onSphereBodyEntered(body)
     }

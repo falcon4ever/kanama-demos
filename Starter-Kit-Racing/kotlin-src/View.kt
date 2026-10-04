@@ -5,7 +5,7 @@ import net.multigesture.kanama.annotations.ExportGroup
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.api.Camera3D
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
@@ -18,7 +18,7 @@ class View(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3
     private lateinit var camera: Camera3D
 
     @ExportGroup("Properties")
-    @ScriptProperty
+    @Export
     var target: Vehicle? = null
 
     @OnReady

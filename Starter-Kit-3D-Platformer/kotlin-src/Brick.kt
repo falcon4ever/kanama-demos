@@ -1,8 +1,8 @@
 package net.multigesture.kanama.demos.platformer3d
 
 import kotlinx.coroutines.launch
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.CollisionShape3D
@@ -47,7 +47,7 @@ class Brick(godotObject: GodotHandle) :
     bottomDetector.signal(Area3D.Signals.bodyEntered).connect(self, BrickNames.Methods.onBottomHit)
   }
 
-  @RegisterFunction("_on_bottom_hit")
+  @GodotName("_on_bottom_hit")
   fun onBottomHit(body: Node3D) {
     if (body.isInGroup("player")) explode()
   }

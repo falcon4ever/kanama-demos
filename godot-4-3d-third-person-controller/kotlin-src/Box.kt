@@ -1,7 +1,6 @@
 package thirdperson
 
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.CollisionShape3D
@@ -30,7 +29,6 @@ class Box(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::R
         collisionShape = self.requireAs("CollisionShape3d", ::CollisionShape3D)
     }
 
-    @RegisterFunction
     fun damage(impactPoint: Vector3, force: Vector3) {
         repeat(COINS_COUNT) {
             val coinNode = DemoScenes.instantiate(DemoScenes.COIN) ?: return@repeat

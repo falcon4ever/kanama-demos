@@ -2,7 +2,7 @@ package thirdperson
 
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.CharacterBody3D
 import net.multigesture.kanama.api.GodotHandle
@@ -16,7 +16,7 @@ import net.multigesture.kanama.types.Vector3
 @ScriptClass(attachTo = "Area3D")
 class JumpingPad(godotObject: GodotHandle) : KanamaScript<Area3D>(godotObject, ::Area3D) {
 
-    @ScriptProperty
+    @Export
     var impulseStrength: Double = 10.0
 
     private lateinit var mushroom: Node3D

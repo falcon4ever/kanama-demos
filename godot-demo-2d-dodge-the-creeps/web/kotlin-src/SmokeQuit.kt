@@ -1,7 +1,6 @@
 package dodge
 
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaCoroutineOwner
@@ -40,7 +39,6 @@ class SmokeQuit(godotObject: GodotHandle) :
      * the tree, so each script's _exit_tree releases its Godot objects and the live-handle
      * count drains to zero (the smoke's teardown assertion). Harness-only; never gameplay.
      */
-    @RegisterFunction("smoke_teardown")
     fun smokeTeardown() {
         val root = self.getParent() ?: error("SmokeQuit has no parent to tear down")
         Node(root.handle).queueFree()

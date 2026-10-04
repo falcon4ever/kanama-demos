@@ -3,7 +3,7 @@ package thirdperson
 import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.Curve
@@ -17,17 +17,17 @@ import net.multigesture.kanama.types.Vector3
 @ScriptClass(attachTo = "Node3D")
 class Bullet(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
 
-    @ScriptProperty
+    @Export
     var scaleDecay: Curve? = null
 
-    @ScriptProperty
+    @Export
     var distanceLimit: Double = 5.0
         set(value) {
             field = value
             updateAliveLimit()
         }
 
-    @ScriptProperty
+    @Export
     var velocity: Vector3 = Vector3.ZERO
         set(value) {
             field = value
@@ -37,7 +37,7 @@ class Bullet(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Nod
             }
         }
 
-    @ScriptProperty
+    @Export
     var shooter: Node? = null
 
     private lateinit var area: Area3D
@@ -69,7 +69,7 @@ class Bullet(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Nod
         }
     }
 
-    fun launch(newShooter: Node, origin: Vector3, newVelocity: Vector3, newDistanceLimit: Double) {
+    internal fun launch(newShooter: Node, origin: Vector3, newVelocity: Vector3, newDistanceLimit: Double) {
         shooter = newShooter
         timeAlive = 0.0
         distanceLimit = newDistanceLimit
