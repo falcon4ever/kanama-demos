@@ -1,17 +1,19 @@
 package tps
 
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import net.multigesture.kanama.annotations.GodotName
-import net.multigesture.kanama.annotations.OnInput
 import net.multigesture.kanama.annotations.OnExitTree
+import net.multigesture.kanama.annotations.OnInput
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.Signal
-import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.CharacterBody3D
 import net.multigesture.kanama.api.CollisionShape3D
+import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.InputEvent
-import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.LightmapGI
 import net.multigesture.kanama.api.MainThread
@@ -23,9 +25,8 @@ import net.multigesture.kanama.api.ResourceLoader
 import net.multigesture.kanama.api.Timer
 import net.multigesture.kanama.api.WorldEnvironment
 import net.multigesture.kanama.api.kotlinScriptInstance
+import net.multigesture.kanama.generated.Autoloads
 import net.multigesture.kanama.generated.RedRobotNames
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 
 @ScriptClass(attachTo = "Node3D")
 class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
@@ -47,11 +48,11 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         spawnedNodes = self.requireAs("SpawnedNodes", ::Node3D)
         GD.print("TPS Level ready: nodes resolved")
 
-        TpsSettings.applyGraphicsSettings(self.getWindow(), worldEnvironment.environment, self)
+        Autoloads.Settings.applyGraphicsSettings(self.getWindow(), worldEnvironment.environment, self)
         GD.print("TPS Level ready: graphics settings applied")
-        when (TpsSettings.renderLong("gi_type")) {
-            TpsSettings.SDFGI -> setupSdfgi()
-            TpsSettings.VOXEL_GI -> setupVoxelgi()
+        when (Autoloads.Settings.renderLong("gi_type")) {
+            Settings.SDFGI -> setupSdfgi()
+            Settings.VOXEL_GI -> setupVoxelgi()
             else -> setupLightmapgi()
         }
         GD.print("TPS Level ready: GI configured")
@@ -207,9 +208,9 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         self.requireAs("VoxelGI", ::Node3D).hide()
         self.requireAs("ReflectionProbes", ::Node3D).hide()
         lightmapGi?.queueFree()
-        when (TpsSettings.renderLong("gi_quality")) {
-            TpsSettings.GI_HIGH -> RenderingServer.environmentSetSdfgiRayCount(RenderingServer.EnvironmentSDFGIRayCount.COUNT_96)
-            TpsSettings.GI_LOW -> RenderingServer.environmentSetSdfgiRayCount(RenderingServer.EnvironmentSDFGIRayCount.COUNT_32)
+        when (Autoloads.Settings.renderLong("gi_quality")) {
+            Settings.GI_HIGH -> RenderingServer.environmentSetSdfgiRayCount(RenderingServer.EnvironmentSDFGIRayCount.COUNT_96)
+            Settings.GI_LOW -> RenderingServer.environmentSetSdfgiRayCount(RenderingServer.EnvironmentSDFGIRayCount.COUNT_32)
             else -> worldEnvironment.environment?.sdfgiEnabled = false
         }
     }
@@ -220,9 +221,9 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         self.requireAs("VoxelGI", ::Node3D).show()
         self.requireAs("ReflectionProbes", ::Node3D).hide()
         lightmapGi?.queueFree()
-        when (TpsSettings.renderLong("gi_quality")) {
-            TpsSettings.GI_HIGH -> RenderingServer.voxelGiSetQuality(RenderingServer.VoxelGIQuality.HIGH)
-            TpsSettings.GI_LOW -> RenderingServer.voxelGiSetQuality(RenderingServer.VoxelGIQuality.LOW)
+        when (Autoloads.Settings.renderLong("gi_quality")) {
+            Settings.GI_HIGH -> RenderingServer.voxelGiSetQuality(RenderingServer.VoxelGIQuality.HIGH)
+            Settings.GI_LOW -> RenderingServer.voxelGiSetQuality(RenderingServer.VoxelGIQuality.LOW)
             else -> self.requireAs("VoxelGI", ::Node3D).hide()
         }
     }
@@ -239,7 +240,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
             lightmapGi = gi
             self.addChild(gi)
         }
-        if (TpsSettings.renderLong("gi_quality") == TpsSettings.GI_DISABLED) {
+        if (Autoloads.Settings.renderLong("gi_quality") == Settings.GI_DISABLED) {
             lightmapGi?.hide()
             self.requireAs("ReflectionProbes", ::Node3D).hide()
         }

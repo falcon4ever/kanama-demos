@@ -14,7 +14,7 @@ import net.multigesture.kanama.api.Sprite2D
 import net.multigesture.kanama.api.Texture2D
 import net.multigesture.kanama.api.Tween
 import net.multigesture.kanama.api.createTween
-import net.multigesture.kanama.api.kotlinScriptInstance
+import net.multigesture.kanama.generated.Autoloads
 import net.multigesture.kanama.generated.TileSignals
 import net.multigesture.kanama.types.Color
 import net.multigesture.kanama.types.Vector2
@@ -111,8 +111,7 @@ class Tile(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area2
     pitch: Double = 1.0,
     volume: Double = 1.0,
   ) {
-    val audio = self.getNodeOrNull("/root/Audio") ?: return
-    audio.kotlinScriptInstance<Audio>()?.play(soundPath, allowOverlap, pitch, volume)
+    Autoloads.Audio.play(soundPath, allowOverlap, pitch, volume)
   }
 
   private fun sprite(): Sprite2D? = self.getAsOrNull("Sprite2D", ::Sprite2D)

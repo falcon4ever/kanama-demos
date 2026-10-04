@@ -1,12 +1,12 @@
 package net.multigesture.kanama.demos.match3
 
+import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.annotations.ExportSubgroup
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnInput
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.Export
-import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.api.Area2D
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
@@ -24,6 +24,7 @@ import net.multigesture.kanama.api.Texture2D
 import net.multigesture.kanama.api.Tween
 import net.multigesture.kanama.api.createTween
 import net.multigesture.kanama.api.kotlinScriptInstance
+import net.multigesture.kanama.generated.Autoloads
 import net.multigesture.kanama.generated.MainNames
 import net.multigesture.kanama.generated.TileNames
 import net.multigesture.kanama.types.Vector2
@@ -353,8 +354,7 @@ class Main(godotObject: GodotHandle) :
     pitch: Double = 1.0,
     volume: Double = 1.0,
   ) {
-    val audio = self.getNodeOrNull("/root/Audio") ?: return
-    audio.kotlinScriptInstance<Audio>()?.play(soundPath, allowOverlap, pitch, volume)
+    Autoloads.Audio.play(soundPath, allowOverlap, pitch, volume)
   }
 
   // Utilities for coordinates

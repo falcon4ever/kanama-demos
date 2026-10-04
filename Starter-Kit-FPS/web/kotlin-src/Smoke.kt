@@ -3,9 +3,9 @@ package fps
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
-import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.kotlinScriptInstance
+import net.multigesture.kanama.generated.Autoloads
 
 /**
  * Web variant of the FPS smoke root. The desktop Smoke drives an env-gated HEADLESS self-test
@@ -24,10 +24,9 @@ class Smoke(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
     self.getNodeOrNull("Player")?.kotlinScriptInstance<Player>()?.weapons?.forEach {
       it.releaseHydratedAssets()
     }
-    self.getNodeOrNull("/root/Audio")?.let { audio ->
-      audio.kotlinScriptInstance<Audio>()?.stopAll()
-      Node(audio.handle).queueFree()
-    }
+    val audio = Autoloads.Audio
+    audio.stopAll()
+    audio.self.queueFree()
     self.queueFree()
   }
 }

@@ -7,12 +7,13 @@ import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.SpotLight3D
+import net.multigesture.kanama.generated.Autoloads
 
 @ScriptClass(attachTo = "Node3D")
 class FlyingForklift(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
     @OnReady
     fun ready() {
-        if (!TpsSettings.renderBool("shadow_mapping")) {
+        if (!Autoloads.Settings.renderBool("shadow_mapping")) {
             self.requireAs("SpotLight3D", ::SpotLight3D).shadowEnabled = false
         }
         GD.randomize()

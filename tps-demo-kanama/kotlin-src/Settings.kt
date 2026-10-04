@@ -15,15 +15,24 @@ import net.multigesture.kanama.api.RenderingServer
 import net.multigesture.kanama.api.Viewport
 import net.multigesture.kanama.api.Window
 
-object TpsSettings {
-    const val SDFGI = 0L
-    const val VOXEL_GI = 1L
-    const val LIGHTMAP_GI = 2L
-    const val GI_DISABLED = 0L
-    const val GI_LOW = 1L
-    const val GI_HIGH = 2L
+/**
+ * The `Settings` autoload (upstream `settings.gd`): the settings `ConfigFile` and its helpers.
+ * Gameplay scripts reach it as `Autoloads.Settings`, GDScript's global `Settings`.
+ */
+@ScriptClass(attachTo = "Node")
+class Settings(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
+    // The config readers are `internal`: Kotlin callers only (a public function would also be
+    // registered with Godot, and the Web backend has no dispatch arm for `(String) -> Long`).
+    companion object {
+        const val SDFGI = 0L
+        const val VOXEL_GI = 1L
+        const val LIGHTMAP_GI = 2L
+        const val GI_DISABLED = 0L
+        const val GI_LOW = 1L
+        const val GI_HIGH = 2L
 
-    private const val CONFIG_FILE_PATH = "user://settings.ini"
+        private const val CONFIG_FILE_PATH = "user://settings.ini"
+    }
 
     val configFile: ConfigFile = TpsFactory.configFile()
 
@@ -83,13 +92,13 @@ object TpsSettings {
         configFile.close()
     }
 
-    fun videoLong(key: String): Long = (configFile.getValue("video", key) as Number).toLong()
-    fun videoInt(key: String): Int = (configFile.getValue("video", key) as Number).toInt()
-    fun renderLong(key: String): Long = (configFile.getValue("rendering", key) as Number).toLong()
-    fun renderBool(key: String): Boolean = configFile.getValue("rendering", key) as Boolean
-    fun videoDouble(key: String): Double = (configFile.getValue("video", key) as Number).toDouble()
+    internal fun videoLong(key: String): Long = (configFile.getValue("video", key) as Number).toLong()
+    internal fun videoInt(key: String): Int = (configFile.getValue("video", key) as Number).toInt()
+    internal fun renderLong(key: String): Long = (configFile.getValue("rendering", key) as Number).toLong()
+    internal fun renderBool(key: String): Boolean = configFile.getValue("rendering", key) as Boolean
+    internal fun videoDouble(key: String): Double = (configFile.getValue("video", key) as Number).toDouble()
 
-    fun applyGraphicsSettings(window: Window?, environment: Environment?, sceneRoot: Node) {
+    internal fun applyGraphicsSettings(window: Window?, environment: Environment?, sceneRoot: Node) {
         if (DisplayServer.getName() != "headless") {
             window?.mode = Window.Mode(videoLong("display_mode"))
         }
@@ -163,13 +172,10 @@ object TpsSettings {
         env.glowEnabled = renderBool("bloom")
         env.volumetricFogEnabled = renderBool("volumetric_fog")
     }
-}
 
-@ScriptClass(attachTo = "Node")
-class Settings(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
     @OnReady
     fun ready() {
-        TpsSettings.loadSettings()
+        loadSettings()
     }
 
     @OnInput

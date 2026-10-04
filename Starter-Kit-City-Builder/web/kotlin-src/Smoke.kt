@@ -5,6 +5,7 @@ import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.kotlinScriptInstance
+import net.multigesture.kanama.generated.Autoloads
 
 /**
  * Web variant of the smoke node: the desktop Smoke drives an env-gated in-editor GridMap check;
@@ -21,10 +22,9 @@ class Smoke(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) 
       it.model?.close()
       it.model = null
     }
-    self.getNodeOrNull("/root/Audio")?.let { audio ->
-      audio.kotlinScriptInstance<Audio>()?.stopAll()
-      Node(audio.handle).queueFree()
-    }
+    val audio = Autoloads.Audio
+    audio.stopAll()
+    audio.self.queueFree()
     val root = self.getParent() ?: error("Smoke has no parent to tear down")
     Node(root.handle).queueFree()
   }

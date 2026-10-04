@@ -4,6 +4,7 @@ import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
+import net.multigesture.kanama.generated.Autoloads
 
 /**
  * Web variant of the smoke root. The desktop SmokeQuit is an env-gated QUIT TIMER (twenty
@@ -17,7 +18,7 @@ import net.multigesture.kanama.api.Node
 @ScriptClass(attachTo = "Node")
 class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
   fun smokeTeardown() {
-    self.getNodeOrNull("/root/Events")?.let { events -> Node(events.handle).queueFree() }
+    Autoloads.Events.self.queueFree()
     val root = self.getParent() ?: error("SmokeQuit has no parent to tear down")
     Node(root.handle).queueFree()
   }

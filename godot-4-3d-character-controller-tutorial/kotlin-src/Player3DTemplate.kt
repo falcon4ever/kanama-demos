@@ -2,12 +2,12 @@ package charactercontroller
 
 import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.annotations.ExportGroup
+import net.multigesture.kanama.annotations.ExportRange
 import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnInput
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.OnUnhandledInput
-import net.multigesture.kanama.annotations.PropertyHint
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.Camera3D
@@ -21,6 +21,7 @@ import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.castOrNull
+import net.multigesture.kanama.generated.Autoloads
 import net.multigesture.kanama.generated.EventsNames
 import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector3
@@ -43,7 +44,7 @@ class Player3DTemplate(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>
     @Export
     var stoppingSpeed = 1.0
 
-    @Export(hint = PropertyHint.RANGE, hintString = "0.0,1.0,0.01")
+    @ExportRange(0.0, 1.0, 0.01)
     @ExportGroup("Camera")
     var mouseSensitivity = 0.25
 
@@ -79,7 +80,7 @@ class Player3DTemplate(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>
         lastInputDirection = self.globalBasis.z
         startPosition = self.globalPosition
 
-        val events = self.eventsNode()
+        val events = Autoloads.Events.self
         events.signal(EventsNames.Signals.killPlaneTouched).connectObject(self) {
             self.globalPosition = startPosition
             self.velocity = Vector3.ZERO

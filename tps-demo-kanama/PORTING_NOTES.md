@@ -29,7 +29,7 @@ path used by robot death parts.
 
 ## Intentional Differences From Upstream
 
-- `TpsSettings.applyGraphicsSettings()` skips window-mode changes while running
+- `Settings.applyGraphicsSettings()` (the `Settings` autoload, `Autoloads.Settings`) skips window-mode changes while running
   headless so validation does not exercise display mode transitions.
 - The online menu is a touch-sized LAN lobby on every platform. Clients wait
   for `connected_to_server` before loading, report connection errors in-place,
