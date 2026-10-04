@@ -17,8 +17,6 @@ import net.multigesture.kanama.api.CollisionShape3D
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.GodotObject
-import net.multigesture.kanama.api.KanamaCoroutineOwner
-import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.api.MeshInstance3D
@@ -53,12 +51,10 @@ import net.multigesture.kanama.types.Transform3D
 import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector3
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 
 @ScriptClass(attachTo = "CharacterBody3D")
 class RedRobot(godotObject: GodotHandle) :
-  KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D), KanamaCoroutineOwner {
-  override val kanamaScope = KanamaScope()
+  KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
 
   @Export(name = "test_shoot") var testShoot = false
 
@@ -162,7 +158,7 @@ class RedRobot(godotObject: GodotHandle) :
     explosionSound.play()
     self.emitSignal("exploded")
     if (self.getMultiplayer()?.isServer() == true) {
-      kanamaScope.launch {
+      launch {
         SceneTree.delaySeconds(10.0)
         self.queueFree()
       }
@@ -200,7 +196,7 @@ class RedRobot(godotObject: GodotHandle) :
       if (collider != null && player?.handle?.value == collider.handle.value) {
         val hitPlayer = player?.kotlinScriptInstance<Player>()
         if (hitPlayer != null) {
-          kanamaScope.launch {
+          launch {
             SceneTree.delaySeconds(0.1)
             hitPlayer.addCameraShakeTrauma(13.0)
           }
@@ -367,7 +363,7 @@ class RedRobot(godotObject: GodotHandle) :
   @OnExitTree
   fun exitTree() {
     exiting = true
-    kanamaScope.cancel()
+    cancelCoroutines()
     self.setPhysicsProcess(false)
     disableCollision()
     if (::animationTree.isInitialized) {

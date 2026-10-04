@@ -16,8 +16,6 @@ import net.multigesture.kanama.api.CharacterBody3D
 import net.multigesture.kanama.api.CollisionShape3D
 import net.multigesture.kanama.api.CPUParticles3D
 import net.multigesture.kanama.api.GodotObject
-import net.multigesture.kanama.api.KanamaCoroutineOwner
-import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.kotlinScriptInstance
@@ -34,11 +32,9 @@ import net.multigesture.kanama.types.Transform3D
 import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector3
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 
 @ScriptClass(attachTo = "CharacterBody3D")
-class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D), KanamaCoroutineOwner {
-	override val kanamaScope = KanamaScope()
+class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
 
 	@Export(name = "test_shoot")
 	var testShoot = false
@@ -147,7 +143,7 @@ class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotOb
 		explosionSound.play()
 		self.emitSignal("exploded")
 		if (self.isMultiplayerServer()) {
-				kanamaScope.launch {
+				launch {
 					requireNotNull(self.getTree()).createTimer(10.0).signal(Timer.Signals.timeout).await(self, argumentCount = 0)
 					self.queueFree()
 				}
@@ -179,7 +175,7 @@ class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotOb
 			if (collider != null && player?.isSameInstance(collider) == true) {
 					val hitPlayer = player?.kotlinScriptInstance<Player>()
 					if (hitPlayer != null) {
-						kanamaScope.launch {
+						launch {
 							requireNotNull(self.getTree()).createTimer(0.1).signal(Timer.Signals.timeout).await(self, argumentCount = 0)
 							hitPlayer.addCameraShakeTrauma(13.0)
 					}
@@ -324,7 +320,7 @@ class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotOb
 
 	@OnExitTree
 	fun exitTree() {
-		kanamaScope.cancel()
+		cancelCoroutines()
 		self.setPhysicsProcess(false)
 		disableCollision()
 		if (::animationTree.isInitialized) {

@@ -8,8 +8,6 @@ import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.GD
-import net.multigesture.kanama.api.KanamaCoroutineOwner
-import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
@@ -19,11 +17,9 @@ import net.multigesture.kanama.api.SceneTree
 import net.multigesture.kanama.api.createTween
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.types.Vector3
-import kotlinx.coroutines.launch
 
 @ScriptClass(attachTo = "RigidBody3D")
-class Coin(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::RigidBody3D), KanamaCoroutineOwner {
-    override val kanamaScope = KanamaScope()
+class Coin(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::RigidBody3D) {
 
     private lateinit var collectAudio: AudioStreamPlayer3D
     private lateinit var playerDetectionArea: Area3D
@@ -44,7 +40,7 @@ class Coin(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::
         val randPos = (randDir * randDistance).withY(randHeight)
         self.applyCentralImpulse(randPos)
 
-        kanamaScope.launch {
+        launch {
             SceneTree.delaySeconds(coinDelay)
             self.setCollisionLayerValue(3, true)
         }
@@ -91,7 +87,7 @@ class Coin(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::
         }
         self.hide()
 
-        kanamaScope.launch {
+        launch {
             collectAudio.signal(AudioStreamPlayer3D.Signals.finished)
                 .await(self, argumentCount = 0)
             self.queueFree()

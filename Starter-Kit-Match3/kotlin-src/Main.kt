@@ -1,6 +1,5 @@
 package net.multigesture.kanama.demos.match3
 
-import kotlinx.coroutines.launch
 import net.multigesture.kanama.annotations.ExportSubgroup
 import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnInput
@@ -15,8 +14,6 @@ import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.InputEvent
 import net.multigesture.kanama.api.InputEventMouseButton
-import net.multigesture.kanama.api.KanamaCoroutineOwner
-import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.api.MouseButton
@@ -34,8 +31,7 @@ import net.multigesture.kanama.types.Vector2i
 
 @ScriptClass(attachTo = "Node2D")
 class Main(godotObject: GodotHandle) :
-  KanamaScript<Node2D>(godotObject, ::Node2D), KanamaCoroutineOwner {
-  override val kanamaScope = KanamaScope()
+  KanamaScript<Node2D>(godotObject, ::Node2D) {
 
   @ExportSubgroup("Properties") @Export var width: Long = 8
 
@@ -101,7 +97,7 @@ class Main(godotObject: GodotHandle) :
     setCursor(openHandCursor)
 
     setupGridArray()
-    kanamaScope.launch { processBoardState() }
+    launch { processBoardState() }
 
     centerGridOnScreen()
     self.getViewport()?.signal("size_changed")?.connect(self, "center_grid_on_screen")
@@ -109,7 +105,7 @@ class Main(godotObject: GodotHandle) :
 
   @OnExitTree
   fun exitTree() {
-    kanamaScope.cancel()
+    cancelCoroutines()
     for (tween in activeTweens.toList()) {
       tween.kill()
       releaseTween(tween)
@@ -214,7 +210,7 @@ class Main(godotObject: GodotHandle) :
 
   // Game loop
   private fun handleSwapLogic(posA: Vector2i, posB: Vector2i) {
-    kanamaScope.launch {
+    launch {
       isSwapping = true
       swapPieces(posA, posB)
 

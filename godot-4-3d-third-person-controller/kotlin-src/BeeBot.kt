@@ -11,8 +11,6 @@ import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.CollisionShape3D
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
-import net.multigesture.kanama.api.KanamaCoroutineOwner
-import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
@@ -21,11 +19,9 @@ import net.multigesture.kanama.api.SignalConnection
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.SmokePuffNames
 import net.multigesture.kanama.types.Vector3
-import kotlinx.coroutines.launch
 
 @ScriptClass(attachTo = "RigidBody3D")
-class BeeBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::RigidBody3D), KanamaCoroutineOwner {
-	override val kanamaScope = KanamaScope()
+class BeeBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::RigidBody3D) {
 
 	@Export
 	var shootTimer: Double = 1.5
@@ -121,7 +117,7 @@ class BeeBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, 
 		self.gravityScale = 1.0
 		beeRoot.playPoweroff()
 
-		kanamaScope.launch {
+		launch {
 			requireNotNull(self.getTree()).delaySeconds(2.0)
 
 			val puff = DemoScenes.instantiate(DemoScenes.SMOKE_PUFF)

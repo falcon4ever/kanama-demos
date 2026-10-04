@@ -8,17 +8,13 @@ import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
-import net.multigesture.kanama.api.KanamaCoroutineOwner
-import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.generated.SmokePuffSignals
-import kotlinx.coroutines.launch
 
 @ScriptClass(attachTo = "Node3D")
-class SmokePuff(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D), KanamaCoroutineOwner {
-    override val kanamaScope = KanamaScope()
+class SmokePuff(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
 
     @Signal
     fun full() = Unit
@@ -33,7 +29,7 @@ class SmokePuff(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::
 
         val animationPlayer = self.requireAs("AnimationPlayer", ::AnimationPlayer)
         animationPlayer.play("poof")
-        kanamaScope.launch {
+        launch {
             animationPlayer.signal(AnimationMixer.Signals.animationFinished)
                 .await(self, argumentCount = 1)
             self.queueFree()

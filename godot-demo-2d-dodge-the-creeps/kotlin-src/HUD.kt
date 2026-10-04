@@ -6,26 +6,21 @@ import net.multigesture.kanama.annotations.Signal
 import net.multigesture.kanama.api.Button
 import net.multigesture.kanama.api.CanvasLayer
 import net.multigesture.kanama.api.GodotHandle
-import net.multigesture.kanama.api.KanamaCoroutineOwner
-import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Label
 import net.multigesture.kanama.api.Timer
 import net.multigesture.kanama.generated.HUDSignals
-import kotlinx.coroutines.launch
 
 @ScriptClass(attachTo = "CanvasLayer")
-class HUD(godotObject: GodotHandle) : KanamaScript<CanvasLayer>(godotObject, ::CanvasLayer), KanamaCoroutineOwner {
-    override val kanamaScope = KanamaScope()
-
+class HUD(godotObject: GodotHandle) : KanamaScript<CanvasLayer>(godotObject, ::CanvasLayer) {
     /** Emitted when the player presses the start button. */
     @Signal
     fun startGame() = Unit
 
-    private val messageLabel: Label get() = self.requireAs("MessageLabel", ::Label)
-    private val scoreLabel: Label get() = self.requireAs("ScoreLabel", ::Label)
-    private val startButton: Button get() = self.requireAs("StartButton", ::Button)
-    private val messageTimer: Timer get() = self.requireAs("MessageTimer", ::Timer)
+    private val messageLabel by node<Label>("MessageLabel")
+    private val scoreLabel by node<Label>("ScoreLabel")
+    private val startButton by node<Button>("StartButton")
+    private val messageTimer by node<Timer>("MessageTimer")
 
     fun showMessage(text: String) {
         messageLabel.text = text
@@ -34,12 +29,12 @@ class HUD(godotObject: GodotHandle) : KanamaScript<CanvasLayer>(godotObject, ::C
     }
 
     fun showGameOver() {
-        kanamaScope.launch {
+        launch {
             showMessage("Game Over")
-            messageTimer.signal(Timer.Signals.timeout).await(self, argumentCount = 0)
+            messageTimer.signal(Timer.Signals.timeout).await(self)
             messageLabel.text = "Dodge the\nCreeps"
             messageLabel.show()
-            requireNotNull(self.getTree()).delaySeconds(1.0)
+            wait(1.0)
             startButton.show()
         }
     }

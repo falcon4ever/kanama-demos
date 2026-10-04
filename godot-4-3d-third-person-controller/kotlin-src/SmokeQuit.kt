@@ -4,8 +4,6 @@ import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.BaseButton
 import net.multigesture.kanama.api.GodotHandle
-import net.multigesture.kanama.api.KanamaCoroutineOwner
-import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.MainThread
@@ -15,12 +13,10 @@ import net.multigesture.kanama.api.ResourceLoader
 import net.multigesture.kanama.api.SceneTree
 import net.multigesture.kanama.types.Basis
 import net.multigesture.kanama.types.Vector3
-import kotlinx.coroutines.launch
 import kotlin.time.TimeSource
 
 @ScriptClass(attachTo = "Node")
-class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node), KanamaCoroutineOwner {
-    override val kanamaScope = KanamaScope()
+class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
     private val smokeClock = TimeSource.Monotonic.markNow()
 
     // Step markers with elapsed time (task 115). println: on the phone only stdout streams to
@@ -33,7 +29,7 @@ class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::No
     fun ready() {
         if (System.getenv("KANAMA_DEMO_SMOKE_QUIT") != "1") return
         mark("ready: smoke armed")
-        kanamaScope.launch {
+        launch {
             MainThread.awaitNextFrame()
             mark("first frame")
             pressResumeButton()

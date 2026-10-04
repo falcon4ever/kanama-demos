@@ -1,6 +1,5 @@
 package thirdperson
 
-import kotlinx.coroutines.launch
 import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
@@ -11,8 +10,6 @@ import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.CollisionShape3D
 import net.multigesture.kanama.api.GodotHandle
-import net.multigesture.kanama.api.KanamaCoroutineOwner
-import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.NavigationAgent3D
 import net.multigesture.kanama.api.Node
@@ -27,8 +24,7 @@ import net.multigesture.kanama.generated.SmokePuffNames
 import net.multigesture.kanama.types.Vector3
 
 @ScriptClass(attachTo = "RigidBody3D")
-class BeetleBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::RigidBody3D), KanamaCoroutineOwner {
-    override val kanamaScope = KanamaScope()
+class BeetleBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::RigidBody3D) {
 
     @Export
     var coinsCount: Long = 5
@@ -135,7 +131,7 @@ class BeetleBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObjec
         self.setAxisLock(PhysicsServer3D.BodyAxis.ANGULAR_Z, false)
         self.gravityScale = 1.0
 
-        kanamaScope.launch {
+        launch {
             requireNotNull(self.getTree()).delaySeconds(2.0)
 
             val puff = DemoScenes.instantiate(DemoScenes.SMOKE_PUFF)

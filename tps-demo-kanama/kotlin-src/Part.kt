@@ -7,8 +7,6 @@ import net.multigesture.kanama.annotations.Rpc
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.api.CollisionShape3D
-import net.multigesture.kanama.api.KanamaCoroutineOwner
-import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Material
@@ -22,11 +20,9 @@ import net.multigesture.kanama.api.ShaderMaterial
 import net.multigesture.kanama.api.Timer
 import net.multigesture.kanama.types.Vector3
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 
 @ScriptClass(attachTo = "RigidBody3D")
-class Part(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::RigidBody3D), KanamaCoroutineOwner {
-    override val kanamaScope = KanamaScope()
+class Part(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::RigidBody3D) {
 
     @Export
     var lifetime = 3.0
@@ -96,7 +92,7 @@ class Part(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::
         self.linearVelocity = Vector3.UP * 3.0
         self.angularVelocity =
             (Vector3(net.multigesture.kanama.api.GD.randf(), net.multigesture.kanama.api.GD.randf(), net.multigesture.kanama.api.GD.randf()).normalized() * 2.0 - Vector3.ONE) * 10.0
-        kanamaScope.launch {
+        launch {
             val delay = if (System.getenv("KANAMA_TPS_SMOKE_FAST_PARTS") == "1") {
                 0.1
             } else {
@@ -135,7 +131,7 @@ class Part(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::
         releaseDuplicatedMaterials()
         if (System.getenv("KANAMA_TPS_SMOKE_QUIT_AFTER_PARTS_DESTROYED") == "1") {
             net.multigesture.kanama.api.GD.print("TPS smoke part destroyed")
-            kanamaScope.launch {
+            launch {
                 val delay = System.getenv("KANAMA_TPS_SMOKE_QUIT_AFTER_PARTS_DESTROYED_DELAY")?.toDoubleOrNull() ?: 4.0
                 requireNotNull(self.getTree()).createTimer(delay).signal(Timer.Signals.timeout).await(self, argumentCount = 0)
                 requireNotNull(self.getTree()).quit()
@@ -145,7 +141,7 @@ class Part(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::
 
     @OnExitTree
     fun exitTree() {
-        kanamaScope.cancel()
+        cancelCoroutines()
         self.setProcess(false)
         disableCollision()
         releaseDuplicatedMaterials()

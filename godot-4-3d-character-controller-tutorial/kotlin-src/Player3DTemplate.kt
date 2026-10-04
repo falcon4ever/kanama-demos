@@ -20,7 +20,7 @@ import net.multigesture.kanama.api.InputEventMouseMotion
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.api.Node3D
-import net.multigesture.kanama.api.kotlinScriptInstance
+import net.multigesture.kanama.api.castOrNull
 import net.multigesture.kanama.generated.EventsNames
 import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector3
@@ -66,27 +66,18 @@ class Player3DTemplate(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>
     private lateinit var lastInputDirection: Vector3
     private lateinit var startPosition: Vector3
 
-    private lateinit var cameraPivot: Node3D
-    private lateinit var camera: Camera3D
-    private lateinit var skinNode: Node3D
-    private lateinit var skin: SophiaSkin
-    private lateinit var landingSound: AudioStreamPlayer3D
-    private lateinit var jumpSound: AudioStreamPlayer3D
-    private lateinit var dustParticles: GPUParticles3D
+    private val cameraPivot by node<Node3D>("%CameraPivot")
+    private val camera by node<Camera3D>("%Camera3D")
+    private val skinNode by node<Node3D>("%SophiaSkin")
+    private val skin by script<SophiaSkin>("%SophiaSkin")
+    private val landingSound by node<AudioStreamPlayer3D>("%LandingSound")
+    private val jumpSound by node<AudioStreamPlayer3D>("%JumpSound")
+    private val dustParticles by node<GPUParticles3D>("%DustParticles")
 
     @OnReady
     fun ready() {
         lastInputDirection = self.globalBasis.z
         startPosition = self.globalPosition
-
-        cameraPivot = self.requireAs("%CameraPivot", ::Node3D)
-        camera = self.requireAs("%Camera3D", ::Camera3D)
-        skinNode = self.requireAs("%SophiaSkin", ::Node3D)
-        skin = skinNode.kotlinScriptInstance<SophiaSkin>()
-            ?: error("%SophiaSkin is missing SophiaSkin script instance")
-        landingSound = self.requireAs("%LandingSound", ::AudioStreamPlayer3D)
-        jumpSound = self.requireAs("%JumpSound", ::AudioStreamPlayer3D)
-        dustParticles = self.requireAs("%DustParticles", ::GPUParticles3D)
 
         val events = self.eventsNode()
         events.signal(EventsNames.Signals.killPlaneTouched).connectObject(self) {
@@ -104,27 +95,23 @@ class Player3DTemplate(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>
 
     @OnExitTree
     fun exitTree() {
-        if (this::landingSound.isInitialized) {
-            landingSound.stop()
-        }
-        if (this::jumpSound.isInitialized) {
-            jumpSound.stop()
-        }
+        if (!self.isNodeReady()) return
+        landingSound.stop()
+        jumpSound.stop()
     }
 
     @OnInput
     fun input(event: InputEvent) {
-        val inputEvent = event
-        if (inputEvent.isActionPressed("ui_cancel")) {
+        if (event.isActionPressed("ui_cancel")) {
             Input.setMouseMode(Input.MouseMode.VISIBLE)
-        } else if (inputEvent.isActionPressed("left_click")) {
+        } else if (event.isActionPressed("left_click")) {
             Input.setMouseMode(Input.MouseMode.CAPTURED)
         }
     }
 
     @OnUnhandledInput
     fun unhandledInput(event: InputEvent) {
-        val motion = InputEventMouseMotion.from(event) ?: return
+        val motion = event.castOrNull<InputEventMouseMotion>() ?: return
         if (Input.getMouseMode() != Input.MouseMode.CAPTURED) return
         val relative = motion.getRelative()
         cameraInputDirection = Vector2(-relative.x.toDouble() * mouseSensitivity, relative.y.toDouble() * mouseSensitivity)

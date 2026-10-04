@@ -11,8 +11,6 @@ import net.multigesture.kanama.api.CharacterBody3D
 import net.multigesture.kanama.api.CollisionShape3D
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.InputEvent
-import net.multigesture.kanama.api.KanamaCoroutineOwner
-import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.LightmapGI
@@ -30,8 +28,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 @ScriptClass(attachTo = "Node3D")
-class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D), KanamaCoroutineOwner {
-    override val kanamaScope = KanamaScope()
+class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
 
     private var lightmapGi: LightmapGI? = null
     private lateinit var worldEnvironment: WorldEnvironment
@@ -82,7 +79,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         }
         GD.print("TPS Level ready: complete")
         if (shouldQuitAfterReady) {
-            kanamaScope.launch {
+            launch {
                 requireNotNull(self.getTree()).createTimer(5.0).signal(Timer.Signals.timeout).await(self, argumentCount = 0)
                 if (!self.isQueuedForDeletion() && self.isInsideTree()) {
                     GD.print("TPS smoke second level ready; quitting")
@@ -136,7 +133,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         val robotCount = System.getenv("KANAMA_TPS_SMOKE_KILL_ROBOTS")?.toIntOrNull()?.coerceAtLeast(1) ?: 1
         val delayBetweenKills = System.getenv("KANAMA_TPS_SMOKE_KILL_ROBOT_DELAY")?.toDoubleOrNull() ?: 3.0
         val useRealBullets = System.getenv("KANAMA_TPS_SMOKE_REAL_BULLETS") == "1"
-        kanamaScope.launch {
+        launch {
             repeat(robotCount) { index ->
                 if (index > 0) {
                     requireNotNull(self.getTree()).createTimer(delayBetweenKills).signal(Timer.Signals.timeout).await(self, argumentCount = 0)
@@ -156,7 +153,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
                         return@postNextFrame
                     }
                     if (useRealBullets) {
-                        kanamaScope.launch {
+                        scriptScope.launch {
                             repeat(5) { shot ->
                                 if (exiting || robot.isQueuedForDeletion() || !robot.isInsideTree()) return@launch
                                 MainThread.postNextFrame {
@@ -260,7 +257,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
 
     @GodotName("_respawn_robot")
     fun respawnRobot(spawnPoint: Node3D) {
-        kanamaScope.launch {
+        launch {
             requireNotNull(self.getTree()).createTimer(15.0).signal(Timer.Signals.timeout).await(self, argumentCount = 0)
             if (exiting || self.isQueuedForDeletion() || !self.isInsideTree()) return@launch
             spawnRobot(spawnPoint)
@@ -292,7 +289,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         val event = inputEvent
         if (event.isActionPressed("quit")) {
             exiting = true
-            kanamaScope.cancel()
+            cancelCoroutines()
             Input.setMouseMode(Input.MouseMode.VISIBLE)
             self.emitSignal("quit")
         }
@@ -301,7 +298,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
     @OnExitTree
     fun exitTree() {
         exiting = true
-        kanamaScope.cancel()
+        cancelCoroutines()
     }
 
     @Signal

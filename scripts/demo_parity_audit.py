@@ -23,7 +23,7 @@ CALL_RE = re.compile(r"\.call\(\s*\"([^\"]+)\"")
 SIGNAL_RE = re.compile(r"\.signal\(\s*\"([^\"]+)\"")
 CONNECT_STRING_RE = re.compile(r"\.connect\([^,\n]+,\s*\"([^\"]+)\"")
 UNLOAD_THEN_SCOPED_LAUNCH_RE = re.compile(
-    r"SceneTree\.unloadCurrentScene\(\)(?P<body>.{0,800}?)\bkanamaScope\.launch\s*\{",
+    r"SceneTree\.unloadCurrentScene\(\)(?P<body>.{0,800}?)(?<![\w.])(?:scriptScope\.)?launch\s*\{",
     re.DOTALL,
 )
 # Ownership rules (Kanama task 97). The one rule lives in kanama
@@ -186,7 +186,7 @@ def audit_file(path: Path, root: Path) -> list[Finding]:
             rel,
             text,
             match.start(),
-            "work scheduled after SceneTree.unloadCurrentScene() must not use scene-owned kanamaScope; use MainThread.postAfterFrames",
+            "work scheduled after SceneTree.unloadCurrentScene() must not use the scene-owned script scope (launch); use MainThread.postAfterFrames",
         )
 
     for match in BORROWED_VIEW_CLOSE_RE.finditer(text):

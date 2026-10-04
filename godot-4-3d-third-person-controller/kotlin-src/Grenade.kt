@@ -9,24 +9,19 @@ import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.CharacterBody3D
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
-import net.multigesture.kanama.api.KanamaCoroutineOwner
-import net.multigesture.kanama.api.KanamaScope
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.ProjectSettings
 import net.multigesture.kanama.api.Timer
 import net.multigesture.kanama.types.Vector3
-import kotlinx.coroutines.launch
 
 @ScriptClass(attachTo = "CharacterBody3D")
 class Grenade(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(
     godotObject,
     ::CharacterBody3D,
-),
-    KanamaCoroutineOwner {
+) {
 
-    override val kanamaScope = KanamaScope()
 
     private val gravity = ProjectSettings.getSettingDouble("physics/3d/default_gravity")
 
@@ -85,7 +80,7 @@ class Grenade(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(
         }
 
         self.hide()
-        kanamaScope.launch {
+        launch {
             explosionSound.signal(AudioStreamPlayer3D.Signals.finished)
                 .await(self, argumentCount = 0)
             self.queueFree()
