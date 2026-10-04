@@ -1,9 +1,9 @@
 package dodge
 
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.api.AudioStreamPlayer
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
@@ -21,7 +21,7 @@ import net.multigesture.kanama.types.Vector2
 
 @ScriptClass(attachTo = "Node")
 class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
-    @ScriptProperty
+    @Export
     var mobScene: PackedScene? = null
 
     private var score: Long = 0
@@ -51,7 +51,6 @@ class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         deathSound = self.requireAs("DeathSound", ::AudioStreamPlayer)
     }
 
-    @RegisterFunction("game_over")
     fun gameOver() {
         scoreTimer.stop()
         mobTimer.stop()
@@ -60,7 +59,6 @@ class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         deathSound.play()
     }
 
-    @RegisterFunction("new_game")
     fun newGame() {
         requireNotNull(self.getTree()).callGroup("mobs", "queue_free")
         score = 0
@@ -71,7 +69,7 @@ class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         music.play()
     }
 
-    @RegisterFunction("_on_MobTimer_timeout")
+    @GodotName("_on_MobTimer_timeout")
     fun onMobTimerTimeout() {
         // Create a new instance of the Mob scene.
         val mobNode = mobScene?.instantiate() ?: error("Main.mob_scene is not assigned")
@@ -98,13 +96,13 @@ class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         self.addChild(mob)
     }
 
-    @RegisterFunction("_on_ScoreTimer_timeout")
+    @GodotName("_on_ScoreTimer_timeout")
     fun onScoreTimerTimeout() {
         score += 1
         hud.updateScore(score)
     }
 
-    @RegisterFunction("_on_StartTimer_timeout")
+    @GodotName("_on_StartTimer_timeout")
     fun onStartTimerTimeout() {
         mobTimer.start()
         scoreTimer.start()

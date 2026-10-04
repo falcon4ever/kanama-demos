@@ -7,7 +7,6 @@ import net.multigesture.kanama.api.ConfigFile
 import net.multigesture.kanama.api.DisplayServer
 import net.multigesture.kanama.api.Engine
 import net.multigesture.kanama.api.Environment
-import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.InputEvent
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
@@ -174,8 +173,8 @@ class Settings(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Nod
     }
 
     @OnInput
-    fun input(inputEvent: GodotObject) {
-        val event = InputEvent(inputEvent.handle)
+    fun input(inputEvent: InputEvent) {
+        val event = inputEvent
         if (event.isActionPressed("toggle_fullscreen")) {
             val window = self.getWindow()
             val mode = window?.mode ?: Window.Mode.WINDOWED

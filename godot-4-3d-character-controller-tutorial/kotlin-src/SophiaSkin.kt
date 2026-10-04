@@ -2,9 +2,9 @@ package charactercontroller
 
 import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.annotations.GlobalClass
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.AnimationMixer
 import net.multigesture.kanama.api.AnimationNodeStateMachinePlayback
@@ -69,7 +69,7 @@ class SophiaSkin(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, :
         eyeMaterial = null
     }
 
-    @RegisterFunction("set_blink")
+    @GodotName("set_blink")
     fun applyBlink(state: Boolean) {
         if (blink == state) return
         blink = state
@@ -81,38 +81,32 @@ class SophiaSkin(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, :
         }
     }
 
-    @RegisterFunction("_set_run_tilt")
+    @GodotName("_set_run_tilt")
     fun setRunTilt(value: Double) {
         runTilt = value.coerceIn(-1.0, 1.0)
         animationTree.setParameter(MOVE_TILT_PATH, runTilt)
     }
 
-    @RegisterFunction
     fun idle() {
         stateMachine.travel(States.IDLE)
     }
 
-    @RegisterFunction
     fun move() {
         stateMachine.travel(States.MOVE)
     }
 
-    @RegisterFunction
     fun fall() {
         stateMachine.travel(States.FALL)
     }
 
-    @RegisterFunction
     fun jump() {
         stateMachine.travel(States.JUMP)
     }
 
-    @RegisterFunction("edge_grab")
     fun edgeGrab() {
         stateMachine.travel(States.EDGE_GRAB)
     }
 
-    @RegisterFunction("wall_slide")
     fun wallSlide() {
         stateMachine.travel(States.WALL_SLIDE)
     }

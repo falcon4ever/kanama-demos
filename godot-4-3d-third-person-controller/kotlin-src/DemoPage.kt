@@ -11,6 +11,7 @@ import net.multigesture.kanama.api.Control
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Input
+import net.multigesture.kanama.api.InputEvent
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.MainThread
 import net.multigesture.kanama.api.Node
@@ -86,8 +87,8 @@ class DemoPage(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Nod
     }
 
     @OnInput
-    fun input(event: GodotObject) {
-        val inputEvent = net.multigesture.kanama.api.InputEvent(event.handle)
+    fun input(event: InputEvent) {
+        val inputEvent = event
         if (inputEvent.isActionPressed("pause") && !inputEvent.isEcho()) {
             if (requireNotNull(self.getTree()).isPaused()) {
                 resumeDemo()

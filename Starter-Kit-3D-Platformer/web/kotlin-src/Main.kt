@@ -1,7 +1,7 @@
 package net.multigesture.kanama.demos.platformer3d
 
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.CanvasLayer
 import net.multigesture.kanama.api.DirectionalLight3D
@@ -29,12 +29,12 @@ class Main(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3
     }
   }
 
-  @RegisterFunction("_on_jump_button_button_down")
+  @GodotName("_on_jump_button_button_down")
   fun onJumpButtonButtonDown() {
     Input.actionPress("jump")
   }
 
-  @RegisterFunction("_on_jump_button_button_up")
+  @GodotName("_on_jump_button_button_up")
   fun onJumpButtonButtonUp() {
     Input.actionRelease("jump")
   }

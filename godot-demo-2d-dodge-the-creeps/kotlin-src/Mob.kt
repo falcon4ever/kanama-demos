@@ -1,7 +1,7 @@
 package dodge
 
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.AnimatedSprite2D
 import net.multigesture.kanama.api.GD
@@ -23,7 +23,7 @@ class Mob(godotObject: GodotHandle) : KanamaScript<RigidBody2D>(godotObject, ::R
         animatedSprite.play()
     }
 
-    @RegisterFunction("_on_VisibilityNotifier2D_screen_exited")
+    @GodotName("_on_VisibilityNotifier2D_screen_exited")
     fun onVisibilityNotifier2DScreenExited() {
         self.queueFree()
     }

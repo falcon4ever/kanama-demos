@@ -6,13 +6,12 @@ import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.OnUnhandledInput
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.Camera3D
 import net.multigesture.kanama.api.CharacterBody3D
 import net.multigesture.kanama.api.GPUParticles3D
 import net.multigesture.kanama.api.GodotHandle
-import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.InputEvent
 import net.multigesture.kanama.api.InputEventMouseMotion
@@ -33,25 +32,25 @@ import net.multigesture.kanama.types.Vector3
 @ScriptClass(attachTo = "CharacterBody3D")
 class Player3DTemplate(godotObject: GodotHandle) :
   KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
-  @ScriptProperty var moveSpeed = 8.0
+  @Export var moveSpeed = 8.0
 
-  @ScriptProperty var acceleration = 20.0
+  @Export var acceleration = 20.0
 
-  @ScriptProperty var jumpImpulse = 12.0
+  @Export var jumpImpulse = 12.0
 
-  @ScriptProperty var rotationSpeed = 12.0
+  @Export var rotationSpeed = 12.0
 
-  @ScriptProperty var stoppingSpeed = 1.0
+  @Export var stoppingSpeed = 1.0
 
-  @ScriptProperty var mouseSensitivity = 0.25
+  @Export var mouseSensitivity = 0.25
 
-  @ScriptProperty var controllerCameraSensitivity = 2.5
+  @Export var controllerCameraSensitivity = 2.5
 
   // Spelled literals (Mathf.PI / 3.0 and -Mathf.PI / 8.0): expression defaults are not
   // portable to the Web proxy, which needs a plain literal it can re-emit.
-  @ScriptProperty var tiltUpperLimit = 1.0471975511965976
+  @Export var tiltUpperLimit = 1.0471975511965976
 
-  @ScriptProperty var tiltLowerLimit = -0.39269908169872414
+  @Export var tiltLowerLimit = -0.39269908169872414
 
   private var gravity = -30.0
   private var wasOnFloorLastFrame = true
@@ -107,8 +106,8 @@ class Player3DTemplate(godotObject: GodotHandle) :
   }
 
   @OnInput
-  fun input(event: GodotObject) {
-    val inputEvent = InputEvent(event.handle)
+  fun input(event: InputEvent) {
+    val inputEvent = event
     if (inputEvent.isActionPressed("ui_cancel")) {
       Input.setMouseMode(Input.MouseMode.VISIBLE)
     } else if (inputEvent.isActionPressed("left_click")) {
@@ -117,7 +116,7 @@ class Player3DTemplate(godotObject: GodotHandle) :
   }
 
   @OnUnhandledInput
-  fun unhandledInput(event: GodotObject) {
+  fun unhandledInput(event: InputEvent) {
     val motion = InputEventMouseMotion.from(event) ?: return
     if (Input.getMouseMode() != Input.MouseMode.CAPTURED) return
     val relative = motion.getRelative()

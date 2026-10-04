@@ -4,12 +4,12 @@ import net.multigesture.kanama.annotations.OnInput
 import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.api.Camera3D
 import net.multigesture.kanama.api.CanvasItem
 import net.multigesture.kanama.api.GodotHandle
-import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Input
+import net.multigesture.kanama.api.InputEvent
 import net.multigesture.kanama.api.InputEventKey
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Key
@@ -21,10 +21,10 @@ import net.multigesture.kanama.types.Vector3
 
 @ScriptClass(attachTo = "Node3D")
 class CameraMode(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
-    @ScriptProperty
+    @Export
     var cameraSpeed: Long = 10L
 
-    @ScriptProperty
+    @Export
     var mouseSensitivity: Double = 0.01
 
     private var camera: Camera3D? = null
@@ -41,7 +41,7 @@ class CameraMode(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, :
     }
 
     @OnInput
-    fun input(event: GodotObject) {
+    fun input(event: InputEvent) {
         val keyEvent = InputEventKey.from(event) ?: return
         if (keyEvent.isPressed() && !keyEvent.isEcho() && keyEvent.getKeycode() == Key.F10) {
             toggleCameraMode()

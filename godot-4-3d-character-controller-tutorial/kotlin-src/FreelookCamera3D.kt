@@ -8,7 +8,6 @@ import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.Camera3D
 import net.multigesture.kanama.api.GodotHandle
-import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.InputEvent
 import net.multigesture.kanama.api.InputEventKey
@@ -49,8 +48,8 @@ class FreelookCamera3D(godotObject: GodotHandle) : KanamaScript<Camera3D>(godotO
     }
 
     @OnInput
-    fun input(event: GodotObject) {
-        val inputEvent = InputEvent(event.handle)
+    fun input(event: InputEvent) {
+        val inputEvent = event
         if (inputEvent.isActionPressed("toggle_freelook_camera")) {
             toggleCameraMode()
         }

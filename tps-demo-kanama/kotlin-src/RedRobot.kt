@@ -3,10 +3,10 @@ package tps
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.Rpc
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.Signal
 import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.AnimationTree
@@ -40,24 +40,24 @@ import kotlinx.coroutines.launch
 class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D), KanamaCoroutineOwner {
 	override val kanamaScope = KanamaScope()
 
-	@ScriptProperty(name = "test_shoot")
+	@Export(name = "test_shoot")
 	var testShoot = false
 
-	@ScriptProperty(name = "target_position")
+	@Export(name = "target_position")
 	var targetPosition = Vector3.ZERO
 
-	@ScriptProperty
+	@Export
 	var health = 5L
 
 	// Spelled literal (State.APPROACH.id): expression defaults are not portable to the Web proxy.
-	@ScriptProperty
+	@Export
 	var state = 0L
 
-	@ScriptProperty
+	@Export
 	var dead = false
 
 	// Spelled literal (AIM_PREPARE_TIME): expression defaults are not portable to the Web proxy.
-	@ScriptProperty(name = "aim_preparing")
+	@Export(name = "aim_preparing")
 	var aimPreparing = 0.5
 
 	private var shootCountdown = SHOOT_WAIT
@@ -120,14 +120,12 @@ class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotOb
 		animate(0.0)
 	}
 
-	@RegisterFunction("resume_approach")
 	fun resumeApproach() {
 		state = State.APPROACH.id
 		aimPreparing = AIM_PREPARE_TIME
 		shootCountdown = SHOOT_WAIT
 	}
 
-	@RegisterFunction
 	@Rpc(callLocal = true)
 	fun hit() {
 		if (dead) return
@@ -156,7 +154,6 @@ class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotOb
 		}
 	}
 
-	@RegisterFunction
 	fun shoot() {
 		val rayOrigin = rayFrom.globalTransform.origin
 		val rayDir = rayFrom.globalTransform.basis.y
@@ -290,25 +287,23 @@ class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotOb
 		self.globalTransform = self.globalTransform.withBasis(orientation.basis)
 	}
 
-	@RegisterFunction("play_shoot")
 	@Rpc(callLocal = true)
 	fun playShoot() {
 		shootAnimation.play("shoot")
 	}
 
-	@RegisterFunction("shoot_check")
 	fun shootCheck() {
 		testShoot = true
 	}
 
-	@RegisterFunction("_clip_ray")
+	@GodotName("_clip_ray")
 	fun clipRay(length: Double) {
 		if (OS.hasFeature("dedicated_server")) return
 		val material = rayMesh.shaderMaterialOverride() ?: return
 		material.setShaderParameter("clip", length + rayMesh.position.z)
 	}
 
-	@RegisterFunction("_on_area_body_entered")
+	@GodotName("_on_area_body_entered")
 	fun onAreaBodyEntered(body: GodotObject) {
 		val node = Node3D(body.handle)
 		if (node.kotlinScriptInstance<Player>() != null || node.getName() == "Target") {
@@ -316,7 +311,7 @@ class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotOb
 		}
 	}
 
-	@RegisterFunction("_on_area_body_exited")
+	@GodotName("_on_area_body_exited")
 	fun onAreaBodyExited(body: GodotObject) {
 		val node = Node3D(body.handle)
 		if (player?.isSameInstance(node) == true) {

@@ -3,7 +3,7 @@ package net.multigesture.kanama.demos.bunnymark
 import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
@@ -12,7 +12,7 @@ import net.multigesture.kanama.types.Vector2
 
 @ScriptClass(attachTo = "Sprite2D")
 class BunnyKanama(godotObject: GodotHandle) : KanamaScript<Sprite2D>(godotObject, ::Sprite2D) {
-    @ScriptProperty
+    @Export
     var speed: Vector2 = Vector2(0.0, 0.0)
 
     private val gravity = 500.0

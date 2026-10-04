@@ -1,9 +1,9 @@
 package tps
 
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.OnInput
 import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.Signal
 import net.multigesture.kanama.api.GD
@@ -248,7 +248,6 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         }
     }
 
-    @RegisterFunction("spawn_robot")
     fun spawnRobot(spawnPoint: Node3D) {
         if (exiting || self.isQueuedForDeletion() || !self.isInsideTree()) return
         GD.print("TPS Level spawnRobot: ${spawnPoint.getName()}")
@@ -259,7 +258,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         spawnedNodes.addChild(robotNode, true)
     }
 
-    @RegisterFunction("_respawn_robot")
+    @GodotName("_respawn_robot")
     fun respawnRobot(spawnPoint: Node3D) {
         kanamaScope.launch {
             requireNotNull(self.getTree()).createTimer(15.0).signal(Timer.Signals.timeout).await(self, argumentCount = 0)
@@ -268,7 +267,6 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         }
     }
 
-    @RegisterFunction("del_player")
     fun delPlayer(id: Long) {
         val name = id.toString()
         if (spawnedNodes.hasNode(name)) {
@@ -276,7 +274,6 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         }
     }
 
-    @RegisterFunction("add_player")
     fun addPlayer(id: Long, spawnPoint: Marker3D? = null) {
         GD.print("TPS Level addPlayer: $id")
         val chosen = spawnPoint
@@ -291,8 +288,8 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
     }
 
     @OnInput
-    fun input(inputEvent: net.multigesture.kanama.api.GodotObject) {
-        val event = InputEvent(inputEvent.handle)
+    fun input(inputEvent: InputEvent) {
+        val event = inputEvent
         if (event.isActionPressed("quit")) {
             exiting = true
             kanamaScope.cancel()

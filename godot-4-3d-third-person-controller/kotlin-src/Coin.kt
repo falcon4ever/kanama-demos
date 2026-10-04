@@ -1,9 +1,9 @@
 package thirdperson
 
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.AudioStreamPlayer3D
@@ -37,7 +37,6 @@ class Coin(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::
         playerDetectionArea = self.requireAs("PlayerDetectionArea", ::Area3D)
     }
 
-    @RegisterFunction
     fun spawn(coinDelay: Double = 0.5) {
         val randHeight = MIN_LAUNCH_HEIGHT + (GD.randf() * MAX_LAUNCH_HEIGHT)
         val randDir = Vector3.FORWARD.rotated(Vector3.UP, GD.randf() * 2.0 * Mathf.PI)
@@ -71,7 +70,7 @@ class Coin(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::
         }
     }
 
-    @RegisterFunction("_follow")
+    @GodotName("_follow")
     fun follow(offset: Double) {
         val currentTarget = target ?: return
         self.globalPosition = initialTweenPosition.lerp(currentTarget.globalPosition, offset)
@@ -82,7 +81,7 @@ class Coin(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::
         setTarget(body)
     }
 
-    @RegisterFunction("_collect")
+    @GodotName("_collect")
     fun collect() {
         collectAudio.setPitchScale(GD.randfn(1.0, 0.1))
         collectAudio.play()

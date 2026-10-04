@@ -5,14 +5,15 @@ import net.multigesture.kanama.annotations.ExportSubgroup
 import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnInput
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.api.Area2D
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Input
+import net.multigesture.kanama.api.InputEvent
 import net.multigesture.kanama.api.InputEventMouseButton
 import net.multigesture.kanama.api.KanamaCoroutineOwner
 import net.multigesture.kanama.api.KanamaScope
@@ -36,21 +37,21 @@ class Main(godotObject: GodotHandle) :
   KanamaScript<Node2D>(godotObject, ::Node2D), KanamaCoroutineOwner {
   override val kanamaScope = KanamaScope()
 
-  @ExportSubgroup("Properties") @ScriptProperty var width: Long = 8
+  @ExportSubgroup("Properties") @Export var width: Long = 8
 
-  @ScriptProperty var height: Long = 8
+  @Export var height: Long = 8
 
-  @ScriptProperty var offset: Long = 68
+  @Export var offset: Long = 68
 
-  @ExportSubgroup("Scenes") @ScriptProperty var tileScene: PackedScene? = null
+  @ExportSubgroup("Scenes") @Export var tileScene: PackedScene? = null
 
-  @ScriptProperty var sparklesScene: PackedScene? = null
+  @Export var sparklesScene: PackedScene? = null
 
-  @ExportSubgroup("Tiles") @ScriptProperty var textures: List<Texture2D> = emptyList()
+  @ExportSubgroup("Tiles") @Export var textures: List<Texture2D> = emptyList()
 
-  @ExportSubgroup("Cursors") @ScriptProperty var openHandCursor: Texture2D? = null
+  @ExportSubgroup("Cursors") @Export var openHandCursor: Texture2D? = null
 
-  @ScriptProperty var closedHandCursor: Texture2D? = null
+  @Export var closedHandCursor: Texture2D? = null
 
   private lateinit var container: Node2D
 
@@ -80,7 +81,6 @@ class Main(godotObject: GodotHandle) :
    * lives in SmokeQuit, not here, so no smoke logic can ride a player's default path -- the
    * exact accident shape task 88 found in the emitter's `47` echo probe.
    */
-  @RegisterFunction("differential_probe")
   fun differentialProbe(): String =
     listOf(
         "width=$width",
@@ -124,7 +124,6 @@ class Main(godotObject: GodotHandle) :
   }
 
   // Centers the board on-screen; the connection above keeps it centered after resizing the window.
-  @RegisterFunction("center_grid_on_screen")
   fun centerGridOnScreen() {
     val viewportRect = self.getViewport()?.getVisibleRect() ?: return
     container.position =
@@ -170,7 +169,7 @@ class Main(godotObject: GodotHandle) :
   }
 
   // Interaction
-  @RegisterFunction("_on_tile_pressed")
+  @GodotName("_on_tile_pressed")
   fun onTilePressed(gridPosition: Vector2i) {
     if (!isSwapping) {
       firstTouch = gridPosition
@@ -179,7 +178,7 @@ class Main(godotObject: GodotHandle) :
   }
 
   @OnInput
-  fun input(event: GodotObject) {
+  fun input(event: InputEvent) {
     val mouseButton = InputEventMouseButton.from(event) ?: return
     if (
       mouseButton.getButtonIndex() == MouseButton.LEFT &&

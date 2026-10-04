@@ -1,10 +1,10 @@
 package fps
 
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.Process
-import net.multigesture.kanama.annotations.RegisterFunction
+import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.api.AnimatedSprite3D
 import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.GD
@@ -19,7 +19,7 @@ import net.multigesture.kanama.types.Vector3
 @ScriptClass(attachTo = "Area3D")
 class Enemy(godotObject: GodotHandle) : KanamaScript<Area3D>(godotObject, ::Area3D) {
 
-  @ScriptProperty var player: Node3D? = null
+  @Export var player: Node3D? = null
 
   private lateinit var raycast: RayCast3D
   private lateinit var muzzleA: AnimatedSprite3D
@@ -39,7 +39,7 @@ class Enemy(godotObject: GodotHandle) : KanamaScript<Area3D>(godotObject, ::Area
     targetPosition = self.position
   }
 
-  @Process
+  @OnProcess
   fun process(delta: Double) {
     val target = player ?: return
     self.lookAt(target.position + Vector3(0.0, 0.5, 0.0), Vector3.UP, useModelFront = true)
@@ -48,7 +48,6 @@ class Enemy(godotObject: GodotHandle) : KanamaScript<Area3D>(godotObject, ::Area
     self.position = targetPosition
   }
 
-  @RegisterFunction("damage")
   fun damage(amount: Double) {
     playAudio("sounds/enemy_hurt.ogg")
     health -= amount
@@ -58,14 +57,13 @@ class Enemy(godotObject: GodotHandle) : KanamaScript<Area3D>(godotObject, ::Area
     }
   }
 
-  @RegisterFunction("destroy")
   fun destroy() {
     playAudio("sounds/enemy_destroy.ogg")
     destroyed = true
     self.queueFree()
   }
 
-  @RegisterFunction("_on_timer_timeout")
+  @GodotName("_on_timer_timeout")
   fun onTimerTimeout() {
     raycast.forceRaycastUpdate()
 

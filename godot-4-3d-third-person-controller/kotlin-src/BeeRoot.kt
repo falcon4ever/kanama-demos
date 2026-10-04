@@ -2,7 +2,6 @@ package thirdperson
 
 import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.AnimationMixer
 import net.multigesture.kanama.api.AnimationNodeStateMachinePlayback
@@ -26,17 +25,14 @@ class BeeRoot(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::No
         playIdle()
     }
 
-    @RegisterFunction("play_idle")
     fun playIdle() {
         stateMachine.travel(States.IDLE)
     }
 
-    @RegisterFunction("play_spit_attack")
     fun playSpitAttack() {
         stateMachine.travel(States.SPIT_ATTACK)
     }
 
-    @RegisterFunction("play_poweroff")
     fun playPoweroff() {
         stateMachine.travel(States.POWER_OFF)
     }

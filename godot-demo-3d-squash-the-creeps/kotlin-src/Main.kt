@@ -2,14 +2,13 @@ package squash
 
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.OnUnhandledInput
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.api.Control
 import net.multigesture.kanama.api.DirectionalLight3D
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
-import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.InputEvent
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Label
@@ -25,7 +24,7 @@ import net.multigesture.kanama.generated.ScoreLabelNames
 
 @ScriptClass(attachTo = "Node")
 class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
-  @ScriptProperty var mobScene: PackedScene? = null
+  @Export var mobScene: PackedScene? = null
 
   private lateinit var retry: Control
   private lateinit var mobSpawnLocation: PathFollow3D
@@ -62,20 +61,20 @@ class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
   }
 
   @OnUnhandledInput
-  fun unhandledInput(event: GodotObject) {
-    if (InputEvent(event.handle).isActionPressed("ui_accept") && retry.isVisible()) {
+  fun unhandledInput(event: InputEvent) {
+    if (event.isActionPressed("ui_accept") && retry.isVisible()) {
       retryCurrentScene()
     }
   }
 
-  @RegisterFunction("_on_retry_button_pressed")
+  @GodotName("_on_retry_button_pressed")
   fun onRetryButtonPressed() {
     if (retry.isVisible()) {
       retryCurrentScene()
     }
   }
 
-  @RegisterFunction("_on_mob_timer_timeout")
+  @GodotName("_on_mob_timer_timeout")
   fun onMobTimerTimeout() {
     // Create a new instance of the Mob scene.
     val mob = mobScene?.instantiate() ?: return
@@ -94,7 +93,7 @@ class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
     mob.signal(MobNames.Signals.squashed).connect(scoreLabel, ScoreLabelNames.Methods.onMobSquashed)
   }
 
-  @RegisterFunction("_on_player_hit")
+  @GodotName("_on_player_hit")
   fun onPlayerHit() {
     mobTimer.stop()
     retry.show()

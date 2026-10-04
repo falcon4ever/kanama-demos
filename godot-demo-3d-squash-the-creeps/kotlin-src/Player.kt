@@ -2,9 +2,9 @@ package squash
 
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.Signal
 import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.CharacterBody3D
@@ -22,16 +22,16 @@ import net.multigesture.kanama.types.Vector3
 class Player(godotObject: GodotHandle) :
   KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
   /** How fast the player moves in meters per second. */
-  @ScriptProperty var speed: Long = 14
+  @Export var speed: Long = 14
 
   /** Vertical impulse applied to the character upon jumping in meters per second. */
-  @ScriptProperty var jumpImpulse: Long = 20
+  @Export var jumpImpulse: Long = 20
 
   /** Vertical impulse applied to the character upon bouncing over a mob in meters per second. */
-  @ScriptProperty var bounceImpulse: Long = 16
+  @Export var bounceImpulse: Long = 16
 
   /** The downward acceleration when in the air, in meters per second. */
-  @ScriptProperty var fallAcceleration: Long = 75
+  @Export var fallAcceleration: Long = 75
 
   @Signal fun hit() = Unit
 
@@ -113,7 +113,7 @@ class Player(godotObject: GodotHandle) :
     self.queueFree()
   }
 
-  @RegisterFunction("_on_MobDetector_body_entered")
+  @GodotName("_on_MobDetector_body_entered")
   fun onMobDetectorBodyEntered(_body: GodotObject) {
     die()
   }

@@ -3,7 +3,6 @@ package tps
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.Rpc
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.AnimationPlayer
@@ -68,7 +67,6 @@ class Bullet(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
         }
     }
 
-    @RegisterFunction
     @Rpc(callLocal = true)
     fun explode() {
         if (exploded) return
@@ -82,7 +80,6 @@ class Bullet(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
         }
     }
 
-    @RegisterFunction
     fun destroy() {
         if (self.isMultiplayerServer()) {
             self.queueFree()

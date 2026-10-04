@@ -5,7 +5,6 @@ import net.multigesture.kanama.annotations.ExportSubgroup
 import net.multigesture.kanama.annotations.GlobalClass
 import net.multigesture.kanama.annotations.PropertyHint
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.PackedScene
 import net.multigesture.kanama.api.Texture2D
@@ -20,13 +19,13 @@ import net.multigesture.kanama.web.KanamaWebScript
 @ScriptClass(attachTo = "Resource")
 @GlobalClass
 class Weapon(objectId: GodotHandle) : KanamaWebScript(objectId) {
-  @ExportSubgroup("Model") @ScriptProperty var model: PackedScene? = null
+  @ExportSubgroup("Model") @Export var model: PackedScene? = null
 
-  @ScriptProperty var position: Vector3 = Vector3.ZERO
+  @Export var position: Vector3 = Vector3.ZERO
 
-  @ScriptProperty var rotation: Vector3 = Vector3.ZERO
+  @Export var rotation: Vector3 = Vector3.ZERO
 
-  @ScriptProperty var muzzlePosition: Vector3 = Vector3.ZERO
+  @Export var muzzlePosition: Vector3 = Vector3.ZERO
 
   @ExportSubgroup("Properties")
   @Export(hint = PropertyHint.RANGE, hintString = "0.1,1")
@@ -42,13 +41,13 @@ class Weapon(objectId: GodotHandle) : KanamaWebScript(objectId) {
 
   @Export(hint = PropertyHint.RANGE, hintString = "0,50,1") var knockback: Long = 20
 
-  @ScriptProperty var minKnockback: Vector2 = Vector2(0.001f, 0.001f)
+  @Export var minKnockback: Vector2 = Vector2(0.001f, 0.001f)
 
-  @ScriptProperty var maxKnockback: Vector2 = Vector2(0.0025f, 0.002f)
+  @Export var maxKnockback: Vector2 = Vector2(0.0025f, 0.002f)
 
-  @ExportSubgroup("Sounds") @ScriptProperty var soundShoot: String = ""
+  @ExportSubgroup("Sounds") @Export var soundShoot: String = ""
 
-  @ExportSubgroup("Crosshair") @ScriptProperty var crosshair: Texture2D? = null
+  @ExportSubgroup("Crosshair") @Export var crosshair: Texture2D? = null
 
   /**
    * Harness-only: releases the hydrated sub-resource handles so the smoke's teardown can drain to

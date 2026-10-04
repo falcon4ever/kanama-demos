@@ -5,7 +5,6 @@ import net.multigesture.kanama.annotations.ExportSubgroup
 import net.multigesture.kanama.annotations.GlobalClass
 import net.multigesture.kanama.annotations.PropertyHint
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.PackedScene
@@ -18,16 +17,16 @@ import net.multigesture.kanama.types.Vector3
 @GlobalClass
 class Weapon(godotObject: GodotHandle) : KanamaScript<Resource>(godotObject, Resource::fromHandle) {
     @ExportSubgroup("Model")
-    @ScriptProperty
+    @Export
     var model: PackedScene? = null
 
-    @ScriptProperty
+    @Export
     var position: Vector3 = Vector3.ZERO
 
-    @ScriptProperty
+    @Export
     var rotation: Vector3 = Vector3.ZERO
 
-    @ScriptProperty
+    @Export
     var muzzlePosition: Vector3 = Vector3.ZERO
 
     @ExportSubgroup("Properties")
@@ -49,17 +48,17 @@ class Weapon(godotObject: GodotHandle) : KanamaScript<Resource>(godotObject, Res
     @Export(hint = PropertyHint.RANGE, hintString = "0,50,1")
     var knockback: Long = 20
 
-    @ScriptProperty
+    @Export
     var minKnockback: Vector2 = Vector2(0.001f, 0.001f)
 
-    @ScriptProperty
+    @Export
     var maxKnockback: Vector2 = Vector2(0.0025f, 0.002f)
 
     @ExportSubgroup("Sounds")
-    @ScriptProperty
+    @Export
     var soundShoot: String = ""
 
     @ExportSubgroup("Crosshair")
-    @ScriptProperty
+    @Export
     var crosshair: Texture2D? = null
 }

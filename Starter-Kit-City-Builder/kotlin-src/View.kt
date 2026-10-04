@@ -2,11 +2,11 @@ package citybuilder
 
 import net.multigesture.kanama.annotations.OnInput
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.Process
+import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GodotHandle
-import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Input
+import net.multigesture.kanama.api.InputEvent
 import net.multigesture.kanama.api.InputEventMouseMotion
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Mathf
@@ -27,7 +27,7 @@ class View(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3
     cameraRotation = self.rotationDegrees
   }
 
-  @Process
+  @OnProcess
   fun process(delta: Double) {
     self.position = self.position.lerp(cameraPosition, delta * 8.0)
     self.rotationDegrees = self.rotationDegrees.lerp(cameraRotation, delta * 6.0)
@@ -54,7 +54,7 @@ class View(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3
   }
 
   @OnInput
-  fun input(event: GodotObject) {
+  fun input(event: InputEvent) {
     val motion = InputEventMouseMotion.from(event) ?: return
     if (Input.isActionPressed("camera_rotate")) {
       cameraRotation += Vector3(0, -motion.getRelative().x.toDouble() / 10.0, 0)

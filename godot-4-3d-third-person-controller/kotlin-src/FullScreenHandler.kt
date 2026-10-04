@@ -4,8 +4,8 @@ import net.multigesture.kanama.annotations.OnInput
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GodotHandle
-import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Input
+import net.multigesture.kanama.api.InputEvent
 import net.multigesture.kanama.api.InputEventKey
 import net.multigesture.kanama.api.InputEventMouseButton
 import net.multigesture.kanama.api.KanamaScript
@@ -27,7 +27,7 @@ class FullScreenHandler(godotObject: GodotHandle) : KanamaScript<Node>(godotObje
     }
 
     @OnInput
-    fun input(event: GodotObject) {
+    fun input(event: InputEvent) {
         // Godot 4 spells the browser feature tag "web" (the Godot-3 "HTML5" tag is false on every
         // 4.x platform, so this branch never ran anywhere). Desktop is unaffected: "web" is false there.
         if (OS.hasFeature("web")) {

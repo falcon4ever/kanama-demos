@@ -3,9 +3,8 @@ package thirdperson
 import net.multigesture.kanama.annotations.GlobalClass
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.annotations.Signal
 import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.AudioStreamPlayer3D
@@ -34,37 +33,37 @@ import net.multigesture.kanama.types.Vector3
 @ScriptClass(attachTo = "CharacterBody3D")
 class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
 
-	@ScriptProperty
+	@Export
 	var moveSpeed = 8.0
 
-	@ScriptProperty
+	@Export
 	var bulletSpeed = 10.0
 
-	@ScriptProperty
+	@Export
 	var attackImpulse = 10.0
 
-	@ScriptProperty
+	@Export
 	var acceleration = 4.0
 
-	@ScriptProperty
+	@Export
 	var jumpInitialImpulse = 12.0
 
-	@ScriptProperty
+	@Export
 	var jumpAdditionalForce = 4.5
 
-	@ScriptProperty
+	@Export
 	var rotationSpeed = 12.0
 
-	@ScriptProperty
+	@Export
 	var stoppingSpeed = 1.0
 
-	@ScriptProperty
+	@Export
 	var maxThrowbackForce = 15.0
 
-	@ScriptProperty
+	@Export
 	var shootCooldown = 0.5
 
-	@ScriptProperty
+	@Export
 	var grenadeCooldown = 0.5
 
 	private lateinit var rotationRoot: Node3D
@@ -238,14 +237,12 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 		}
 	}
 
-	@RegisterFunction
 	fun attack() {
 		attackAnimationPlayer.play("Attack")
 		characterSkin.punch()
 		self.velocity = rotationRoot.transform.basis * Vector3.BACK * attackImpulse
 	}
 
-	@RegisterFunction
 	fun shoot() {
 		val origin = self.globalPosition + Vector3.UP
 		val aimTarget = cameraController.getAimTarget()
@@ -253,21 +250,17 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 		DemoScenes.launchBullet(self.getParent(), self, origin, aimDirection * bulletSpeed, 14.0)
 	}
 
-	@RegisterFunction("reset_position")
 	fun resetPosition() {
 		self.transform = self.transform.withOrigin(startPosition)
 	}
 
-	@RegisterFunction("get_ground_height")
 	fun getGroundHeight(): Double = groundHeight
 
-	@RegisterFunction("collect_coin")
 	fun collectCoin() {
 		coins += 1
 		uiCoinsContainer.updateCoinsAmount(coins)
 	}
 
-	@RegisterFunction("lose_coins")
 	fun loseCoins() {
 		val lostCoins = Mathf.min(coins, 5L)
 		coins -= lostCoins
@@ -282,13 +275,11 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 		uiCoinsContainer.updateCoinsAmount(coins)
 	}
 
-	@RegisterFunction("play_foot_step_sound")
 	fun playFootStepSound() {
 		stepSound.setPitchScale(GD.randfn(1.2, 0.2))
 		stepSound.play()
 	}
 
-	@RegisterFunction
 	fun damage(impactPoint: Vector3, force: Vector3) {
 		self.velocity = force.withY(Mathf.abs(force.y.toDouble())).limitLength(maxThrowbackForce)
 		loseCoins()

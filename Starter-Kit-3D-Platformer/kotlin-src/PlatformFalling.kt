@@ -1,8 +1,8 @@
 package net.multigesture.kanama.demos.platformer3d
 
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.OnPhysicsProcess
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
@@ -44,7 +44,7 @@ class PlatformFalling(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObje
         audio.call("play", path)
     }
 
-    @RegisterFunction("_on_body_entered")
+    @GodotName("_on_body_entered")
     fun onBodyEntered(_body: Node) {
         if (!falling) {
             playAudio("res://sounds/fall.ogg")

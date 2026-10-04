@@ -1,8 +1,8 @@
 package thirdperson
 
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.AudioStreamPlayer3D
@@ -58,7 +58,7 @@ class Grenade(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(
         }
     }
 
-    @RegisterFunction("throw")
+    @GodotName("throw")
     fun throwGrenade(throwVelocity: Vector3) {
         grenadeVelocity = throwVelocity
     }

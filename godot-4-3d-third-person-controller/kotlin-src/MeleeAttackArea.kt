@@ -1,7 +1,6 @@
 package thirdperson
 
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.CollisionShape3D
@@ -23,12 +22,10 @@ class MeleeAttackArea(godotObject: GodotHandle) : KanamaScript<Area3D>(godotObje
         }
     }
 
-    @RegisterFunction
     fun activate() {
         collisionShape.setDeferred("disabled", false)
     }
 
-    @RegisterFunction
     fun deactivate() {
         collisionShape.setDeferred("disabled", true)
     }

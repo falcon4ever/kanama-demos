@@ -3,10 +3,9 @@ package tps
 import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.Rpc
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.api.CollisionShape3D
 import net.multigesture.kanama.api.KanamaCoroutineOwner
 import net.multigesture.kanama.api.KanamaScope
@@ -29,16 +28,16 @@ import kotlinx.coroutines.launch
 class Part(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::RigidBody3D), KanamaCoroutineOwner {
     override val kanamaScope = KanamaScope()
 
-    @ScriptProperty
+    @Export
     var lifetime = 3.0
 
-    @ScriptProperty(name = "lifetime_random")
+    @Export(name = "lifetime_random")
     var lifetimeRandom = 3.0
 
-    @ScriptProperty(name = "disappearing_time")
+    @Export(name = "disappearing_time")
     var disappearingTime = 0.5
 
-    @ScriptProperty(name = "fade_value")
+    @Export(name = "fade_value")
     var fadeValue = 0.0
         set(value) {
             field = value
@@ -86,7 +85,6 @@ class Part(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::
         }
     }
 
-    @RegisterFunction
     fun explode() {
         if (exploded || self.isQueuedForDeletion() || !self.isInsideTree()) return
         exploded = true
@@ -122,7 +120,6 @@ class Part(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::
         }
     }
 
-    @RegisterFunction
     @Rpc(callLocal = true)
     fun destroy() {
         if (destroying || self.isQueuedForDeletion() || !self.isInsideTree()) return

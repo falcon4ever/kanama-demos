@@ -1,8 +1,8 @@
 package net.multigesture.kanama.demos.platformer3d
 
+import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.GPUParticles3D
@@ -34,7 +34,7 @@ class Coin(godotObject: GodotHandle) : KanamaScript<Area3D>(godotObject, ::Area3
       ?: error("Coin requires the Audio autoload")
   }
 
-  @RegisterFunction("_on_body_entered")
+  @GodotName("_on_body_entered")
   fun onBodyEntered(body: Node3D) {
     if (grabbed) return
     val player = body.kotlinScriptInstance<Player>() ?: return

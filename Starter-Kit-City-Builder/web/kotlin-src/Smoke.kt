@@ -1,6 +1,5 @@
 package citybuilder
 
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
@@ -15,7 +14,6 @@ import net.multigesture.kanama.api.kotlinScriptInstance
  */
 @ScriptClass(attachTo = "Node")
 class Smoke(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
-  @RegisterFunction("smoke_teardown")
   fun smokeTeardown() {
     // Structure resources persist in Godot's cache; release their hydrated PackedScene
     // handles so the live-handle count can drain to zero.

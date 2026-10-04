@@ -1,7 +1,6 @@
 package thirdperson
 
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.Signal
 import net.multigesture.kanama.api.AnimationMixer
@@ -41,7 +40,6 @@ class SmokePuff(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::
         }
     }
 
-    @RegisterFunction("smoke_at_full_density")
     fun smokeAtFullDensity() {
         SmokePuffSignals.full(this)
     }

@@ -3,15 +3,13 @@ package tps
 import net.multigesture.kanama.annotations.OnInput
 import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.Rpc
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.Camera3D
 import net.multigesture.kanama.api.CollisionObject3D
 import net.multigesture.kanama.api.ColorRect
-import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.InputEvent
 import net.multigesture.kanama.api.InputEventMouseMotion
@@ -37,37 +35,37 @@ class PlayerInputSynchronizer(godotObject: GodotHandle) :
     private var toggledAim = false
     private var aimingTimer = 0.0
 
-    @ScriptProperty
+    @Export
     var aiming = false
 
-    @ScriptProperty(name = "shoot_target")
+    @Export(name = "shoot_target")
     var shootTarget = Vector3.ZERO
 
-    @ScriptProperty
+    @Export
     var motion = Vector2.ZERO
 
-    @ScriptProperty
+    @Export
     var shooting = false
 
-    @ScriptProperty
+    @Export
     var jumping = false
 
-    @ScriptProperty(name = "camera_animation")
+    @Export(name = "camera_animation")
     var cameraAnimation: AnimationPlayer? = null
 
-    @ScriptProperty
+    @Export
     var crosshair: TextureRect? = null
 
-    @ScriptProperty(name = "camera_base")
+    @Export(name = "camera_base")
     var cameraBase: Node3D? = null
 
-    @ScriptProperty(name = "camera_rot")
+    @Export(name = "camera_rot")
     var cameraRot: Node3D? = null
 
-    @ScriptProperty(name = "camera_camera")
+    @Export(name = "camera_camera")
     var cameraCamera: Camera3D? = null
 
-    @ScriptProperty(name = "color_rect")
+    @Export(name = "color_rect")
     var colorRect: ColorRect? = null
 
     @OnReady
@@ -130,7 +128,7 @@ class PlayerInputSynchronizer(godotObject: GodotHandle) :
     }
 
     @OnInput
-    fun input(inputEvent: GodotObject) {
+    fun input(inputEvent: InputEvent) {
         val motionEvent = InputEventMouseMotion.from(inputEvent)
         if (motionEvent != null) {
             var cameraSpeed = CAMERA_MOUSE_ROTATION_SPEED
@@ -139,7 +137,6 @@ class PlayerInputSynchronizer(godotObject: GodotHandle) :
         }
     }
 
-    @RegisterFunction("rotate_camera")
     fun rotateCamera(move: Vector2) {
         val base = cameraBase ?: return
         val rot = cameraRot ?: return
@@ -150,17 +147,14 @@ class PlayerInputSynchronizer(godotObject: GodotHandle) :
         )
     }
 
-    @RegisterFunction("get_aim_rotation")
     fun getAimRotation(): Double {
         val cameraX = (cameraRot?.rotation?.x?.toDouble() ?: 0.0).coerceIn(CAMERA_X_ROT_MIN, CAMERA_X_ROT_MAX)
         return if (cameraX >= 0.0) -cameraX / CAMERA_X_ROT_MAX else cameraX / CAMERA_X_ROT_MIN
     }
 
-    @RegisterFunction("get_camera_base_quaternion")
     fun getCameraBaseQuaternion(): Quaternion =
         cameraBase?.globalTransform?.basis?.getRotationQuaternion() ?: Quaternion.IDENTITY
 
-    @RegisterFunction("get_camera_rotation_basis")
     fun getCameraRotationBasis(): Basis =
         cameraRot?.globalTransform?.basis ?: Basis.IDENTITY
 
@@ -168,7 +162,6 @@ class PlayerInputSynchronizer(godotObject: GodotHandle) :
         cameraCamera?.kotlinScriptInstance<CameraNoiseShakeEffect>()?.addTrauma(amount)
     }
 
-    @RegisterFunction
     @Rpc(callLocal = true)
     fun jump() {
         jumping = true

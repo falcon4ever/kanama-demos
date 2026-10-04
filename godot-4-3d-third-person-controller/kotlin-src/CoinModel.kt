@@ -4,14 +4,14 @@ import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.Time
 
 @ScriptClass(attachTo = "Node3D")
 class CoinModel(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
-    @ScriptProperty
+    @Export
     var yAmplitude: Double = 0.04
 
     @OnProcess

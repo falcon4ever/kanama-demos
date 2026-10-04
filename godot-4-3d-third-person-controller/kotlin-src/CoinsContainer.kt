@@ -1,7 +1,6 @@
 package thirdperson
 
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.Control
 import net.multigesture.kanama.api.GodotHandle
@@ -26,7 +25,6 @@ class CoinsContainer(godotObject: GodotHandle) : KanamaScript<Control>(godotObje
         }
     }
 
-    @RegisterFunction("update_coins_amount")
     fun updateCoinsAmount(amount: Long) {
         if (displayTimer.isStopped()) {
             tweenPosition(DISPLAY_Y_POS)

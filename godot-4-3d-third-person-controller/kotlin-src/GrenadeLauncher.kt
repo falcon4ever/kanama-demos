@@ -4,9 +4,8 @@ import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.RegisterFunction
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.ScriptProperty
+import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.api.CharacterBody3D
 import net.multigesture.kanama.api.CollisionObject3D
 import net.multigesture.kanama.api.Engine
@@ -25,19 +24,19 @@ import net.multigesture.kanama.types.Vector3
 
 @ScriptClass(attachTo = "Node3D")
 class GrenadeLauncher(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
-    @ScriptProperty
+    @Export
     var minThrowDistance: Double = 7.0
 
-    @ScriptProperty
+    @Export
     var maxThrowDistance: Double = 16.0
 
-    @ScriptProperty
+    @Export
     var gravity: Double = 16.0
 
-    @ScriptProperty
+    @Export
     var fromLookPosition: Vector3 = Vector3.ZERO
 
-    @ScriptProperty
+    @Export
     var throwDirection: Vector3 = Vector3.ZERO
 
     private lateinit var snapMesh: Node3D
@@ -89,7 +88,6 @@ class GrenadeLauncher(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObje
         }
     }
 
-    @RegisterFunction("throw_grenade")
     fun throwGrenade(): Boolean {
         if (!self.isVisible()) return false
 
