@@ -62,6 +62,10 @@ Self-check:
       the check's own red run is re-executed without a phone: copy a green console.log and add one
       FAULT line (anywhere, including between FAULT-PROBE lines), edit a summary line to faults=8
       expected=7, or delete the two summary lines — each must trip it.
+  scripts/ios_device_run.sh --self-test-console-checks
+      Run the console checks (runtime self-test verdict, FAULT lines, fault counts) against built-in fixture logs,
+      including the one that reported exit 0 over `OBJECTCALLS SELFTEST FAIL:` and `2 failed`; no device. Exit 0/1.
+      KANAMA_IOS_REQUIRE_SELFTEST=1 makes a console with no self-test text at all fail too.
   scripts/ios_device_run.sh --self-test-app-pids
       Run the app-pid parser (used to close the app after a run) against built-in samples of the
       `devicectl device info processes` output; no device needed. Exit 0/1.
@@ -106,8 +110,57 @@ FAULT_LINE_MARKER='[kanama][ios][c] FAULT '
 # Printed by the C ptrcall matrix at the start of every debug self-test, before any Kotlin row.
 SELFTEST_RAN_MARKER='PTRCALL SELFTEST MATRIX'
 
+# Task 118 (found by a device run: step exit 0 with `OBJECTCALLS SELFTEST FAIL: ...` and `306 passed, 2 failed`
+# on the console): the runtime self-tests' OWN verdict is part of this check, as in kanama's ios_visual_smoke.sh.
+#   * any `SELFTEST FAIL:` line fails the run;
+#   * any summary line (PTRCALL matrix or ObjectCalls, the early one and the final one alike) with a non-zero
+#     failed count fails the run;
+#   * a console that shows the self-test ran must carry BOTH summaries, `PTRCALL SELFTEST MATRIX: N passed, 0 failed`
+#     and `OBJECTCALLS SELFTEST: N passed, 0 failed`; a missing one means the self-test did not finish.
+# How the runner knows the app prints self-tests: it does not assume it. This runner always builds Debug, which
+# prints them, but an older KANAMA_ROOT or a release build prints none; so the self-test is "expected" when the
+# console shows any self-test text (the matrix marker, a FAIL line or a summary), or when
+# KANAMA_IOS_REQUIRE_SELFTEST=1 is set (then a console with none at all fails too). The default stays marker-based so
+# a runtime that predates self-tests is not failed for lacking them.
+SELFTEST_ANY_RE='SELFTEST( MATRIX)?[:( ]'
+REQUIRE_SELFTEST="${KANAMA_IOS_REQUIRE_SELFTEST:-0}"
+
+check_selftest_verdict() {
+  local log="$1" fail_lines bad_summaries any
+  # justified: grep exits 1 when nothing matches, which is the clean case; the checks below read the captured text.
+  fail_lines="$(grep -E 'SELFTEST FAIL:' "$log" 2>/dev/null || true)"
+  if [[ -n "$fail_lines" ]]; then
+    echo "[ios_device_run] console: a runtime self-test reported a FAILURE: $log"
+    printf '%s\n' "$fail_lines" | head -n 5 | sed 's/^/[ios_device_run]   /'
+    return 1
+  fi
+  # justified: grep exits 1 when no summary has a failed count, which is the clean case.
+  bad_summaries="$(grep -E 'SELFTEST( MATRIX)?: [0-9]+ passed, [1-9][0-9]* failed' "$log" 2>/dev/null || true)"
+  if [[ -n "$bad_summaries" ]]; then
+    echo "[ios_device_run] console: a runtime self-test summary has failures: $log"
+    printf '%s\n' "$bad_summaries" | head -n 5 | sed 's/^/[ios_device_run]   /'
+    return 1
+  fi
+  # justified: grep -c prints 0 and exits 1 when nothing matches, which is the answer, not an error.
+  any="$(grep -c -E "$SELFTEST_ANY_RE" "$log" 2>/dev/null || true)"
+  : "${any:=0}"
+  if (( any > 0 || REQUIRE_SELFTEST == 1 )); then
+    if ! grep -q -E 'PTRCALL SELFTEST MATRIX: [0-9]+ passed, 0 failed' "$log" 2>/dev/null; then  # justified: the grep status is the test
+      echo "[ios_device_run] console: no 'PTRCALL SELFTEST MATRIX: N passed, 0 failed' summary line; the self-test did not finish (or did not run, with KANAMA_IOS_REQUIRE_SELFTEST=1): $log"
+      return 1
+    fi
+    if ! grep -q -E 'OBJECTCALLS SELFTEST: [0-9]+ passed, 0 failed' "$log" 2>/dev/null; then  # justified: the grep status is the test
+      echo "[ios_device_run] console: no 'OBJECTCALLS SELFTEST: N passed, 0 failed' summary line; the self-test did not finish (or did not run, with KANAMA_IOS_REQUIRE_SELFTEST=1): $log"
+      return 1
+    fi
+  fi
+  return 0
+}
+
 check_console_faults() {
   local log="$1"
+
+  check_selftest_verdict "$log" || return 1
 
   local first
   # justified: awk exits non-zero only when the log is unreadable, and the callers have just written or checked it.
@@ -292,6 +345,64 @@ self_test_app_pids() {
   echo "[ios_device_run] app pid parser self-test: PASS"
 }
 
+# Device-free red runs of check_console_faults against fixture console logs (task 118): the clean log must pass,
+# and each broken one must fail with its own message. Includes the 2026-10 device run that reported exit 0 over
+# `OBJECTCALLS SELFTEST FAIL: ...` and `306 passed, 2 failed`. Exit 0/1.
+self_test_console_checks() {
+  local dir failures=0
+  dir="$(mktemp -d "${TMPDIR:-/tmp}/ios_device_run_console.XXXXXX")"
+  local good="$dir/good.log"
+  cat >"$good" <<'LOG'
+[kanama][ios] runtime up
+PTRCALL SELFTEST MATRIX: 120 passed, 0 failed
+[kanama][ios][c] FAULT-PROBE kanama_ios_godot_get_method_bind: bind-lookup-failed Node3D.set_visible
+OBJECTCALLS SELFTEST: 308 passed, 0 failed faults=7 expected=7
+[kanama:smoke] SmokeQuit complete
+LOG
+  case_log() {  # <label> <expect: pass|fail> <expected text in output, or -> <log file> [REQUIRE_SELFTEST]
+    local out rc=0
+    out="$(REQUIRE_SELFTEST="${5:-0}" check_console_faults "$4" 2>&1)" || rc=$?
+    if [[ "$2" == "pass" && "$rc" -eq 0 ]] ||
+       [[ "$2" == "fail" && "$rc" -ne 0 && ( "$3" == "-" || "$out" == *"$3"* ) ]]; then
+      echo "[ios_device_run] console self-test ok:   $1 -> $2"
+    else
+      echo "[ios_device_run] console self-test FAIL: $1 expected $2 ${3:+('$3')}, got rc=$rc: $out"
+      failures=$((failures + 1))
+    fi
+  }
+  case_log "clean log" pass - "$good"
+  # the reported case: FAIL line and a failed count, everything else healthy
+  sed 's/OBJECTCALLS SELFTEST: 308 passed, 0 failed/OBJECTCALLS SELFTEST FAIL: property-retain(a new set releases the old values)\nOBJECTCALLS SELFTEST: 306 passed, 2 failed/' "$good" >"$dir/r1.log"
+  case_log "FAIL line + 2 failed (the device run)" fail "reported a FAILURE" "$dir/r1.log"
+  grep -v 'SELFTEST FAIL' "$dir/r1.log" >"$dir/r2.log"
+  case_log "ObjectCalls summary with failures, no FAIL line" fail "summary has failures" "$dir/r2.log"
+  sed 's/MATRIX: 120 passed, 0 failed/MATRIX: 119 passed, 1 failed/' "$good" >"$dir/r3.log"
+  case_log "PTRCALL matrix summary with a failure" fail "summary has failures" "$dir/r3.log"
+  { grep -v 'OBJECTCALLS SELFTEST' "$good"; echo 'OBJECTCALLS SELFTEST: 12 passed, 0 failed'; echo 'OBJECTCALLS SELFTEST: 306 passed, 2 failed faults=7 expected=7'; } >"$dir/r4.log"
+  case_log "early summary clean, final summary failed" fail "summary has failures" "$dir/r4.log"
+  grep -v 'OBJECTCALLS SELFTEST' "$good" >"$dir/r5.log"
+  case_log "self-test ran, ObjectCalls summary missing" fail "no 'OBJECTCALLS SELFTEST: N passed, 0 failed'" "$dir/r5.log"
+  { echo '[kanama][ios] runtime up'; echo 'OBJECTCALLS SELFTEST: 308 passed, 0 failed faults=7 expected=7'; } >"$dir/r6.log"
+  case_log "ObjectCalls summary present, matrix summary missing" fail "no 'PTRCALL SELFTEST MATRIX: N passed, 0 failed'" "$dir/r6.log"
+  printf '[kanama][ios] runtime up\n' >"$dir/r7.log"
+  case_log "no self-test text at all, not required (older runtime)" pass - "$dir/r7.log"
+  case_log "no self-test text at all, KANAMA_IOS_REQUIRE_SELFTEST=1" fail "did not run" "$dir/r7.log" 1
+  { cat "$good"; echo '[kanama][ios][c] FAULT kanama_ios_godot_ptrcall: null-bind'; } >"$dir/r8.log"
+  case_log "a real FAULT line" fail "reported a FAULT" "$dir/r8.log"
+  sed 's/faults=7 expected=7/faults=8 expected=7/' "$good" >"$dir/r9.log"
+  case_log "faults=8 expected=7" fail "fault count disagrees" "$dir/r9.log"
+  rm -rf "$dir"
+  if (( failures > 0 )); then
+    echo "[ios_device_run] console checks self-test: FAIL ($failures)"
+    return 1
+  fi
+  echo "[ios_device_run] console checks self-test: PASS"
+}
+
+if [[ "${1:-}" == "--self-test-console-checks" ]]; then
+  self_test_console_checks && exit 0
+  exit 1
+fi
 if [[ "${1:-}" == "--self-test-app-pids" ]]; then
   self_test_app_pids && exit 0
   exit 1

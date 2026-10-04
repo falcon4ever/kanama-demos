@@ -183,6 +183,18 @@ run_smoke() {
   else
     env "$@" "${command[@]}" 2>&1 | tee "$console_log_file"
   fi
+  # Task 118: a demo whose smoke is SmokeQuit (KANAMA_DEMO_SMOKE_QUIT=1) must print its completion line, as the iOS
+  # runner requires; a run that exits without it never ran its checks to the end (a timeout alone is the only
+  # other signal, and `timeout` is optional above). FPS, Racing and City-Builder smokes quit from ready() instead
+  # and print no line: their failure is a Kotlin exception, which keeps the game running until the timeout.
+  case " $* " in
+    *" KANAMA_DEMO_SMOKE_QUIT=1 "*)
+      if ! grep -qF '[kanama:smoke] SmokeQuit complete' "$console_log_file"; then
+        echo "[desktop_smoke_all] $folder: the SmokeQuit completion line '[kanama:smoke] SmokeQuit complete' never appeared; its checks did not finish: $console_log_file" >&2
+        exit 1
+      fi
+      ;;
+  esac
   assert_no_hard_log_errors "$folder" "runtime" "$log_file"
   assert_no_hard_log_errors "$folder" "runtime (console)" "$console_log_file"
   assert_no_per_tick_leaks "$folder" "$console_log_file"
