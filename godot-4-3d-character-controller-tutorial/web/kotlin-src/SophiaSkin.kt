@@ -20,7 +20,21 @@ import net.multigesture.kanama.api.Timer
 @ScriptClass(attachTo = "Node3D")
 class SophiaSkin(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
 
-  @Export var blink = true
+  @Export
+  var blink = true
+    set(state) {
+      if (field == state) return
+      field = state
+      // Scene/inspector writes can land before _ready, when the timers are not resolved yet;
+      // ready() applies the initial value then.
+      if (!::closedEyesTimer.isInitialized) return
+      if (state) {
+        blinkTimer.start(0.2)
+      } else {
+        blinkTimer.stop()
+        closedEyesTimer.stop()
+      }
+    }
 
   private lateinit var animationTree: AnimationMixer
   private lateinit var stateMachine: AnimationNodeStateMachinePlayback
@@ -43,18 +57,6 @@ class SophiaSkin(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, :
     }
 
     if (!blink) {
-      blinkTimer.stop()
-      closedEyesTimer.stop()
-    }
-  }
-
-  @GodotName("set_blink")
-  fun applyBlink(state: Boolean) {
-    if (blink == state) return
-    blink = state
-    if (blink) {
-      blinkTimer.start(0.2)
-    } else {
       blinkTimer.stop()
       closedEyesTimer.stop()
     }
