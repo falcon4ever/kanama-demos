@@ -16,13 +16,4 @@ class Structure(godotObject: GodotHandle) :
   @ExportSubgroup("Model") @Export var model: PackedScene? = null
 
   @ExportSubgroup("Gameplay") @Export var price: Long = 0
-
-  /**
-   * Harness-only: releases the hydrated model handle so the smoke's teardown can drain to zero
-   * (Structure resources themselves persist in Godot's resource cache).
-   */
-  fun releaseHydratedAssets() {
-    model?.close()
-    model = null
-  }
 }
