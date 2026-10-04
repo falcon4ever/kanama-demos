@@ -49,10 +49,10 @@ class Weapon(godotObject: GodotHandle) : KanamaScript<Resource>(godotObject, Res
     var knockback: Long = 20
 
     @Export
-    var minKnockback: Vector2 = Vector2(0.001f, 0.001f)
+    var minKnockback: Vector2 = Vector2(0.001, 0.001)
 
     @Export
-    var maxKnockback: Vector2 = Vector2(0.0025f, 0.002f)
+    var maxKnockback: Vector2 = Vector2(0.0025, 0.002)
 
     @ExportSubgroup("Sounds")
     @Export

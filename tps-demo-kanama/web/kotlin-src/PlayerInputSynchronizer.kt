@@ -204,7 +204,7 @@ class PlayerInputSynchronizer(godotObject: GodotHandle) :
       } else {
         Mathf.max(fallFadeAlpha * (1.0 - delta * 4.0), 0.0)
       }
-    rect.modulate = Color(1.0f, 1.0f, 1.0f, fallFadeAlpha.toFloat())
+    rect.modulate = Color(1.0, 1.0, 1.0, fallFadeAlpha)
   }
 
   private companion object {

@@ -84,7 +84,7 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 			rotationDirection = planar.angle()
 		}
 		val rot = self.rotation
-		self.rotation = rot.withY(Mathf.lerpAngle(rot.y.toDouble(), rotationDirection, delta * 10.0))
+		self.rotation = rot.withY(Mathf.lerpAngle(rot.y, rotationDirection, delta * 10.0))
 
 		// Falling/respawning. The early return after the scene-reload request is a Web bridge
 		// safety (the freed proxy must not receive further calls this frame) and is harmless
@@ -99,7 +99,7 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 
 		// Landing pulse
 		if (self.isOnFloor() && gravity > 2.0 && !previouslyFloored) {
-			model.scale = Vector3(1.25f, 0.75f, 1.25f)
+			model.scale = Vector3(1.25, 0.75, 1.25)
 			playAudio("res://sounds/land.ogg")
 		}
 		previouslyFloored = self.isOnFloor()
@@ -135,8 +135,8 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 	private fun handleControls(delta: Double) {
 		val ix = Input.getAxis("move_left", "move_right")
 		val iz = Input.getAxis("move_forward", "move_back")
-		var input = Vector3(ix.toFloat(), 0f, iz.toFloat())
-		input = input.rotated(Vector3.UP, viewNode.rotation.y.toDouble())
+		var input = Vector3(ix, 0.0, iz)
+		input = input.rotated(Vector3.UP, viewNode.rotation.y)
 		if (input.length() > 1.0) input = input.normalized()
 		movementVelocity = input * (movementSpeed.toDouble() * delta)
 
@@ -156,7 +156,7 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 	private fun jump() {
 		playAudio("res://sounds/jump.ogg")
 		gravity = -jumpStrength.toDouble()
-		model.scale = Vector3(0.5f, 1.5f, 0.5f)
+		model.scale = Vector3(0.5, 1.5, 0.5)
 
 		if (jumpSingle) {
 			jumpSingle = false

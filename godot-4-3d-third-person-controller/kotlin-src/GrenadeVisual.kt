@@ -12,7 +12,7 @@ import net.multigesture.kanama.types.Vector3
 
 @ScriptClass(attachTo = "Node3D")
 class GrenadeVisual(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
-    private val rotationAxis = Vector3(1f, 0f, 0f).normalized()
+    private val rotationAxis = Vector3(1.0, 0.0, 0.0).normalized()
 
     @OnReady
     fun ready() {

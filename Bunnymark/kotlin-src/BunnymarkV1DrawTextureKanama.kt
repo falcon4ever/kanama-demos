@@ -22,7 +22,7 @@ class BunnymarkV1DrawTextureKanama(godotObject: GodotHandle) : KanamaScript<Node
     private val bunnies = mutableListOf<Bunny>()
     private lateinit var screenSize: Vector2
     private var bunnyTexture: Texture2D? = null
-    private val white = Color(1.0f, 1.0f, 1.0f, 1.0f)
+    private val white = Color(1.0, 1.0, 1.0, 1.0)
 
     @OnReady
     fun ready() {

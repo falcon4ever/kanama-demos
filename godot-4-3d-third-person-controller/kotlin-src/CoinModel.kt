@@ -21,6 +21,6 @@ class CoinModel(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::
 
         val position = self.position
         val timeSeconds = Time.getTicksMsec() / 1000.0
-        self.position = position.withY((Mathf.sin(timeSeconds) * yAmplitude).toFloat())
+        self.position = position.withY(Mathf.sin(timeSeconds) * yAmplitude)
     }
 }

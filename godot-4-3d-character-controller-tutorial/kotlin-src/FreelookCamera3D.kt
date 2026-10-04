@@ -59,7 +59,7 @@ class FreelookCamera3D(godotObject: GodotHandle) : KanamaScript<Camera3D>(godotO
         val motion = InputEventMouseMotion.from(event)
         if (motion != null && Input.getMouseMode() == Input.MouseMode.CAPTURED) {
             val relative = motion.getRelative()
-            cameraInputDirection = Vector2(relative.x.toDouble() * mouseSensitivity, relative.y.toDouble() * mouseSensitivity)
+            cameraInputDirection = Vector2(relative.x * mouseSensitivity, relative.y * mouseSensitivity)
         }
 
         val mouseButton = InputEventMouseButton.from(event) ?: return
@@ -81,8 +81,8 @@ class FreelookCamera3D(godotObject: GodotHandle) : KanamaScript<Camera3D>(godotO
 
         val rotation = self.rotation
         self.rotation = rotation
-            .withX(Mathf.clamp(rotation.x.toDouble() - cameraInputDirection.y.toDouble(), -Mathf.PI / 2.0, Mathf.PI / 2.0))
-            .withY(rotation.y.toDouble() - cameraInputDirection.x.toDouble())
+            .withX(Mathf.clamp(rotation.x - cameraInputDirection.y, -Mathf.PI / 2.0, Mathf.PI / 2.0))
+            .withY(rotation.y - cameraInputDirection.x)
 
         self.globalPosition = self.globalPosition + self.globalTransform.basis * movement * delta * movementSpeed
         cameraInputDirection = Vector2.ZERO

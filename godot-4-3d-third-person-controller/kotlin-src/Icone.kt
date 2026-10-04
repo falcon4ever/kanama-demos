@@ -11,16 +11,16 @@ import net.multigesture.kanama.types.Color
 @ScriptClass(attachTo = "TextureRect")
 class Icone(godotObject: GodotHandle) : KanamaScript<TextureRect>(godotObject, ::TextureRect) {
 
-    private var disabledAlpha = 0.2f
+    private var disabledAlpha = 0.2
 
     @OnReady
     fun ready() {
-        self.modulate = Color(1f, 1f, 1f, disabledAlpha)
+        self.modulate = Color(1.0, 1.0, 1.0, disabledAlpha)
     }
 
     fun setState(state: Boolean) {
-        val disabled = Color(1f, 1f, 1f, disabledAlpha)
-        val enabled = Color(1f, 1f, 1f, 1f)
+        val disabled = Color(1.0, 1.0, 1.0, disabledAlpha)
+        val enabled = Color(1.0, 1.0, 1.0, 1.0)
         val target = if (state) enabled else disabled
         val source = if (state) disabled else enabled
         val tween = self.createTween()

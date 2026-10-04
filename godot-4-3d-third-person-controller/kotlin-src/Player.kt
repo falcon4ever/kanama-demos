@@ -142,7 +142,7 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 		val isJustAttacking = Input.isActionJustPressed("attack")
 		val isJustJumping = Input.isActionJustPressed("jump") && self.isOnFloor()
 		val isAiming = Input.isActionPressed("aim") && self.isOnFloor()
-		val isAirBoosting = Input.isActionPressed("jump") && !self.isOnFloor() && self.velocity.y > 0.0f
+		val isAirBoosting = Input.isActionPressed("jump") && !self.isOnFloor() && self.velocity.y > 0.0
 		val isJustOnFloor = self.isOnFloor() && !isOnFloorBuffer
 
 		isOnFloorBuffer = self.isOnFloor()
@@ -201,20 +201,20 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 			}
 		}
 
-		self.velocity = self.velocity.withY(self.velocity.y.toDouble() + GRAVITY * delta)
+		self.velocity = self.velocity.withY(self.velocity.y + GRAVITY * delta)
 
 		if (isJustJumping) {
-			self.velocity = self.velocity.withY(self.velocity.y.toDouble() + jumpInitialImpulse)
+			self.velocity = self.velocity.withY(self.velocity.y + jumpInitialImpulse)
 		} else if (isAirBoosting) {
-			self.velocity = self.velocity.withY(self.velocity.y.toDouble() + jumpAdditionalForce * delta)
+			self.velocity = self.velocity.withY(self.velocity.y + jumpAdditionalForce * delta)
 		}
 
 		if (isJustJumping) {
 			characterSkin.jump()
-		} else if (!self.isOnFloor() && self.velocity.y < 0.0f) {
+		} else if (!self.isOnFloor() && self.velocity.y < 0.0) {
 			characterSkin.fall()
 		} else if (self.isOnFloor()) {
-			val xzVelocity = Vector3(self.velocity.x.toDouble(), 0.0, self.velocity.z.toDouble())
+			val xzVelocity = Vector3(self.velocity.x, 0.0, self.velocity.z)
 			if (xzVelocity.length() > stoppingSpeed) {
 				characterSkin.setMoving(true)
 				characterSkin.setMovingSpeed(Mathf.inverseLerp(0.0, moveSpeed, xzVelocity.length()))
@@ -281,7 +281,7 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 	}
 
 	fun damage(impactPoint: Vector3, force: Vector3) {
-		self.velocity = force.withY(Mathf.abs(force.y.toDouble())).limitLength(maxThrowbackForce)
+		self.velocity = force.withY(Mathf.abs(force.y)).limitLength(maxThrowbackForce)
 		loseCoins()
 	}
 
@@ -291,13 +291,13 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 	private fun updateGroundHeight() {
 		if (groundShapeCast.getCollisionCount() > 0) {
 			for (index in 0 until groundShapeCast.getCollisionCount()) {
-				groundHeight = Mathf.max(groundHeight, groundShapeCast.getCollisionPoint(index).y.toDouble())
+				groundHeight = Mathf.max(groundHeight, groundShapeCast.getCollisionPoint(index).y)
 			}
 		} else {
-			groundHeight = self.globalPosition.y.toDouble() + groundShapeCast.targetPosition.y.toDouble()
+			groundHeight = self.globalPosition.y + groundShapeCast.targetPosition.y
 		}
-		if (self.globalPosition.y.toDouble() < groundHeight) {
-			groundHeight = self.globalPosition.y.toDouble()
+		if (self.globalPosition.y < groundHeight) {
+			groundHeight = self.globalPosition.y
 		}
 	}
 
@@ -308,8 +308,8 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 
 		val rawInput = Input.getVector("move_left", "move_right", "move_up", "move_down")
 		var input = Vector3.ZERO
-		input = input.withX(-rawInput.x.toDouble() * Mathf.sqrt(1.0 - rawInput.y.toDouble() * rawInput.y.toDouble() / 2.0))
-		input = input.withZ(-rawInput.y.toDouble() * Mathf.sqrt(1.0 - rawInput.x.toDouble() * rawInput.x.toDouble() / 2.0))
+		input = input.withX(-rawInput.x * Mathf.sqrt(1.0 - rawInput.y * rawInput.y / 2.0))
+		input = input.withZ(-rawInput.y * Mathf.sqrt(1.0 - rawInput.x * rawInput.x / 2.0))
 
 		input = cameraControllerNode.globalTransform.basis * input
 		return input.withY(0.0)

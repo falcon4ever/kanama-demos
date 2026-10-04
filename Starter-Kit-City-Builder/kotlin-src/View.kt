@@ -31,7 +31,7 @@ class View(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3
   fun process(delta: Double) {
     self.position = self.position.lerp(cameraPosition, delta * 8.0)
     self.rotationDegrees = self.rotationDegrees.lerp(cameraRotation, delta * 6.0)
-    camera.position = camera.position.lerp(Vector3(0, 0, zoom), delta * 8.0)
+    camera.position = camera.position.lerp(Vector3(0.0, 0.0, zoom), delta * 8.0)
     handleInput()
   }
 
@@ -39,7 +39,7 @@ class View(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3
     var input = Vector3.ZERO
     input = input.withX(Input.getAxis("camera_left", "camera_right"))
     input = input.withZ(Input.getAxis("camera_forward", "camera_back"))
-    input = input.rotated(Vector3.UP, self.rotation.y.toDouble()).normalized()
+    input = input.rotated(Vector3.UP, self.rotation.y).normalized()
     cameraPosition += input / 4.0
 
     if (Input.isActionJustReleased("zoom_in")) {
@@ -57,7 +57,7 @@ class View(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3
   fun input(event: InputEvent) {
     val motion = InputEventMouseMotion.from(event) ?: return
     if (Input.isActionPressed("camera_rotate")) {
-      cameraRotation += Vector3(0, -motion.getRelative().x.toDouble() / 10.0, 0)
+      cameraRotation += Vector3(0.0, -motion.getRelative().x / 10.0, 0.0)
     }
   }
 }
