@@ -30,12 +30,12 @@ class PlatformFalling(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObje
         if (falling) {
             fallVelocity += 15.0 * delta
             val pos = self.position
-            self.position = pos.withY(pos.y - (fallVelocity * delta).toFloat())
+            self.position = pos.withY(pos.y - fallVelocity * delta)
         } else {
             fallVelocity = 0.0
         }
 
-        if (self.position.y < -10f) {
+        if (self.position.y < -10.0) {
             self.queueFree()
         }
     }
@@ -48,7 +48,7 @@ class PlatformFalling(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObje
     fun onBodyEntered(_body: Node) {
         if (!falling) {
             playAudio("res://sounds/fall.ogg")
-            self.scale = Vector3(1.25f, 1f, 1.25f)
+            self.scale = Vector3(1.25, 1.0, 1.25)
         }
         falling = true
     }

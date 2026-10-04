@@ -77,8 +77,8 @@ class CameraController(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObj
         val motion = InputEventMouseMotion.from(event)
         if (motion != null && Input.getMouseMode() == Input.MouseMode.CAPTURED) {
             val relative = motion.getRelative()
-            rotationInput = -relative.x.toDouble() * mouseSensitivity
-            tiltInput = -relative.y.toDouble() * mouseSensitivity
+            rotationInput = -relative.x * mouseSensitivity
+            tiltInput = -relative.y * mouseSensitivity
         }
     }
 
@@ -103,14 +103,14 @@ class CameraController(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObj
 
         val groundHeight = getAnchorGroundHeight(anchorBody)
         self.globalPosition = (anchorBody.globalPosition + offset).withY(
-            Mathf.lerp(self.globalPosition.y.toDouble(), groundHeight, 0.1),
+            Mathf.lerp(self.globalPosition.y, groundHeight, 0.1),
         )
 
         val minTilt = Mathf.min(tiltLowerLimit, tiltUpperLimit)
         val maxTilt = Mathf.max(tiltLowerLimit, tiltUpperLimit)
         eulerRotation = eulerRotation
-            .withX((eulerRotation.x.toDouble() + tiltInput * delta).coerceIn(minTilt, maxTilt))
-            .withY(eulerRotation.y.toDouble() + rotationInput * delta)
+            .withX((eulerRotation.x + tiltInput * delta).coerceIn(minTilt, maxTilt))
+            .withY(eulerRotation.y + rotationInput * delta)
         self.basis = Basis.fromEuler(eulerRotation)
 
         val activePivot = pivot
@@ -173,7 +173,7 @@ class CameraController(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObj
         aimCollider?.takeIf { GD.isInstanceValid(it) }?.getInstanceId() ?: 0L
 
     private fun getAnchorGroundHeight(anchorBody: CharacterBody3D): Double {
-        return anchorPlayer?.getGroundHeight() ?: anchorBody.globalPosition.y.toDouble()
+        return anchorPlayer?.getGroundHeight() ?: anchorBody.globalPosition.y
     }
 
     companion object {

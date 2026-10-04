@@ -161,7 +161,7 @@ class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotOb
 			if (position != null) maxDist = rayOrigin.distanceTo(position)
 		}
 		clipRay(maxDist)
-			val meshOffset = rayMesh.position.z.toDouble()
+			val meshOffset = rayMesh.position.z
 		laserEmber.position = Vector3(0.0, 0.0, -maxDist / 2.0 - meshOffset)
 			laserEmber.emissionBoxExtents = laserEmber.emissionBoxExtents.withZ((maxDist - Mathf.abs(meshOffset)) / 2.0)
 		if (hit.isNotEmpty()) {
@@ -187,7 +187,7 @@ class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotOb
 	private fun animate(delta: Double) {
 		if (state == State.APPROACH.id) {
 			val local = toLocalTarget(targetPosition)
-			val angle = Mathf.atan2(local.x.toDouble(), local.z.toDouble())
+			val angle = Mathf.atan2(local.x, local.z)
 			when {
 				angle > PLAYER_AIM_TOLERANCE -> animationTree.set("parameters/state/transition_request", "turn_left")
 				angle < -PLAYER_AIM_TOLERANCE -> animationTree.set("parameters/state/transition_request", "turn_right")
@@ -202,14 +202,14 @@ class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotOb
 			animationTree.set("parameters/aiming/blend_amount", (aimPreparing / AIM_PREPARE_TIME).coerceIn(0.0, 1.0))
 			val local = rayMesh.globalTransform.basis.inverse() *
 				((targetPosition + Vector3.UP) - rayMesh.globalTransform.origin)
-				val hAngle = net.multigesture.kanama.api.GD.radToDeg(Mathf.atan2(local.x.toDouble(), -local.z.toDouble()))
-				val vAngle = net.multigesture.kanama.api.GD.radToDeg(Mathf.atan2(local.y.toDouble(), -local.z.toDouble()))
+				val hAngle = net.multigesture.kanama.api.GD.radToDeg(Mathf.atan2(local.x, -local.z))
+				val vAngle = net.multigesture.kanama.api.GD.radToDeg(Mathf.atan2(local.y, -local.z))
 			val blend = (animationTree.get("parameters/aim/blend_position") as? Vector2) ?: Vector2.ZERO
 			animationTree.set(
 				"parameters/aim/blend_position",
 				Vector2(
-					(blend.x.toDouble() + BLEND_AIM_SPEED * delta * -hAngle).coerceIn(-1.0, 1.0),
-					(blend.y.toDouble() + BLEND_AIM_SPEED * delta * vAngle).coerceIn(-1.0, 1.0),
+					(blend.x + BLEND_AIM_SPEED * delta * -hAngle).coerceIn(-1.0, 1.0),
+					(blend.y + BLEND_AIM_SPEED * delta * vAngle).coerceIn(-1.0, 1.0),
 				),
 			)
 		}
@@ -240,7 +240,7 @@ class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotOb
 		targetPosition = activePlayer.globalTransform.origin
 		if (state == State.APPROACH.id) {
 			if (aimPreparing > 0.0) aimPreparing = (aimPreparing - delta).coerceAtLeast(0.0)
-			val angle = Mathf.atan2(toLocalTarget(targetPosition).x.toDouble(), toLocalTarget(targetPosition).z.toDouble())
+			val angle = Mathf.atan2(toLocalTarget(targetPosition).x, toLocalTarget(targetPosition).z)
 			if (angle in -PLAYER_AIM_TOLERANCE..PLAYER_AIM_TOLERANCE) {
 				shootCountdown -= delta
 				if (shootCountdown < 0.0) {
@@ -275,7 +275,7 @@ class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotOb
 		animate(delta)
 		orientation = composeTransforms(orientation, Transform3D(Basis(animationTree.getRootMotionRotation()), animationTree.getRootMotionPosition()))
 		val horizontal = orientation.origin / delta
-		self.velocity = self.velocity.withX(horizontal.x.toDouble()).withZ(horizontal.z.toDouble())
+		self.velocity = self.velocity.withX(horizontal.x).withZ(horizontal.z)
 		self.velocity = self.velocity + self.getGravity() * delta
 		self.setUpDirection(Vector3.UP)
 		self.moveAndSlide()

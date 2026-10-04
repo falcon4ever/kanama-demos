@@ -36,8 +36,8 @@ class Tile(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area2
   fun onMouseEntered() {
     val sprite = sprite() ?: return
     val tween = trackedTween() ?: return
-    tween.tweenProperty(sprite, "scale", Vector2(1.1f, 1.1f), 0.1)
-    tween.tweenProperty(sprite, "modulate", Color(1.2f, 1.2f, 1.2f), 0.1)
+    tween.tweenProperty(sprite, "scale", Vector2(1.1, 1.1), 0.1)
+    tween.tweenProperty(sprite, "modulate", Color(1.2, 1.2, 1.2), 0.1)
   }
 
   // Return to default state when mouse exits
@@ -46,7 +46,7 @@ class Tile(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area2
     val sprite = sprite() ?: return
     val tween = trackedTween() ?: return
     tween.tweenProperty(sprite, "scale", Vector2.ONE, 0.1)
-    tween.tweenProperty(sprite, "modulate", Color(1f, 1f, 1f), 0.1)
+    tween.tweenProperty(sprite, "modulate", Color(1.0, 1.0, 1.0), 0.1)
   }
 
   // Set piece type when initializing
@@ -84,7 +84,7 @@ class Tile(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area2
     }
 
     sprite()?.let { sprite ->
-      sprite.scale = Vector2(1.2f, 0.8f)
+      sprite.scale = Vector2(1.2, 0.8)
       tween.tweenProperty(sprite, "scale", Vector2.ONE, 0.3).let { tweener ->
         tweener.setTrans(Tween.TransitionType.ELASTIC).setEase(Tween.EaseType.OUT)
       }

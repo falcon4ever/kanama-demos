@@ -52,15 +52,15 @@ class View(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3
 		self.position = self.position.lerp(targetNode.position, delta * 4.0)
 		self.rotationDegrees = self.rotationDegrees.lerp(cameraRotation, delta * 6.0)
 
-		camera.position = camera.position.lerp(Vector3(0f, 0f, zoom.toFloat()), delta * 8.0)
+		camera.position = camera.position.lerp(Vector3(0.0, 0.0, zoom), delta * 8.0)
 
 		// Rotation input
 		val inputY = Input.getAxis("camera_left", "camera_right")
 		val inputX = Input.getAxis("camera_up", "camera_down")
-		val raw = Vector3(inputX.toFloat(), inputY.toFloat(), 0f)
+		val raw = Vector3(inputX, inputY, 0.0)
 		val limited = raw.limitLength(1.0)
 		cameraRotation = cameraRotation + limited * (rotationSpeed.toDouble() * delta)
-		cameraRotation = cameraRotation.withX(Mathf.clamp(cameraRotation.x.toDouble(), -80.0, -10.0))
+		cameraRotation = cameraRotation.withX(Mathf.clamp(cameraRotation.x, -80.0, -10.0))
 
 		// Zoom input
 		zoom += Input.getAxis("zoom_in", "zoom_out") * zoomSpeed.toDouble() * delta

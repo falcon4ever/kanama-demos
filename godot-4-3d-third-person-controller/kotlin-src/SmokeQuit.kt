@@ -120,9 +120,9 @@ class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::No
 
             MainThread.awaitNextFrame()
 
-            Node3D(defaultCoin.handle).globalPosition = Vector3(0f, 20f, 0f)
+            Node3D(defaultCoin.handle).globalPosition = Vector3(0.0, 20.0, 0.0)
             defaultCoin.call("spawn")
-            Node3D(immediateCoin.handle).globalPosition = Vector3(2f, 20f, 0f)
+            Node3D(immediateCoin.handle).globalPosition = Vector3(2.0, 20.0, 0.0)
             immediateCoin.call("spawn", 0.0)
 
             MainThread.awaitNextFrame()
@@ -143,8 +143,8 @@ class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::No
 
             MainThread.awaitNextFrame()
 
-            Node3D(grenade.handle).globalPosition = Vector3(0f, 10f, 0f)
-            grenade.call("throw", Vector3(0f, 0f, 0f))
+            Node3D(grenade.handle).globalPosition = Vector3(0.0, 10.0, 0.0)
+            grenade.call("throw", Vector3(0.0, 0.0, 0.0))
 
             repeat(3) {
                 MainThread.awaitNextFrame()
@@ -189,7 +189,7 @@ class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::No
             mark("bullet: added")
 
             val bullet3d = Node3D(bullet.handle)
-            bullet3d.globalPosition = Vector3(0f, 30f, 0f)
+            bullet3d.globalPosition = Vector3(0.0, 30.0, 0.0)
             val rawShooter = bulletObject.call("get", "shooter")
             val shooter = rawShooter as? GodotObject
             mark(
@@ -230,7 +230,7 @@ class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::No
         try {
             if (puff == null) return
             parent.addChild(puff)
-            Node3D(puff.handle).globalPosition = Vector3(0f, 20f, 0f)
+            Node3D(puff.handle).globalPosition = Vector3(0.0, 20.0, 0.0)
             repeat(8) {
                 MainThread.awaitNextFrame()
             }
@@ -269,10 +269,10 @@ class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::No
             if (bee == null) return
             parent.addChild(bee)
             val bee3d = Node3D(bee.handle)
-            bee3d.globalPosition = Vector3(0f, 30f, 0f)
-            bee3d.transform.lookingAt(Vector3(0f, 30f, -1f))
+            bee3d.globalPosition = Vector3(0.0, 30.0, 0.0)
+            bee3d.transform.lookingAt(Vector3(0.0, 30.0, -1.0))
             MainThread.awaitNextFrame()
-            bee.call("damage", Vector3.ZERO, Vector3(0f, 0f, 1f))
+            bee.call("damage", Vector3.ZERO, Vector3(0.0, 0.0, 1.0))
             repeat(3) {
                 MainThread.awaitNextFrame()
             }
@@ -289,9 +289,9 @@ class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::No
         try {
             if (beetle == null) return
             parent.addChild(beetle)
-            Node3D(beetle.handle).globalPosition = Vector3(3f, 30f, 0f)
+            Node3D(beetle.handle).globalPosition = Vector3(3.0, 30.0, 0.0)
             MainThread.awaitNextFrame()
-            beetle.call("damage", Vector3.ZERO, Vector3(0f, 0f, 1f))
+            beetle.call("damage", Vector3.ZERO, Vector3(0.0, 0.0, 1.0))
             repeat(3) {
                 MainThread.awaitNextFrame()
             }

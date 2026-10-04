@@ -101,14 +101,14 @@ class DemoPage(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Nod
     private fun changeInstruction(type: Long) {
         when (type) {
             KEYBOARD -> {
-                keyboardButton.modulate = keyboardButton.modulate.withAlpha(1f)
-                joypadButton.modulate = joypadButton.modulate.withAlpha(0.3f)
+                keyboardButton.modulate = keyboardButton.modulate.withAlpha(1.0)
+                joypadButton.modulate = joypadButton.modulate.withAlpha(0.3)
                 gridContainerKeyboard.show()
                 gridContainerJoypad.hide()
             }
             JOYPAD -> {
-                keyboardButton.modulate = keyboardButton.modulate.withAlpha(0.3f)
-                joypadButton.modulate = joypadButton.modulate.withAlpha(1f)
+                keyboardButton.modulate = keyboardButton.modulate.withAlpha(0.3)
+                joypadButton.modulate = joypadButton.modulate.withAlpha(1.0)
                 gridContainerKeyboard.hide()
                 gridContainerJoypad.show()
             }
@@ -122,7 +122,7 @@ class DemoPage(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Nod
         demoMouseMode = Input.getMouseMode()
         requireNotNull(self.getTree()).setPaused(true)
         demoPageRoot.show()
-        tweenDemoPage(Color(1f, 1f, 1f, 1f))
+        tweenDemoPage(Color(1.0, 1.0, 1.0, 1.0))
         Input.setMouseMode(Input.MouseMode.VISIBLE)
     }
 
@@ -132,7 +132,7 @@ class DemoPage(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Nod
         hideAfterTween = false
         // Transparent controls still receive touch input, so hide the overlay
         // before restoring gameplay controls.
-        demoPageRoot.modulate = Color(1f, 1f, 1f, 0f)
+        demoPageRoot.modulate = Color(1.0, 1.0, 1.0, 0.0)
         demoPageRoot.hide()
         enableDeferredLightingAfterResume()
         Input.setMouseMode(demoMouseMode)
@@ -233,7 +233,7 @@ class DemoPage(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Nod
 
     private fun isWeb(): Boolean = OS.hasFeature("web")
 
-    private fun Color.withAlpha(alpha: Float): Color =
+    private fun Color.withAlpha(alpha: Double): Color =
         Color(r, g, b, alpha)
 
     companion object {

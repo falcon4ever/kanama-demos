@@ -146,7 +146,7 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
         playerInput.jumping = false
 
         if (onAir) {
-            animate(if (self.velocity.y > 0.0f) AnimationState.JUMP_UP.id else AnimationState.JUMP_DOWN.id, delta)
+            animate(if (self.velocity.y > 0.0) AnimationState.JUMP_UP.id else AnimationState.JUMP_DOWN.id, delta)
         } else if (playerInput.aiming) {
             val qFrom = orientation.basis.getRotationQuaternion()
             val qTo = playerInput.getCameraBaseQuaternion()
@@ -170,14 +170,14 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 
         orientation = composeTransforms(orientation, rootMotion)
         val horizontal = orientation.origin / delta
-        self.velocity = self.velocity.withX(horizontal.x.toDouble()).withZ(horizontal.z.toDouble())
+        self.velocity = self.velocity.withX(horizontal.x).withZ(horizontal.z)
         self.velocity = self.velocity + self.getGravity() * delta
         self.setUpDirection(Vector3.UP)
         self.moveAndSlide()
 
         orientation = orientation.withOrigin(Vector3.ZERO).orthonormalized()
         playerModel.globalTransform = playerModel.globalTransform.withBasis(orientation.basis)
-        if (self.transform.origin.y < -40.0f) {
+        if (self.transform.origin.y < -40.0) {
             self.transform = self.transform.withOrigin(initialPosition)
         }
     }

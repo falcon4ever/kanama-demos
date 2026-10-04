@@ -114,23 +114,23 @@ class Player3DTemplate(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>
         val motion = event.castOrNull<InputEventMouseMotion>() ?: return
         if (Input.getMouseMode() != Input.MouseMode.CAPTURED) return
         val relative = motion.getRelative()
-        cameraInputDirection = Vector2(-relative.x.toDouble() * mouseSensitivity, relative.y.toDouble() * mouseSensitivity)
+        cameraInputDirection = Vector2(-relative.x * mouseSensitivity, relative.y * mouseSensitivity)
     }
 
     @OnPhysicsProcess
     fun physicsProcess(delta: Double) {
         val cameraInput = Input.getVector("camera_left", "camera_right", "camera_up", "camera_down")
-        if (cameraInput.length() > 0.0f) {
+        if (cameraInput.length() > 0.0) {
             cameraInputDirection += Vector2(
-                -cameraInput.x.toDouble() * controllerCameraSensitivity,
-                -cameraInput.y.toDouble() * controllerCameraSensitivity,
+                -cameraInput.x * controllerCameraSensitivity,
+                -cameraInput.y * controllerCameraSensitivity,
             )
         }
 
         val pivotRotation = cameraPivot.rotation
         cameraPivot.rotation = pivotRotation
-            .withX(Mathf.clamp(pivotRotation.x.toDouble() + cameraInputDirection.y.toDouble() * delta, tiltLowerLimit, tiltUpperLimit))
-            .withY(pivotRotation.y.toDouble() + cameraInputDirection.x.toDouble() * delta)
+            .withX(Mathf.clamp(pivotRotation.x + cameraInputDirection.y * delta, tiltLowerLimit, tiltUpperLimit))
+            .withY(pivotRotation.y + cameraInputDirection.x * delta)
         cameraInputDirection = Vector2.ZERO
 
         val rawInput = Input.getVector("move_left", "move_right", "move_up", "move_down", 0.4)
@@ -145,7 +145,7 @@ class Player3DTemplate(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>
         val targetAngle = Vector3.BACK.signedAngleTo(lastInputDirection, Vector3.UP)
         val skinRotation = skinNode.rotation
         skinNode.globalRotation = skinNode.globalRotation.withY(
-            Mathf.lerpAngle(skinRotation.y.toDouble(), targetAngle, rotationSpeed * delta),
+            Mathf.lerpAngle(skinRotation.y, targetAngle, rotationSpeed * delta),
         )
 
         val yVelocity = self.velocity.y
@@ -154,15 +154,15 @@ class Player3DTemplate(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>
         if (Mathf.isEqualApprox(moveDirection.lengthSquared(), 0.0) && self.velocity.lengthSquared() < stoppingSpeed) {
             self.velocity = Vector3.ZERO
         }
-        self.velocity = self.velocity.withY(yVelocity.toDouble() + gravity * delta)
+        self.velocity = self.velocity.withY(yVelocity + gravity * delta)
 
         val groundSpeed = Vector2(self.velocity.x, self.velocity.z).length()
         val isJustJumping = Input.isActionJustPressed("jump") && self.isOnFloor()
         if (isJustJumping) {
-            self.velocity = self.velocity.withY(self.velocity.y.toDouble() + jumpImpulse)
+            self.velocity = self.velocity.withY(self.velocity.y + jumpImpulse)
             skin.jump()
             jumpSound.play()
-        } else if (!self.isOnFloor() && self.velocity.y < 0f) {
+        } else if (!self.isOnFloor() && self.velocity.y < 0.0) {
             skin.fall()
         } else if (self.isOnFloor()) {
             if (groundSpeed > 0.0) {

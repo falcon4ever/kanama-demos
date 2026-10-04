@@ -16,8 +16,8 @@ import net.multigesture.kanama.types.Vector2
  * A browser page has no OS window to measure and no notch to route around -- the canvas is
  * already the usable area -- so every entry point returns before it asks the display server
  * (Kanama's Web backend has no answer for `window_get_size` / `get_display_safe_area` and says
- * so loudly). The arithmetic below is spelled in Double because desktop vectors carry `real_t`
- * (Float) components and the Web mirrors carry Double.
+ * so loudly). The `.toDouble()` calls below convert the integer `Vector2i`/`Rect2i` values; the
+ * `Vector2` components are already Double.
  */
 object SafeArea {
     private fun isBrowser(): Boolean = OS.hasFeature("web")
@@ -31,8 +31,8 @@ object SafeArea {
         val window = DisplayServer.windowGetSize()
         if (window.x <= 0 || window.y <= 0 || safe.size.x <= 0 || safe.size.y <= 0) return
         val canvas = control.getViewport()?.getVisibleRect()?.size ?: return
-        val scaleX = canvas.x.toDouble() / window.x.toDouble()
-        val scaleY = canvas.y.toDouble() / window.y.toDouble()
+        val scaleX = canvas.x / window.x.toDouble()
+        val scaleY = canvas.y / window.y.toDouble()
         val left = safe.position.x.toDouble() * scaleX
         val top = safe.position.y.toDouble() * scaleY
         val right = (window.x - safe.end.x).coerceAtLeast(0).toDouble() * scaleX
@@ -44,8 +44,8 @@ object SafeArea {
         control.setPosition(currentPosition + Vector2(left, top))
         control.setSize(
             Vector2(
-                (currentSize.x.toDouble() - left - right).coerceAtLeast(0.0),
-                (currentSize.y.toDouble() - top - bottom).coerceAtLeast(0.0),
+                (currentSize.x - left - right).coerceAtLeast(0.0),
+                (currentSize.y - top - bottom).coerceAtLeast(0.0),
             ),
         )
     }
@@ -62,8 +62,8 @@ object SafeArea {
         val current = control.position
         control.setPosition(
             Vector2(
-                current.x.toDouble() + safe.position.x.toDouble() * canvas.x.toDouble() / window.x.toDouble(),
-                current.y.toDouble() + safe.position.y.toDouble() * canvas.y.toDouble() / window.y.toDouble(),
+                current.x + safe.position.x.toDouble() * canvas.x / window.x.toDouble(),
+                current.y + safe.position.y.toDouble() * canvas.y / window.y.toDouble(),
             ),
         )
     }

@@ -45,10 +45,10 @@ class Player(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Are
     @OnProcess
     fun process(delta: Double) {
         var velocity = Vector2.ZERO // The player's movement vector.
-        if (Input.isActionPressed("move_right")) velocity = velocity.withX(velocity.x + 1f)
-        if (Input.isActionPressed("move_left")) velocity = velocity.withX(velocity.x - 1f)
-        if (Input.isActionPressed("move_down")) velocity = velocity.withY(velocity.y + 1f)
-        if (Input.isActionPressed("move_up")) velocity = velocity.withY(velocity.y - 1f)
+        if (Input.isActionPressed("move_right")) velocity = velocity.withX(velocity.x + 1.0)
+        if (Input.isActionPressed("move_left")) velocity = velocity.withX(velocity.x - 1.0)
+        if (Input.isActionPressed("move_down")) velocity = velocity.withY(velocity.y + 1.0)
+        if (Input.isActionPressed("move_up")) velocity = velocity.withY(velocity.y - 1.0)
 
         if (velocity.length() > 0.0) {
             velocity = velocity.normalized() * speed
@@ -59,15 +59,15 @@ class Player(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Are
 
         self.position = (self.position + velocity * delta).clamp(Vector2.ZERO, screenSize)
 
-        if (velocity.x.toDouble() != 0.0) {
+        if (velocity.x != 0.0) {
             animatedSprite.animation = "right"
             self.rotation = 0.0
             animatedSprite.flipV = false
             trail.rotation = 0.0
-            animatedSprite.flipH = velocity.x < 0f
-        } else if (velocity.y.toDouble() != 0.0) {
+            animatedSprite.flipH = velocity.x < 0.0
+        } else if (velocity.y != 0.0) {
             animatedSprite.animation = "up"
-            self.rotation = if (velocity.y > 0f) Mathf.PI else 0.0
+            self.rotation = if (velocity.y > 0.0) Mathf.PI else 0.0
         }
     }
 

@@ -110,7 +110,7 @@ class GrenadeLauncher(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObje
 
     private fun updateThrowVelocity() {
         val camera = self.getViewport()?.getCamera3D() ?: return
-        val upRatio = (Mathf.max(camera.rotation.x.toDouble() + 0.5, -0.4) * 2.0).coerceIn(0.0, 1.0)
+        val upRatio = (Mathf.max(camera.rotation.x + 0.5, -0.4) * 2.0).coerceIn(0.0, 1.0)
 
         val baseThrowDistance = lerp(minThrowDistance, maxThrowDistance, upRatio)
         val throwDistance = baseThrowDistance
@@ -132,11 +132,11 @@ class GrenadeLauncher(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObje
             snapMesh.setVisible(false)
         }
 
-        val peakHeight = Mathf.max(toTarget.y.toDouble() + 0.25, launchPoint.position.y.toDouble() + 0.25)
+        val peakHeight = Mathf.max(toTarget.y + 0.25, launchPoint.position.y + 0.25)
         val motionUp = peakHeight
         val timeGoingUp = Mathf.sqrt(2.0 * motionUp / gravity)
 
-        val motionDown = toTarget.y.toDouble() - peakHeight
+        val motionDown = toTarget.y - peakHeight
         val timeGoingDown = Mathf.sqrt(-2.0 * motionDown / gravity)
 
         timeToLand = timeGoingUp + timeGoingDown

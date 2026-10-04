@@ -64,13 +64,13 @@ class CameraMode(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, :
         if (Input.isKeyPressed(Key.E)) movement += Vector3.UP
 
         val mouseVelocity = Input.getLastMouseVelocity()
-        val rotationInput = -mouseVelocity.x.toDouble() * mouseSensitivity
-        val tiltInput = -mouseVelocity.y.toDouble() * mouseSensitivity
+        val rotationInput = -mouseVelocity.x * mouseSensitivity
+        val tiltInput = -mouseVelocity.y * mouseSensitivity
 
         var eulerRotation = currentCamera.globalTransform.basis.getEuler()
         eulerRotation = eulerRotation
-            .withX((eulerRotation.x.toDouble() + tiltInput * delta).coerceIn(-Mathf.PI + 0.01, Mathf.PI - 0.01))
-            .withY(eulerRotation.y.toDouble() + rotationInput * delta)
+            .withX((eulerRotation.x + tiltInput * delta).coerceIn(-Mathf.PI + 0.01, Mathf.PI - 0.01))
+            .withY(eulerRotation.y + rotationInput * delta)
 
         currentCamera.globalTransform = currentCamera.globalTransform.withBasis(Basis.fromEuler(eulerRotation))
         currentCamera.globalPosition += currentCamera.globalTransform.basis * movement * delta * cameraSpeed

@@ -124,7 +124,7 @@ class Main(godotObject: GodotHandle) :
     val viewportRect = self.getViewport()?.getVisibleRect() ?: return
     container.position =
       viewportRect.size / 2.0 -
-        Vector2((width - 1).toFloat(), (height - 1).toFloat()) * offset.toDouble() / 2.0
+        Vector2((width - 1).toDouble(), (height - 1).toDouble()) * offset.toDouble() / 2.0
   }
 
   // Initialize grid
@@ -193,9 +193,9 @@ class Main(godotObject: GodotHandle) :
       var otherTouch = firstTouch
       otherTouch =
         if (Mathf.abs(difference.x) > Mathf.abs(difference.y)) {
-          Vector2i(otherTouch.x + if (difference.x > 0f) 1 else -1, otherTouch.y)
+          Vector2i(otherTouch.x + if (difference.x > 0.0) 1 else -1, otherTouch.y)
         } else {
-          Vector2i(otherTouch.x, otherTouch.y + if (difference.y > 0f) 1 else -1)
+          Vector2i(otherTouch.x, otherTouch.y + if (difference.y > 0.0) 1 else -1)
         }
 
       if (isWithinGrid(otherTouch)) {
@@ -359,14 +359,14 @@ class Main(godotObject: GodotHandle) :
 
   // Utilities for coordinates
   private fun gridToPixel(column: Int, row: Int): Vector2 =
-    Vector2((offset * column).toFloat(), (offset * row).toFloat())
+    Vector2((offset * column).toDouble(), (offset * row).toDouble())
 
   private fun isWithinGrid(pos: Vector2i): Boolean =
     pos.x >= 0 && pos.x < width.toInt() && pos.y >= 0 && pos.y < height.toInt()
 
   // Utilities
   private fun setCursor(cursorTexture: Texture2D?) {
-    Input.setCustomMouseCursor(cursorTexture, hotspot = Vector2(16f, 16f))
+    Input.setCustomMouseCursor(cursorTexture, hotspot = Vector2(16.0, 16.0))
   }
 
   private fun trackedTween(): Tween {

@@ -34,6 +34,6 @@ class View(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3
 
         val speedFactor = GD.clampf(Mathf.abs(vehicle.linearSpeed), 0.0, 1.0)
         val targetZ = GD.remap(speedFactor, 0.0, 1.0, 10.0, 20.0)
-        camera.position = camera.position.withZ(GD.lerpf(camera.position.z.toDouble(), targetZ, delta * 0.5))
+        camera.position = camera.position.withZ(GD.lerpf(camera.position.z, targetZ, delta * 0.5))
     }
 }

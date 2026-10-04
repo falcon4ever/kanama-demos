@@ -140,15 +140,15 @@ class PlayerInputSynchronizer(godotObject: GodotHandle) :
     fun rotateCamera(move: Vector2) {
         val base = cameraBase ?: return
         val rot = cameraRot ?: return
-        base.rotateY(-move.x.toDouble())
+        base.rotateY(-move.x)
         base.orthonormalize()
         rot.rotation = rot.rotation.withX(
-            (rot.rotation.x.toDouble() + move.y.toDouble()).coerceIn(CAMERA_X_ROT_MIN, CAMERA_X_ROT_MAX),
+            (rot.rotation.x + move.y).coerceIn(CAMERA_X_ROT_MIN, CAMERA_X_ROT_MAX),
         )
     }
 
     fun getAimRotation(): Double {
-        val cameraX = (cameraRot?.rotation?.x?.toDouble() ?: 0.0).coerceIn(CAMERA_X_ROT_MIN, CAMERA_X_ROT_MAX)
+        val cameraX = (cameraRot?.rotation?.x ?: 0.0).coerceIn(CAMERA_X_ROT_MIN, CAMERA_X_ROT_MAX)
         return if (cameraX >= 0.0) -cameraX / CAMERA_X_ROT_MAX else cameraX / CAMERA_X_ROT_MIN
     }
 
@@ -196,16 +196,16 @@ class PlayerInputSynchronizer(godotObject: GodotHandle) :
 
     private fun updateFallFade(delta: Double) {
         val rect = colorRect ?: return
-        val y = self.getParent()?.let { Node3D(it.handle).globalTransform.origin.y.toDouble() } ?: return
+        val y = self.getParent()?.let { Node3D(it.handle).globalTransform.origin.y } ?: return
         val modulate = rect.modulate
         rect.modulate = if (y < -17.0) {
             modulate.withAlpha(Mathf.min((-17.0 - y) / 15.0, 1.0))
         } else {
-            modulate.withAlpha(Mathf.max(modulate.a.toDouble() * (1.0 - delta * 4.0), 0.0))
+            modulate.withAlpha(Mathf.max(modulate.a * (1.0 - delta * 4.0), 0.0))
         }
     }
 
-    private fun Color.withAlpha(alpha: Double): Color = copy(a = alpha.toFloat())
+    private fun Color.withAlpha(alpha: Double): Color = copy(a = alpha)
 
     private companion object {
         const val CAMERA_CONTROLLER_ROTATION_SPEED = 3.0

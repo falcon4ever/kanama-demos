@@ -28,19 +28,19 @@ class Smoke(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         val enemy = self.requireAs("Enemies/enemy-flying", ::Node3D)
 
         val originalRotation = player.rotation
-        player.rotation = Vector3(0f, GD.degToRad(90.0).toFloat(), 0f)
+        player.rotation = Vector3(0.0, GD.degToRad(90.0), 0.0)
         val globalForward = player.transform.basis * (Vector3.FORWARD * 5.0)
-        check(globalForward.isCloseTo(Vector3(-5f, 0f, 0f))) {
+        check(globalForward.isCloseTo(Vector3(-5.0, 0.0, 0.0))) {
             "FPS smoke expected yaw 90 forward to be (-5, 0, 0), got $globalForward"
         }
         val calledTransform = player.call("get_transform") as? Transform3D
             ?: error("FPS smoke expected get_transform call to return Transform3D")
         val calledForward = calledTransform.basis * (Vector3.FORWARD * 5.0)
-        check(calledForward.isCloseTo(Vector3(-5f, 0f, 0f))) {
+        check(calledForward.isCloseTo(Vector3(-5.0, 0.0, 0.0))) {
             "FPS smoke expected Variant Transform3D forward to be (-5, 0, 0), got $calledForward"
         }
         val localForward = player.basis.inverse() * globalForward
-        check(localForward.isCloseTo(Vector3(0f, 0f, -5f))) {
+        check(localForward.isCloseTo(Vector3(0.0, 0.0, -5.0))) {
             "FPS smoke expected inverse basis to recover local forward, got $localForward"
         }
         player.rotation = originalRotation
@@ -75,7 +75,7 @@ class Smoke(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         audio.kotlinScriptInstance<Audio>()?.stopAll()
     }
 
-    private fun Vector3.isCloseTo(other: Vector3, epsilon: Float = 0.001f): Boolean =
+    private fun Vector3.isCloseTo(other: Vector3, epsilon: Double = 0.001): Boolean =
         Mathf.abs(x - other.x) <= epsilon &&
             Mathf.abs(y - other.y) <= epsilon &&
             Mathf.abs(z - other.z) <= epsilon

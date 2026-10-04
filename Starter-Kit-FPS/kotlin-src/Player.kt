@@ -132,7 +132,7 @@ class Player(godotObject: GodotHandle) :
       soundFootsteps.setStreamPaused(false)
     }
 
-    camera.position = camera.position.withY(GD.lerpf(camera.position.y.toDouble(), 0.0, delta * 5.0))
+    camera.position = camera.position.withY(GD.lerpf(camera.position.y, 0.0, delta * 5.0))
     if (self.isOnFloor() && gravity > 1.0 && !previouslyFloored) {
       playAudio("sounds/land.ogg")
       camera.position = camera.position.withY(-0.1)
@@ -148,7 +148,7 @@ class Player(godotObject: GodotHandle) :
   fun input(event: InputEvent) {
     if (!mouseCaptured) return
     val relative = InputEventMouseMotion.from(event)?.getRelative() ?: return
-    handleRotation(relative.x.toDouble(), relative.y.toDouble(), isController = false)
+    handleRotation(relative.x, relative.y, isController = false)
   }
 
   private fun handleControls(delta: Double) {
@@ -167,7 +167,7 @@ class Player(godotObject: GodotHandle) :
 
     val rotationInput = Input.getVector("camera_right", "camera_left", "camera_down", "camera_up")
     if (rotationInput != Vector2.ZERO) {
-      handleRotation(rotationInput.x.toDouble(), rotationInput.y.toDouble(), isController = true, delta = delta)
+      handleRotation(rotationInput.x, rotationInput.y, isController = true, delta = delta)
     }
 
     actionShoot()
@@ -189,21 +189,21 @@ class Player(godotObject: GodotHandle) :
       rotationTarget -= Vector3(-yRot, -xRot, 0.0).limitLength(1.0) * gamepadSensitivity
       rotationTarget =
         rotationTarget.withX(
-          GD.clampf(rotationTarget.x.toDouble(), GD.degToRad(-90.0), GD.degToRad(90.0))
+          GD.clampf(rotationTarget.x, GD.degToRad(-90.0), GD.degToRad(90.0))
         )
       camera.rotation =
         camera.rotation.withX(
-          GD.lerpAngle(camera.rotation.x.toDouble(), rotationTarget.x.toDouble(), delta * 25.0)
+          GD.lerpAngle(camera.rotation.x, rotationTarget.x, delta * 25.0)
         )
       self.rotation =
         self.rotation.withY(
-          GD.lerpAngle(self.rotation.y.toDouble(), rotationTarget.y.toDouble(), delta * 25.0)
+          GD.lerpAngle(self.rotation.y, rotationTarget.y, delta * 25.0)
         )
     } else {
       rotationTarget += Vector3(-yRot, -xRot, 0.0) / mouseSensitivity
       rotationTarget =
         rotationTarget.withX(
-          GD.clampf(rotationTarget.x.toDouble(), GD.degToRad(-90.0), GD.degToRad(90.0))
+          GD.clampf(rotationTarget.x, GD.degToRad(-90.0), GD.degToRad(90.0))
         )
       camera.rotation = camera.rotation.withX(rotationTarget.x)
       self.rotation = self.rotation.withY(rotationTarget.y)
@@ -343,8 +343,8 @@ class Player(godotObject: GodotHandle) :
   private fun randomVec2(min: Vector2, max: Vector2): Vector2 {
     val sign = if (GD.randi() % 2L == 0L) -1.0 else 1.0
     return Vector2(
-      GD.randfRange(min.x.toDouble(), max.x.toDouble()),
-      GD.randfRange(min.y.toDouble(), max.y.toDouble()) * sign,
+      GD.randfRange(min.x, max.x),
+      GD.randfRange(min.y, max.y) * sign,
     )
   }
 
