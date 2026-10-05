@@ -34,6 +34,7 @@ import net.multigesture.kanama.generated.Autoloads
 import net.multigesture.kanama.generated.PlayerSignals
 import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector3
+import net.multigesture.kanama.generated.healthUpdated
 
 /**
  * Shared on desktop and Web. Two spellings stay web-shaped because the desktop originals have no
@@ -333,7 +334,7 @@ class Player(godotObject: GodotHandle) :
 
   fun damage(amount: Double) {
     health -= amount.toLong()
-    PlayerSignals.healthUpdated(this, health)
+    healthUpdated.emit(health)
 
     if (health < 0) {
       requireNotNull(self.getTree()).reloadCurrentScene()

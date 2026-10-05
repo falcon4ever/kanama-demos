@@ -19,6 +19,7 @@ import net.multigesture.kanama.api.SignalConnection
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.SmokePuffNames
 import net.multigesture.kanama.types.Vector3
+import net.multigesture.kanama.generated.SmokePuffSignals
 
 @ScriptClass(attachTo = "RigidBody3D")
 class BeeBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::RigidBody3D) {
@@ -56,10 +57,8 @@ class BeeBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, 
 			?: error("MeshRoot/bee_root is missing BeeRoot script instance")
 		defeatSound = self.requireAs("DefeatSound", ::AudioStreamPlayer3D)
 
-		bodyEnteredConnection = detectionArea.signal(Area3D.Signals.bodyEntered)
-			.connectObject(self) { body -> onBodyEntered(Node3D(body.handle)) }
-		bodyExitedConnection = detectionArea.signal(Area3D.Signals.bodyExited)
-			.connectObject(self) { body -> onBodyExited(Node3D(body.handle)) }
+		bodyEnteredConnection = detectionArea.bodyEntered.connect { body -> onBodyEntered(body) }
+		bodyExitedConnection = detectionArea.bodyExited.connect { body -> onBodyExited(body) }
 
 		beeRoot.playIdle()
 	}
@@ -124,7 +123,7 @@ class BeeBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, 
 			if (puff != null) {
 				self.getParent()?.addChild(puff)
 				Node3D(puff.handle).globalPosition = self.globalPosition
-				puff.signal(SmokePuffNames.Signals.full).await(self, argumentCount = 0)
+				SmokePuffSignals.full(puff).await()
 			}
 
 			repeat(coinsCount.toInt()) {

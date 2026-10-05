@@ -5,7 +5,6 @@ import net.multigesture.kanama.annotations.OnInput
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.AudioStreamPlayer
-import net.multigesture.kanama.api.BaseButton
 import net.multigesture.kanama.api.Button
 import net.multigesture.kanama.api.Control
 import net.multigesture.kanama.api.GodotHandle
@@ -59,16 +58,16 @@ class DemoPage(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Nod
         gridContainerKeyboard = self.requireAs("%GridContainerKeyboard", ::Control)
         gridContainerJoypad = self.requireAs("%GridContainerJoypad", ::Control)
 
-        resumeButton.signal(BaseButton.Signals.pressed).connect(self, argumentCount = 0) {
+        resumeButton.pressed.connect {
             resumeDemo()
         }
-        exitButton.signal(BaseButton.Signals.pressed).connect(self, argumentCount = 0) {
+        exitButton.pressed.connect {
             exitDemo()
         }
-        keyboardButton.signal(BaseButton.Signals.pressed).connect(self, argumentCount = 0) {
+        keyboardButton.pressed.connect {
             changeInstruction(KEYBOARD)
         }
-        joypadButton.signal(BaseButton.Signals.pressed).connect(self, argumentCount = 0) {
+        joypadButton.pressed.connect {
             changeInstruction(JOYPAD)
         }
 
@@ -181,7 +180,7 @@ class DemoPage(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Nod
 
         pageTween = tween
         tween.tweenProperty(demoPageRoot, "modulate", target, DEMO_PAGE_FADE_SECONDS)
-        tween.signal(Tween.Signals.finished).connect(self, argumentCount = 0, flags = GodotObject.ConnectFlags.ONE_SHOT) {
+        tween.finished.connect(GodotObject.ConnectFlags.ONE_SHOT) {
             if (pageTween === tween) {
                 pageTween = null
             }

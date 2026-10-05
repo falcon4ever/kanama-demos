@@ -17,6 +17,7 @@ import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.PlayerSignals
 import net.multigesture.kanama.types.Vector3
+import net.multigesture.kanama.generated.hit
 
 @ScriptClass(attachTo = "CharacterBody3D")
 class Player(godotObject: GodotHandle) :
@@ -109,7 +110,7 @@ class Player(godotObject: GodotHandle) :
   }
 
   fun die() {
-    PlayerSignals.hit(this)
+    hit.emit()
     self.queueFree()
   }
 

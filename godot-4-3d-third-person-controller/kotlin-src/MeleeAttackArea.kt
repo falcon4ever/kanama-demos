@@ -17,8 +17,8 @@ class MeleeAttackArea(godotObject: GodotHandle) : KanamaScript<Area3D>(godotObje
     @OnReady
     fun ready() {
         collisionShape = self.requireAs("CollisionShape3d", ::CollisionShape3D)
-        self.signal(Area3D.Signals.bodyEntered).connectObject(self) { body ->
-            onBodyEntered(Node3D(body.handle))
+        self.bodyEntered.connect { body ->
+            onBodyEntered(body)
         }
     }
 

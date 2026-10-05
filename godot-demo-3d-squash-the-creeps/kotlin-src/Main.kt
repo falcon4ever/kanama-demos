@@ -21,6 +21,7 @@ import net.multigesture.kanama.api.Timer
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.MobNames
 import net.multigesture.kanama.generated.ScoreLabelNames
+import net.multigesture.kanama.generated.MobSignals
 
 @ScriptClass(attachTo = "Node")
 class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
@@ -90,7 +91,7 @@ class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
     self.addChild(Node(mob.handle))
 
     // We connect the mob to the score label to update the score upon squashing a mob.
-    mob.signal(MobNames.Signals.squashed).connect(scoreLabel, ScoreLabelNames.Methods.onMobSquashed)
+    MobSignals.squashed(mob).connect(scoreLabel, ScoreLabelNames.Methods.onMobSquashed)
   }
 
   @GodotName("_on_player_hit")

@@ -25,8 +25,7 @@ class Blast(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
 		animationPlayer = self.requireAs("AnimationPlayer", ::AnimationPlayer)
 		camera = requireNotNull(requireNotNull(self.getTree()).root).getCamera3d()
 		launch {
-			animationPlayer.signal(net.multigesture.kanama.api.AnimationMixer.Signals.animationFinished)
-				.await(self, argumentCount = 1)
+			animationPlayer.animationFinished.await()
 			self.queueFree()
 		}
 	}

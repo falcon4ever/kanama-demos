@@ -60,11 +60,11 @@ class SophiaSkin(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, :
         eyeMaterial = sophiaMesh?.getSurfaceOverrideMaterial(2)
         eyeMat = eyeMaterial?.let { BaseMaterial3D.fromMaterial(it) }
 
-        blinkTimer.signal(Timer.Signals.timeout).connect(self, argumentCount = 0) {
+        blinkTimer.timeout.connect {
             eyeMat?.setUv1Offset(Vector3(0.0, 0.5, 0.0))
             closedEyesTimer.start(0.2)
         }
-        closedEyesTimer.signal(Timer.Signals.timeout).connect(self, argumentCount = 0) {
+        closedEyesTimer.timeout.connect {
             eyeMat?.setUv1Offset(Vector3.ZERO)
             blinkTimer.start(GD.randfRange(1.0, 4.0))
         }

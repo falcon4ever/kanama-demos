@@ -8,16 +8,19 @@ import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.MainThread
 import net.multigesture.kanama.generated.Autoloads
 import net.multigesture.kanama.generated.EventsNames
+import net.multigesture.kanama.generated.killPlaneTouched
+import net.multigesture.kanama.api.PhysicsBody3D
+import net.multigesture.kanama.api.cast
 
 @ScriptClass(attachTo = "Area3D")
 class KillPlane3D(godotObject: GodotHandle) : KanamaScript<Area3D>(godotObject, ::Area3D) {
 
     @OnReady
     fun ready() {
-        self.signal(Area3D.Signals.bodyEntered).connectObject(self) { body ->
+        self.bodyEntered.connect { body ->
             launch {
                 MainThread.awaitNextFrame()
-                Autoloads.Events.self.emitSignal(EventsNames.Signals.killPlaneTouched, body)
+                Autoloads.Events.killPlaneTouched.emit(body.cast<PhysicsBody3D>())
             }
         }
     }

@@ -22,6 +22,7 @@ import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.PlayerMethods
 import net.multigesture.kanama.generated.SmokePuffNames
 import net.multigesture.kanama.types.Vector3
+import net.multigesture.kanama.generated.SmokePuffSignals
 
 @ScriptClass(attachTo = "RigidBody3D")
 class BeetleBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::RigidBody3D) {
@@ -55,10 +56,8 @@ class BeetleBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObjec
         deathCollisionShape = self.requireAs("DeathCollisionShape", ::CollisionShape3D)
         defeatSound = self.requireAs("DefeatSound", ::AudioStreamPlayer3D)
 
-        bodyEnteredConnection = detectionArea.signal(Area3D.Signals.bodyEntered)
-            .connectObject(self) { body -> onBodyEntered(Node3D(body.handle)) }
-        bodyExitedConnection = detectionArea.signal(Area3D.Signals.bodyExited)
-            .connectObject(self) { body -> onBodyExited(Node3D(body.handle)) }
+        bodyEnteredConnection = detectionArea.bodyEntered.connect { body -> onBodyEntered(body) }
+        bodyExitedConnection = detectionArea.bodyExited.connect { body -> onBodyExited(body) }
 
         beetleSkin.idle()
     }
@@ -138,7 +137,7 @@ class BeetleBot(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObjec
             if (puff != null) {
                 self.getParent()?.addChild(puff)
                 Node3D(puff.handle).globalPosition = self.globalPosition
-                puff.signal(SmokePuffNames.Signals.full).await(self, argumentCount = 0)
+                SmokePuffSignals.full(puff).await()
             }
 
             repeat(coinsCount.toInt()) {

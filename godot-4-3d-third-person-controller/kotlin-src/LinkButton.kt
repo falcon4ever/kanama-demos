@@ -4,7 +4,6 @@ import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.annotations.GodotName
-import net.multigesture.kanama.api.BaseButton
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.OS
@@ -18,7 +17,7 @@ class LinkButton(godotObject: GodotHandle) : KanamaScript<TextureButton>(godotOb
 
     @OnReady
     fun ready() {
-        self.signal(BaseButton.Signals.pressed).connect(self, argumentCount = 0) {
+        self.pressed.connect {
             onButtonPressed()
         }
     }

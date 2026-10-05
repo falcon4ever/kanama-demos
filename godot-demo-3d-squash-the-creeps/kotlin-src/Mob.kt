@@ -13,6 +13,7 @@ import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.generated.MobSignals
 import net.multigesture.kanama.types.Vector3
+import net.multigesture.kanama.generated.squashed
 
 @ScriptClass(attachTo = "CharacterBody3D")
 class Mob(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
@@ -53,7 +54,7 @@ class Mob(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObject,
   }
 
   fun squash() {
-    MobSignals.squashed(this)
+    squashed.emit()
     self.queueFree()
   }
 
