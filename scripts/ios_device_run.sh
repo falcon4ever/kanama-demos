@@ -112,9 +112,9 @@ SELFTEST_RAN_MARKER='PTRCALL SELFTEST MATRIX'
 
 # Task 118 (found by a device run: step exit 0 with `OBJECTCALLS SELFTEST FAIL: ...` and `306 passed, 2 failed`
 # on the console): the runtime self-tests' OWN verdict is part of this check, as in kanama's ios_visual_smoke.sh.
-#   * any `SELFTEST FAIL:` line fails the run;
-#   * any summary line (PTRCALL matrix or ObjectCalls, the early one and the final one alike) with a non-zero
-#     failed count fails the run;
+#   * any `SELFTEST FAIL:` line fails the run, with or without a parenthesised phase (`SELFTEST (frame 1) FAIL:`);
+#   * any summary line (PTRCALL matrix or ObjectCalls, the early one, the final one and the `(frame 1)` one alike)
+#     with a non-zero failed count fails the run;
 #   * a console that shows the self-test ran must carry BOTH summaries, `PTRCALL SELFTEST MATRIX: N passed, 0 failed`
 #     and `OBJECTCALLS SELFTEST: N passed, 0 failed`; a missing one means the self-test did not finish.
 # How the runner knows the app prints self-tests: it does not assume it. This runner always builds Debug, which
@@ -128,14 +128,17 @@ REQUIRE_SELFTEST="${KANAMA_IOS_REQUIRE_SELFTEST:-0}"
 check_selftest_verdict() {
   local log="$1" fail_lines bad_summaries any
   # justified: grep exits 1 when nothing matches, which is the clean case; the checks below read the captured text.
-  fail_lines="$(grep -E 'SELFTEST FAIL:' "$log" 2>/dev/null || true)"
+  # An optional parenthesised phase: the frame-1 phase prints `OBJECTCALLS SELFTEST (frame 1) FAIL:` and
+  # `OBJECTCALLS SELFTEST (frame 1): N passed, M failed`, which the phase-less patterns let through (a device run
+  # with a frame-1 failure printed PASS, kanama task 129 A).
+  fail_lines="$(grep -E 'SELFTEST( \([^)]*\))? FAIL:' "$log" 2>/dev/null || true)"
   if [[ -n "$fail_lines" ]]; then
     echo "[ios_device_run] console: a runtime self-test reported a FAILURE: $log"
     printf '%s\n' "$fail_lines" | head -n 5 | sed 's/^/[ios_device_run]   /'
     return 1
   fi
   # justified: grep exits 1 when no summary has a failed count, which is the clean case.
-  bad_summaries="$(grep -E 'SELFTEST( MATRIX)?: [0-9]+ passed, [1-9][0-9]* failed' "$log" 2>/dev/null || true)"
+  bad_summaries="$(grep -E 'SELFTEST( MATRIX| \([^)]*\))?: [0-9]+ passed, [1-9][0-9]* failed' "$log" 2>/dev/null || true)"
   if [[ -n "$bad_summaries" ]]; then
     echo "[ios_device_run] console: a runtime self-test summary has failures: $log"
     printf '%s\n' "$bad_summaries" | head -n 5 | sed 's/^/[ios_device_run]   /'
@@ -391,6 +394,15 @@ LOG
   case_log "a real FAULT line" fail "reported a FAULT" "$dir/r8.log"
   sed 's/faults=7 expected=7/faults=8 expected=7/' "$good" >"$dir/r9.log"
   case_log "faults=8 expected=7" fail "fault count disagrees" "$dir/r9.log"
+  # kanama task 129 A: the frame-1 phase lines of the iPhone 12 run that printed PASS.
+  { cat "$good"
+    echo '[kanama][ios][kn] OBJECTCALLS SELFTEST (frame 1) FAIL: tween-await(signal fires -> the callback after the await runs)'
+    echo '[kanama][ios][kn] OBJECTCALLS SELFTEST (frame 1): 24 passed, 1 failed faults=7 expected=7'; } >"$dir/r10.log"
+  case_log "frame-1 FAIL line + frame-1 summary with a failure" fail "reported a FAILURE" "$dir/r10.log"
+  grep -v 'SELFTEST (frame 1) FAIL' "$dir/r10.log" >"$dir/r11.log"
+  case_log "frame-1 summary with a failure, no FAIL line" fail "summary has failures" "$dir/r11.log"
+  { cat "$good"; echo '[kanama][ios][kn] OBJECTCALLS SELFTEST (frame 1): 25 passed, 0 failed faults=7 expected=7'; } >"$dir/r12.log"
+  case_log "clean frame-1 summary" pass - "$dir/r12.log"
   rm -rf "$dir"
   if (( failures > 0 )); then
     echo "[ios_device_run] console checks self-test: FAIL ($failures)"
