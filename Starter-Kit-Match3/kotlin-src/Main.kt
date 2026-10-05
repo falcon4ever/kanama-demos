@@ -59,6 +59,24 @@ class Main(godotObject: GodotHandle) :
   private var comboCount = 0
   private val activeTweens = mutableSetOf<Tween>()
 
+  // Read by SmokeQuit / SmokeTouchSwipe: the drag releases the input handler saw and the swipes it
+  // accepted as moves. On the player's path they only count. Internal, so none of this is a
+  // registered script member.
+  internal var dragReleases = 0
+    private set
+
+  internal var moves = 0
+    private set
+
+  internal val isBoardIdle: Boolean
+    get() = !isSwapping
+
+  internal val board: Node2D
+    get() = container
+
+  // The centre of [cell] in the board's local coordinates.
+  internal fun cellCenter(cell: Vector2i): Vector2 = gridToPixel(cell.x, cell.y)
+
   // Functions
   /**
    * Task 80 slice 6: a deterministic dump of this script's HYDRATED state.
@@ -180,6 +198,7 @@ class Main(godotObject: GodotHandle) :
         mouseButton.isReleased()
     ) {
       if (firstTouch != Vector2i(-1, -1)) {
+        dragReleases += 1
         calculateSwipe(container.getLocalMousePosition())
       }
     }
@@ -198,6 +217,7 @@ class Main(godotObject: GodotHandle) :
         }
 
       if (isWithinGrid(otherTouch)) {
+        moves += 1
         handleSwapLogic(firstTouch, otherTouch)
         playAudio("res://sounds/tile-swap.ogg", false, GD.randfRange(0.8, 1.2), 0.3)
       }
