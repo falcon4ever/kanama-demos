@@ -6,6 +6,7 @@ import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.SceneTree
+import net.multigesture.kanama.generated.Autoloads
 import net.multigesture.kanama.generated.EventsNames
 
 /**
@@ -21,7 +22,7 @@ class KillPlane3D(godotObject: GodotHandle) :
     self.signal(Area3D.Signals.bodyEntered).connectObject(self) { body ->
       launch {
         SceneTree.delaySeconds(0.0)
-        self.eventsNode().emitSignal(EventsNames.Signals.killPlaneTouched, body)
+        Autoloads.Events.self.emitSignal(EventsNames.Signals.killPlaneTouched, body)
       }
     }
   }

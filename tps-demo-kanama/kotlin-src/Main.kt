@@ -2,8 +2,8 @@ package tps
 
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.api.Engine
 import net.multigesture.kanama.api.DisplayServer
+import net.multigesture.kanama.api.Engine
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
@@ -11,6 +11,7 @@ import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.SceneMultiplayer
 import net.multigesture.kanama.api.Window
 import net.multigesture.kanama.api.kotlinScriptInstance
+import net.multigesture.kanama.generated.Autoloads
 import net.multigesture.kanama.generated.LevelNames
 import net.multigesture.kanama.generated.MenuNames
 
@@ -32,7 +33,7 @@ class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         // settings ConfigFile is a Kotlin-owned handle: both must be released for the live-handle
         // count to drain to zero.
         TpsScenes.releaseCachedScenes()
-        TpsSettings.releaseConfigFile()
+        Autoloads.Settings.releaseConfigFile()
         self.queueFree()
     }
 
@@ -43,7 +44,7 @@ class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         }
         self.withMultiplayer { SceneMultiplayer.fromApi(it)?.serverRelay = false }
         net.multigesture.kanama.api.GD.randomize()
-        self.getWindow()?.mode = Window.Mode(TpsSettings.videoLong("display_mode"))
+        self.getWindow()?.mode = Window.Mode(Autoloads.Settings.videoLong("display_mode"))
         goToMainMenu()
     }
 

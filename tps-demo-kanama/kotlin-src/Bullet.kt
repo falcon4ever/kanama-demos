@@ -1,7 +1,7 @@
 package tps
 
-import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnExitTree
+import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.Rpc
 import net.multigesture.kanama.annotations.ScriptClass
@@ -14,6 +14,7 @@ import net.multigesture.kanama.api.MainThread
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.OmniLight3D
 import net.multigesture.kanama.api.kotlinScriptInstance
+import net.multigesture.kanama.generated.Autoloads
 
 @ScriptClass(attachTo = "CharacterBody3D")
 class Bullet(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
@@ -75,7 +76,7 @@ class Bullet(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
         self.setPhysicsProcess(false)
         collisionShape.disabled = true
         animationPlayer.play("explode")
-        if (TpsSettings.renderBool("shadow_mapping")) {
+        if (Autoloads.Settings.renderBool("shadow_mapping")) {
             omniLight.shadowEnabled = true
         }
     }

@@ -9,9 +9,9 @@ import net.multigesture.kanama.api.GPUParticles3D
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Mathf
-import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.kotlinScriptInstance
+import net.multigesture.kanama.generated.Autoloads
 
 /**
  * Web port of a collectible coin: spins + bobs, and on the scene body_entered signal awards the
@@ -24,14 +24,10 @@ class Coin(godotObject: GodotHandle) : KanamaScript<Area3D>(godotObject, ::Area3
   private var grabbed = false
   private lateinit var mesh: Node3D
   private lateinit var particles: GPUParticles3D
-  private lateinit var audio: Node
-
   @OnReady
   fun ready() {
     mesh = self.requireAs("Mesh", ::Node3D)
     particles = self.requireAs("Particles", ::GPUParticles3D)
-    audio = self.getNodeOrNull("/root/Audio")?.let { Node(it.handle) }
-      ?: error("Coin requires the Audio autoload")
   }
 
   @GodotName("_on_body_entered")
@@ -49,7 +45,7 @@ class Coin(godotObject: GodotHandle) : KanamaScript<Area3D>(godotObject, ::Area3
   // The Audio autoload is the original demo's GDScript, so it has no typed wrapper; the
   // dynamic call stays out of the signal callback body itself, as in the sibling scripts.
   private fun playAudio(path: String) {
-    audio.call("play", path)
+    Autoloads.Audio.call("play", path)
   }
 
   @OnProcess

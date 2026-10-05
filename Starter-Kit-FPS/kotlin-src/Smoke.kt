@@ -1,19 +1,18 @@
 package fps
 
-import net.multigesture.kanama.api.GodotHandle
-import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GD
+import net.multigesture.kanama.api.GodotHandle
+import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Label
-import net.multigesture.kanama.api.Node
+import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.OS
 import net.multigesture.kanama.api.TextureRect
+import net.multigesture.kanama.generated.Autoloads
 import net.multigesture.kanama.types.Transform3D
 import net.multigesture.kanama.types.Vector3
-import net.multigesture.kanama.api.KanamaScript
-import net.multigesture.kanama.api.kotlinScriptInstance
 
 @ScriptClass(attachTo = "Node3D")
 class Smoke(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
@@ -71,8 +70,7 @@ class Smoke(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
 
 
     private fun stopAudio() {
-        val audio = self.getNodeOrNull("/root/Audio") ?: return
-        audio.kotlinScriptInstance<Audio>()?.stopAll()
+        Autoloads.Audio.stopAll()
     }
 
     private fun Vector3.isCloseTo(other: Vector3, epsilon: Double = 0.001): Boolean =

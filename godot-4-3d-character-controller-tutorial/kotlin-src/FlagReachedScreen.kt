@@ -7,6 +7,7 @@ import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.CanvasLayer
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
+import net.multigesture.kanama.generated.Autoloads
 import net.multigesture.kanama.generated.EventsNames
 
 @ScriptClass(attachTo = "CanvasLayer")
@@ -18,7 +19,7 @@ class FlagReachedScreen(godotObject: GodotHandle) :
   @OnReady
   fun ready() {
     animationPlayer = self.requireAs("AnimationPlayer", ::AnimationPlayer)
-    val events = self.eventsNode()
+    val events = Autoloads.Events.self
     events.signal(EventsNames.Signals.flagReached).connect(self, argumentCount = 0) {
       launch {
         requireNotNull(self.getTree()).delaySeconds(2.0)

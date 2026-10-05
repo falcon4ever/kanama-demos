@@ -1,10 +1,10 @@
 package fps
 
-import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.OnProcess
-import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.annotations.GodotName
+import net.multigesture.kanama.annotations.OnProcess
+import net.multigesture.kanama.annotations.OnReady
+import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.AnimatedSprite3D
 import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.GD
@@ -14,6 +14,7 @@ import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.RayCast3D
 import net.multigesture.kanama.api.kotlinScriptInstance
+import net.multigesture.kanama.generated.Autoloads
 import net.multigesture.kanama.types.Vector3
 
 @ScriptClass(attachTo = "Area3D")
@@ -86,7 +87,6 @@ class Enemy(godotObject: GodotHandle) : KanamaScript<Area3D>(godotObject, ::Area
   }
 
   private fun playAudio(soundPath: String) {
-    val audio = self.getNodeOrNull("/root/Audio") ?: return
-    audio.kotlinScriptInstance<Audio>()?.play(soundPath)
+    Autoloads.Audio.play(soundPath)
   }
 }

@@ -1,15 +1,10 @@
 package racing
 
 import net.multigesture.kanama.annotations.GlobalClass
-import net.multigesture.kanama.annotations.GodotName
-import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
-import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.Node3D
-import net.multigesture.kanama.types.Vector3
 
 @ScriptClass(attachTo = "Node3D")
 @GlobalClass
@@ -19,7 +14,6 @@ class VehicleMotorcycle(godotObject: GodotHandle) : Vehicle(godotObject) {
     private lateinit var wheelFront: Node3D
     private lateinit var wheelBack: Node3D
 
-    @OnReady
     override fun ready() {
         super.ready()
         motorcycle = self.requireAs("Container/Model/motorcycle", ::Node3D)
@@ -27,18 +21,6 @@ class VehicleMotorcycle(godotObject: GodotHandle) : Vehicle(godotObject) {
         wheelFront = self.requireAs("Container/Model/motorcycle/wheel-front", ::Node3D)
         wheelBack = self.requireAs("Container/Model/motorcycle/wheel-back", ::Node3D)
         vehicleBody = self.requireAs("Container/Model/motorcycle/body", ::Node3D)
-    }
-
-    override fun getVehiclePosition(): Vector3 = super.getVehiclePosition()
-
-    @OnPhysicsProcess
-    override fun physicsProcess(delta: Double) {
-        super.physicsProcess(delta)
-    }
-
-    @GodotName("_on_sphere_body_entered")
-    override fun onSphereBodyEntered(body: GodotObject) {
-        super.onSphereBodyEntered(body)
     }
 
     override fun effectBody(delta: Double) {

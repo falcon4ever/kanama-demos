@@ -1,10 +1,10 @@
 package net.multigesture.kanama.demos.platformer3d
 
+import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.annotations.ExportSubgroup
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.annotations.Signal
 import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.AudioStreamPlayer
@@ -12,13 +12,13 @@ import net.multigesture.kanama.api.CharacterBody3D
 import net.multigesture.kanama.api.GPUParticles3D
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.Input
+import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Mathf
-import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
+import net.multigesture.kanama.generated.Autoloads
+import net.multigesture.kanama.generated.PlayerSignals
 import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector3
-import net.multigesture.kanama.generated.PlayerSignals
-import net.multigesture.kanama.api.KanamaScript
 
 @ScriptClass(attachTo = "CharacterBody3D")
 class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
@@ -49,8 +49,6 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 	private lateinit var soundFootsteps: AudioStreamPlayer
 	private lateinit var model: Node3D
 	private lateinit var animation: AnimationPlayer
-	private lateinit var audio: Node
-
 	@Signal
 	fun coinCollected(value: Long) = Unit
 
@@ -61,8 +59,6 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 		soundFootsteps = self.requireAs("SoundFootsteps", ::AudioStreamPlayer)
 		model = self.requireAs("Character", ::Node3D)
 		animation = self.requireAs("Character/AnimationPlayer", ::AnimationPlayer)
-		audio = self.getNodeOrNull("/root/Audio")?.let { Node(it.handle) }
-			?: error("Player requires the Audio autoload")
 	}
 
 	@OnPhysicsProcess
@@ -172,6 +168,6 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 	}
 
 	private fun playAudio(path: String) {
-		audio.call("play", path)
+		Autoloads.Audio.call("play", path)
 	}
 }

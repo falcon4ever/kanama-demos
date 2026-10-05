@@ -6,6 +6,7 @@ import net.multigesture.kanama.api.Area3D
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node3D
+import net.multigesture.kanama.generated.Autoloads
 import net.multigesture.kanama.generated.EventsNames
 
 @ScriptClass(attachTo = "Node3D")
@@ -14,7 +15,7 @@ class Flag3D(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Nod
   @OnReady
   fun ready() {
     val area = self.requireAs("Area3D", ::Area3D)
-    val events = self.eventsNode()
+    val events = Autoloads.Events.self
     area.signal(Area3D.Signals.bodyEntered).connect(self, argumentCount = 1) {
       events.emitSignal(EventsNames.Signals.flagReached)
     }

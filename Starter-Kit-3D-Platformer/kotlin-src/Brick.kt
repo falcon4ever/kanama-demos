@@ -8,10 +8,10 @@ import net.multigesture.kanama.api.CollisionShape3D
 import net.multigesture.kanama.api.GPUParticles3D
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
-import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.SceneTree
 import net.multigesture.kanama.api.StaticBody3D
+import net.multigesture.kanama.generated.Autoloads
 import net.multigesture.kanama.generated.BrickNames
 
 /**
@@ -29,16 +29,12 @@ class Brick(godotObject: GodotHandle) :
   private lateinit var mesh: Node3D
   private lateinit var particles: GPUParticles3D
   private lateinit var collisionShape: CollisionShape3D
-  private lateinit var audio: Node
-
   @OnReady
   fun ready() {
     bottomDetector = self.requireAs("BottomDetector", ::Area3D)
     mesh = self.requireAs("Mesh", ::Node3D)
     particles = self.requireAs("Particles", ::GPUParticles3D)
     collisionShape = self.requireAs("CollisionShape3D", ::CollisionShape3D)
-    audio = self.getNodeOrNull("/root/Audio")?.let { Node(it.handle) }
-      ?: error("Brick requires the Audio autoload")
 
     bottomDetector.signal(Area3D.Signals.bodyEntered).connect(self, BrickNames.Methods.onBottomHit)
   }
@@ -52,7 +48,7 @@ class Brick(godotObject: GodotHandle) :
     if (exploded) return
     exploded = true
 
-    audio.call("play", "res://sounds/break.ogg")
+    Autoloads.Audio.call("play", "res://sounds/break.ogg")
 
     particles.restart(keepSeed = true)
     mesh.hide()
