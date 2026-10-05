@@ -3,7 +3,6 @@ package thirdperson
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.Signal
-import net.multigesture.kanama.api.AnimationMixer
 import net.multigesture.kanama.api.AnimationPlayer
 import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.GD
@@ -12,6 +11,7 @@ import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.generated.SmokePuffSignals
+import net.multigesture.kanama.generated.full
 
 @ScriptClass(attachTo = "Node3D")
 class SmokePuff(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
@@ -30,13 +30,12 @@ class SmokePuff(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::
         val animationPlayer = self.requireAs("AnimationPlayer", ::AnimationPlayer)
         animationPlayer.play("poof")
         launch {
-            animationPlayer.signal(AnimationMixer.Signals.animationFinished)
-                .await(self, argumentCount = 1)
+            animationPlayer.animationFinished.await()
             self.queueFree()
         }
     }
 
     fun smokeAtFullDensity() {
-        SmokePuffSignals.full(this)
+        full.emit()
     }
 }

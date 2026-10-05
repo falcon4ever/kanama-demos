@@ -24,8 +24,8 @@ class JumpingPad(godotObject: GodotHandle) : KanamaScript<Area3D>(godotObject, :
     @OnReady
     fun ready() {
         mushroom = self.requireAs("%mushroom", ::Node3D)
-        self.signal(Area3D.Signals.bodyEntered).connectObject(self) { body ->
-            if (!Node3D(body.handle).isPlayer()) return@connectObject
+        self.bodyEntered.connect { body ->
+            if (!body.isPlayer()) return@connect
             launch(CharacterBody3D(body.handle))
         }
     }

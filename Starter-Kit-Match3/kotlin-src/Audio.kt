@@ -26,7 +26,7 @@ class Audio(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) 
       self.addChild(player)
       available.addLast(player)
       player.setVolumeDb(-10.0)
-      player.signal("finished").connect(self, argumentCount = 0) { onStreamFinished(player) }
+      player.finished.connect { onStreamFinished(player) }
       player.setBus(bus)
     }
   }

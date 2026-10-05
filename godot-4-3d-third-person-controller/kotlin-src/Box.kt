@@ -47,8 +47,7 @@ class Box(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::R
         destroySound.play()
 
         launch {
-            destroySound.signal(AudioStreamPlayer3D.Signals.finished)
-                .await(self, argumentCount = 0)
+            destroySound.finished.await()
             self.queueFree()
         }
     }

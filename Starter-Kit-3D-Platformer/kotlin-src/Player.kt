@@ -19,6 +19,7 @@ import net.multigesture.kanama.generated.Autoloads
 import net.multigesture.kanama.generated.PlayerSignals
 import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector3
+import net.multigesture.kanama.generated.coinCollected
 
 @ScriptClass(attachTo = "CharacterBody3D")
 class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
@@ -164,7 +165,7 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 
 	fun collectCoin() {
 		coins += 1
-		PlayerSignals.coinCollected(this, coins)
+		coinCollected.emit(coins)
 	}
 
 	private fun playAudio(path: String) {

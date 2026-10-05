@@ -28,6 +28,8 @@ import net.multigesture.kanama.generated.CharacterSkinNames
 import net.multigesture.kanama.generated.PlayerSignals
 import net.multigesture.kanama.types.Basis
 import net.multigesture.kanama.types.Vector3
+import net.multigesture.kanama.generated.weaponSwitched
+import net.multigesture.kanama.generated.CharacterSkinSignals
 
 @GlobalClass
 @ScriptClass(attachTo = "CharacterBody3D")
@@ -123,7 +125,7 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 			registerInputActions()
 		}
 
-		characterSkinNode.signal(CharacterSkinNames.Signals.stepped).connect(self, argumentCount = 0) {
+		CharacterSkinSignals.stepped(characterSkinNode).connect {
 			playFootStepSound()
 		}
 	}
@@ -353,7 +355,7 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 	}
 
 	private fun emitWeaponSwitched() {
-		PlayerSignals.weaponSwitched(this, equippedWeapon.name)
+		weaponSwitched.emit(equippedWeapon.name)
 	}
 
 	private enum class WeaponType {

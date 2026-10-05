@@ -45,10 +45,7 @@ class Coin(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::
             self.setCollisionLayerValue(3, true)
         }
 
-        playerDetectionArea.signal(Area3D.Signals.bodyEntered)
-            .connectObject(self) { body ->
-                onBodyEntered(PhysicsBody3D(body.handle))
-            }
+        playerDetectionArea.bodyEntered.connect { body -> onBodyEntered(PhysicsBody3D(body.handle)) }
     }
 
     private fun setTarget(newTarget: PhysicsBody3D) {
@@ -88,8 +85,7 @@ class Coin(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::
         self.hide()
 
         launch {
-            collectAudio.signal(AudioStreamPlayer3D.Signals.finished)
-                .await(self, argumentCount = 0)
+            collectAudio.finished.await()
             self.queueFree()
         }
     }

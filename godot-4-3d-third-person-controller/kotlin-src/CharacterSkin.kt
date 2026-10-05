@@ -16,6 +16,7 @@ import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.setParameter
 import net.multigesture.kanama.generated.CharacterSkinSignals
+import net.multigesture.kanama.generated.stepped
 
 @GlobalClass
 @ScriptClass(attachTo = "Node3D")
@@ -62,7 +63,7 @@ class CharacterSkin(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject
 
     @GodotName("_step")
     fun step() {
-        CharacterSkinSignals.stepped(this)
+        stepped.emit()
     }
 
     @Signal

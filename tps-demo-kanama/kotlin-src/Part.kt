@@ -17,7 +17,6 @@ import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.OS
 import net.multigesture.kanama.api.RigidBody3D
 import net.multigesture.kanama.api.ShaderMaterial
-import net.multigesture.kanama.api.Timer
 import net.multigesture.kanama.types.Vector3
 import kotlinx.coroutines.cancel
 
@@ -98,8 +97,7 @@ class Part(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::
             } else {
                 lifetime + lifetimeRandom * net.multigesture.kanama.api.GD.randf()
             }
-            requireNotNull(self.getTree()).createTimer(delay)
-                .signal(Timer.Signals.timeout).await(self, argumentCount = 0)
+            wait(delay)
             if (!self.isQueuedForDeletion() && self.isInsideTree()) {
                 self.setProcess(true)
             }
@@ -133,7 +131,7 @@ class Part(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::
             net.multigesture.kanama.api.GD.print("TPS smoke part destroyed")
             launch {
                 val delay = System.getenv("KANAMA_TPS_SMOKE_QUIT_AFTER_PARTS_DESTROYED_DELAY")?.toDoubleOrNull() ?: 4.0
-                requireNotNull(self.getTree()).createTimer(delay).signal(Timer.Signals.timeout).await(self, argumentCount = 0)
+                wait(delay)
                 requireNotNull(self.getTree()).quit()
             }
         }

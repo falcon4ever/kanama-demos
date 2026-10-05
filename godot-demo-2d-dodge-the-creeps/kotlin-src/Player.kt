@@ -17,6 +17,7 @@ import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.api.Node2D
 import net.multigesture.kanama.generated.PlayerSignals
 import net.multigesture.kanama.types.Vector2
+import net.multigesture.kanama.generated.hit
 
 @ScriptClass(attachTo = "Area2D")
 class Player(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area2D) {
@@ -81,7 +82,7 @@ class Player(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Are
     @GodotName("_on_body_entered")
     fun onBodyEntered(_body: Node2D) {
         self.hide() // Player disappears after being hit.
-        PlayerSignals.hit(this)
+        hit.emit()
         // Must be deferred as we can't change physics properties on a physics callback.
         collisionShape.setDeferred("disabled", true)
     }

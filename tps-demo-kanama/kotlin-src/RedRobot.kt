@@ -26,7 +26,6 @@ import net.multigesture.kanama.api.OS
 import net.multigesture.kanama.api.PhysicsRayQueryParameters3D
 import net.multigesture.kanama.api.RayCast3D
 import net.multigesture.kanama.api.RigidBody3D
-import net.multigesture.kanama.api.Timer
 import net.multigesture.kanama.types.Basis
 import net.multigesture.kanama.types.Transform3D
 import net.multigesture.kanama.types.Vector2
@@ -144,7 +143,7 @@ class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotOb
 		self.emitSignal("exploded")
 		if (self.isMultiplayerServer()) {
 				launch {
-					requireNotNull(self.getTree()).createTimer(10.0).signal(Timer.Signals.timeout).await(self, argumentCount = 0)
+					wait(10.0)
 					self.queueFree()
 				}
 		}
@@ -176,7 +175,7 @@ class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotOb
 					val hitPlayer = player?.kotlinScriptInstance<Player>()
 					if (hitPlayer != null) {
 						launch {
-							requireNotNull(self.getTree()).createTimer(0.1).signal(Timer.Signals.timeout).await(self, argumentCount = 0)
+							wait(0.1)
 							hitPlayer.addCameraShakeTrauma(13.0)
 					}
 				}

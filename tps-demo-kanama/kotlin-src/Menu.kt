@@ -20,7 +20,6 @@ import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Label
 import net.multigesture.kanama.api.LineEdit
 import net.multigesture.kanama.api.Mathf
-import net.multigesture.kanama.api.MultiplayerAPI
 import net.multigesture.kanama.api.MultiplayerPeer
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.OS
@@ -85,22 +84,17 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         loading = self.requireAs("UI/Loading", ::Control)
         loadingProgress = self.requireAs("UI/Loading/Progress", ::ProgressBar)
         loadingDoneTimer = self.requireAs("UI/Loading/DoneTimer", ::Timer)
-        loadingDoneTimer.signal(Timer.Signals.timeout).connect(self, argumentCount = 0) {
+        loadingDoneTimer.timeout.connect {
             onLoadingDoneTimerTimeout()
         }
         self.withMultiplayer { api ->
-            api.signal(MultiplayerAPI.Signals.connectedToServer)
-                .connect(self, argumentCount = 0) { onConnectedToServer() }
-            api.signal(MultiplayerAPI.Signals.connectionFailed)
-                .connect(self, argumentCount = 0) { showConnectionFailure("Could not reach the host. Check the address, port, and Wi-Fi network.") }
-            api.signal(MultiplayerAPI.Signals.serverDisconnected)
-                .connect(self, argumentCount = 0) {
+            api.connectedToServer.connect { onConnectedToServer() }
+            api.connectionFailed.connect { showConnectionFailure("Could not reach the host. Check the address, port, and Wi-Fi network.") }
+            api.serverDisconnected.connect {
                     if (joinedLobby) showConnectionFailure("The host disconnected.")
                 }
-            api.signal(MultiplayerAPI.Signals.peerConnected)
-                .connect(self, argumentCount = 1) { args -> onLobbyPeerConnected((args.firstOrNull() as Number).toLong()) }
-            api.signal(MultiplayerAPI.Signals.peerDisconnected)
-                .connect(self, argumentCount = 1) { args -> onLobbyPeerDisconnected((args.firstOrNull() as Number).toLong()) }
+            api.peerConnected.connect { id -> onLobbyPeerConnected(id) }
+            api.peerDisconnected.connect { id -> onLobbyPeerDisconnected(id) }
         }
 
         registerButtons()

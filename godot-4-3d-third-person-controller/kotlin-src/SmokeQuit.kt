@@ -72,7 +72,7 @@ class SmokeQuit(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::No
         val root = self.getParent() ?: return
         val resume = root.getAsOrNull("DemoPage/CanvasLayer/DemoPageRoot/Content/MarginContainer/Buttons/Resume", ::BaseButton)
         if (resume != null) {
-            resume.signal(BaseButton.Signals.pressed).emit()
+            resume.pressed.emit()
         } else {
             requireNotNull(self.getTree()).setPaused(false)
         }
