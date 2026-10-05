@@ -1,10 +1,10 @@
 package citybuilder
 
-import net.multigesture.kanama.annotations.OnExitTree
-import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.OnProcess
-import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.Export
+import net.multigesture.kanama.annotations.OnExitTree
+import net.multigesture.kanama.annotations.OnProcess
+import net.multigesture.kanama.annotations.OnReady
+import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.Camera3D
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
@@ -12,13 +12,11 @@ import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.GridMap
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.KanamaScript
-import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.api.Label
 import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.api.Mesh
 import net.multigesture.kanama.api.MeshInstance3D
 import net.multigesture.kanama.api.MeshLibrary
-import net.multigesture.kanama.api.newScriptInstance
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.OwnedScriptResource
@@ -26,6 +24,9 @@ import net.multigesture.kanama.api.PackedScene
 import net.multigesture.kanama.api.Resource
 import net.multigesture.kanama.api.ResourceLoader
 import net.multigesture.kanama.api.ResourceSaver
+import net.multigesture.kanama.api.kotlinScriptInstance
+import net.multigesture.kanama.api.newScriptInstance
+import net.multigesture.kanama.generated.Autoloads
 import net.multigesture.kanama.types.Plane
 import net.multigesture.kanama.types.Transform3D
 import net.multigesture.kanama.types.Vector2i
@@ -232,8 +233,7 @@ class Builder(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::No
   }
 
   private fun playAudio(soundPath: String, volumeDb: Double = -10.0) {
-    val audio = self.getNodeOrNull("/root/Audio") ?: return
-    audio.kotlinScriptInstance<Audio>()?.play(soundPath, volumeDb)
+    Autoloads.Audio.play(soundPath, volumeDb)
   }
 
   private fun updateCash() {

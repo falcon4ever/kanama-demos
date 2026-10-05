@@ -1,13 +1,13 @@
 package fps
 
 import net.multigesture.kanama.annotations.Export
+import net.multigesture.kanama.annotations.ExportRange
 import net.multigesture.kanama.annotations.ExportSubgroup
 import net.multigesture.kanama.annotations.GlobalClass
 import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnInput
 import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.OnReady
-import net.multigesture.kanama.annotations.PropertyHint
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.Signal
 import net.multigesture.kanama.api.AnimatedSprite3D
@@ -30,7 +30,7 @@ import net.multigesture.kanama.api.TextureRect
 import net.multigesture.kanama.api.Timer
 import net.multigesture.kanama.api.Tween
 import net.multigesture.kanama.api.createTween
-import net.multigesture.kanama.api.kotlinScriptInstance
+import net.multigesture.kanama.generated.Autoloads
 import net.multigesture.kanama.generated.PlayerSignals
 import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector3
@@ -50,7 +50,7 @@ class Player(godotObject: GodotHandle) :
 
   @ExportSubgroup("Properties") @Export var movementSpeed: Long = 5
 
-  @Export(hint = PropertyHint.RANGE, hintString = "0,100,1") var numberOfJumps: Long = 2
+  @ExportRange(0.0, 100.0, 1.0) var numberOfJumps: Long = 2
 
   @Export var jumpStrength: Long = 8
 
@@ -349,7 +349,6 @@ class Player(godotObject: GodotHandle) :
   }
 
   private fun playAudio(soundPath: String) {
-    val audio = self.getNodeOrNull("/root/Audio") ?: return
-    audio.kotlinScriptInstance<Audio>()?.play(soundPath)
+    Autoloads.Audio.play(soundPath)
   }
 }

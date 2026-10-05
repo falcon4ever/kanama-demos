@@ -1,12 +1,12 @@
 package charactercontroller
 
+import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnInput
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.OnUnhandledInput
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.api.AudioStreamPlayer3D
 import net.multigesture.kanama.api.Camera3D
 import net.multigesture.kanama.api.CharacterBody3D
@@ -21,6 +21,7 @@ import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.globalBasis
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.api.setPhysicsProcess
+import net.multigesture.kanama.generated.Autoloads
 import net.multigesture.kanama.generated.EventsNames
 import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector3
@@ -81,7 +82,7 @@ class Player3DTemplate(godotObject: GodotHandle) :
     jumpSound = self.requireAs("%JumpSound", ::AudioStreamPlayer3D)
     dustParticles = self.requireAs("%DustParticles", ::GPUParticles3D)
 
-    val events = self.eventsNode()
+    val events = Autoloads.Events.self
     events.signal(EventsNames.Signals.killPlaneTouched).connectObject(self) {
       self.globalPosition = startPosition
       self.velocity = Vector3.ZERO

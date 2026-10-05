@@ -1,9 +1,9 @@
 package fps
 
 import net.multigesture.kanama.annotations.Export
+import net.multigesture.kanama.annotations.ExportRange
 import net.multigesture.kanama.annotations.ExportSubgroup
 import net.multigesture.kanama.annotations.GlobalClass
-import net.multigesture.kanama.annotations.PropertyHint
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.PackedScene
@@ -28,18 +28,18 @@ class Weapon(objectId: GodotHandle) : KanamaWebScript(objectId) {
   @Export var muzzlePosition: Vector3 = Vector3.ZERO
 
   @ExportSubgroup("Properties")
-  @Export(hint = PropertyHint.RANGE, hintString = "0.1,1")
+  @ExportRange(0.1, 1.0)
   var cooldown: Double = 0.1
 
-  @Export(hint = PropertyHint.RANGE, hintString = "1,20,1") var maxDistance: Long = 10
+  @ExportRange(1.0, 20.0, 1.0) var maxDistance: Long = 10
 
-  @Export(hint = PropertyHint.RANGE, hintString = "0,100") var damage: Double = 25.0
+  @ExportRange(0.0, 100.0) var damage: Double = 25.0
 
-  @Export(hint = PropertyHint.RANGE, hintString = "0,5") var spread: Double = 0.0
+  @ExportRange(0.0, 5.0) var spread: Double = 0.0
 
-  @Export(hint = PropertyHint.RANGE, hintString = "1,5,1") var shotCount: Long = 1
+  @ExportRange(1.0, 5.0, 1.0) var shotCount: Long = 1
 
-  @Export(hint = PropertyHint.RANGE, hintString = "0,50,1") var knockback: Long = 20
+  @ExportRange(0.0, 50.0, 1.0) var knockback: Long = 20
 
   @Export var minKnockback: Vector2 = Vector2(0.001, 0.001)
 

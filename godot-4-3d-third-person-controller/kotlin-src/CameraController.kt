@@ -1,12 +1,12 @@
 package thirdperson
 
-import net.multigesture.kanama.annotations.OnProcess
+import net.multigesture.kanama.annotations.Export
+import net.multigesture.kanama.annotations.ExportRange
 import net.multigesture.kanama.annotations.OnInput
+import net.multigesture.kanama.annotations.OnProcess
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.OnUnhandledInput
-import net.multigesture.kanama.annotations.PropertyHint
 import net.multigesture.kanama.annotations.ScriptClass
-import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.api.Camera3D
 import net.multigesture.kanama.api.CharacterBody3D
 import net.multigesture.kanama.api.GD
@@ -29,10 +29,10 @@ class CameraController(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObj
     @Export
     var invertMouseY = false
 
-    @Export(hint = PropertyHint.RANGE, hintString = "0.0,1.0,0.01")
+    @ExportRange(0.0, 1.0, 0.01)
     var mouseSensitivity = 0.25
 
-    @Export(hint = PropertyHint.RANGE, hintString = "0.0,8.0,0.01")
+    @ExportRange(0.0, 8.0, 0.01)
     var joystickSensitivity = 2.0
 
     // Spelled literals (GD.degToRad(-60.0) and GD.degToRad(60.0)): expression defaults are not
