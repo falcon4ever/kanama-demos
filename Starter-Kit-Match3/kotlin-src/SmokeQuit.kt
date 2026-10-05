@@ -30,6 +30,21 @@ class SmokeQuit(godotObject: GodotHandle) :
           ?: error("SmokeQuit parent is missing the Main script")
       GD.print("KANAMA-DIFF match3.Main ${main.differentialProbe()}")
       SceneTree.delaySeconds(0.1)
+      // Kanama task 129 A: one swipe made of touch events, through Godot's touch -> mouse
+      // emulation (SmokeTouchSwipe). The release must reach Main._input and become one move;
+      // otherwise the completion line below is withheld, which fails the desktop and iOS runners.
+      val touch = SmokeTouchSwipe.run(main)
+      if (touch == null) {
+        println("[kanama:smoke] match3 touch: skipped (this platform cannot inject input events)")
+      } else {
+        println("[kanama:smoke] match3 touch: $touch")
+        if (main.dragReleases != 1 || main.moves != 1) {
+          println("[kanama:smoke] FAIL match3 touch: expected releases=1 moves=1 ($touch)")
+          val tree = requireNotNull(self.getTree())
+          MainThread.post { tree.quit(1) }
+          return@launch
+        }
+      }
       // One line every smoke prints once its checks ran; the iOS runner requires it (task 111).
       println("[kanama:smoke] SmokeQuit complete")
       val tree = requireNotNull(self.getTree())

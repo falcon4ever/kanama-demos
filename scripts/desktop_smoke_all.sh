@@ -203,6 +203,13 @@ run_smoke() {
 
 run_smoke "Starter-Kit-3D-Platformer" KANAMA_DEMO_SMOKE_QUIT=1
 run_smoke "Starter-Kit-Match3" KANAMA_DEMO_SMOKE_QUIT=1
+# Kanama task 129 A: Match3's SmokeQuit swipes one tile with touch events through Godot's touch -> mouse
+# emulation (SmokeTouchSwipe.kt); the release must reach Main._input and count as exactly one move.
+match3_console="$LOG_DIR/Starter-Kit-Match3.console.log"
+if ! grep -qE '\[kanama:smoke\] match3 touch: .* releases=1 moves=1' "$match3_console"; then
+  echo "[desktop_smoke_all] Starter-Kit-Match3: no '[kanama:smoke] match3 touch: ... releases=1 moves=1' line; the touch swipe did not become a move: $match3_console" >&2
+  exit 1
+fi
 run_smoke "Starter-Kit-FPS" KANAMA_FPS_SMOKE=1
 run_smoke "Starter-Kit-Racing" KANAMA_RACING_SMOKE=1
 run_smoke "Starter-Kit-City-Builder" KANAMA_CITY_BUILDER_SMOKE=1

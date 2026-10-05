@@ -13,7 +13,6 @@ import net.multigesture.kanama.api.MouseButton
 import net.multigesture.kanama.api.Sprite2D
 import net.multigesture.kanama.api.Texture2D
 import net.multigesture.kanama.api.Tween
-import net.multigesture.kanama.api.createTween
 import net.multigesture.kanama.generated.Autoloads
 import net.multigesture.kanama.generated.TileSignals
 import net.multigesture.kanama.types.Color

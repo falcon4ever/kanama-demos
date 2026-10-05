@@ -18,7 +18,6 @@ import net.multigesture.kanama.api.OS
 import net.multigesture.kanama.api.SceneTree
 import net.multigesture.kanama.api.Tween
 import net.multigesture.kanama.api.WorldEnvironment
-import net.multigesture.kanama.api.createTween
 import net.multigesture.kanama.types.Color
 
 @ScriptClass(attachTo = "Node")

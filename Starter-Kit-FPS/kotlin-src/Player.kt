@@ -29,7 +29,6 @@ import net.multigesture.kanama.api.ResourceLoader
 import net.multigesture.kanama.api.TextureRect
 import net.multigesture.kanama.api.Timer
 import net.multigesture.kanama.api.Tween
-import net.multigesture.kanama.api.createTween
 import net.multigesture.kanama.generated.Autoloads
 import net.multigesture.kanama.generated.PlayerSignals
 import net.multigesture.kanama.types.Vector2
