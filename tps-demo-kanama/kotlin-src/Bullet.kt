@@ -15,6 +15,9 @@ import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.OmniLight3D
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.Autoloads
+import net.multigesture.kanama.generated.BulletRpcs
+import net.multigesture.kanama.generated.PlayerRpcs
+import net.multigesture.kanama.generated.RedRobotRpcs
 
 @ScriptClass(attachTo = "CharacterBody3D")
 class Bullet(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
@@ -42,7 +45,7 @@ class Bullet(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
         timeAlive -= delta
         if (timeAlive < 0.0) {
             hit = true
-            explode()
+            BulletRpcs.callLocalExplode(this)
         }
         val displacement = -(self.transform.basis.z * (delta * BULLET_VELOCITY))
         val collision = self.moveAndCollide(displacement)
@@ -56,12 +59,12 @@ class Bullet(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
                 if (node != null) {
                     MainThread.postNextFrame {
                         if (node.isQueuedForDeletion() || !node.isInsideTree()) return@postNextFrame
-                        node.kotlinScriptInstance<RedRobot>()?.hit()
-                            ?: node.kotlinScriptInstance<Player>()?.hit()
+                        node.kotlinScriptInstance<RedRobot>()?.let { RedRobotRpcs.callLocalHit(it) }
+                            ?: node.kotlinScriptInstance<Player>()?.let { PlayerRpcs.callLocalHit(it) }
                     }
                 }
                 collisionShape.disabled = true
-                explode()
+                BulletRpcs.callLocalExplode(this)
             } finally {
                 collision.close()
             }

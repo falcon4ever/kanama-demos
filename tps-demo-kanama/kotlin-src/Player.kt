@@ -24,6 +24,7 @@ import net.multigesture.kanama.types.Basis
 import net.multigesture.kanama.types.Transform3D
 import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector3
+import net.multigesture.kanama.generated.PlayerRpcs
 
 @GlobalClass
 @ScriptClass(attachTo = "CharacterBody3D")
@@ -133,7 +134,7 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
 
         airborneTime += delta
         if (self.isOnFloor()) {
-            if (airborneTime > 0.5) land()
+            if (airborneTime > 0.5) PlayerRpcs.callLocalLand(this)
             airborneTime = 0.0
         }
         var onAir = airborneTime > MIN_AIRBORNE_TIME
@@ -141,7 +142,7 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
             self.velocity = self.velocity.withY(JUMP_SPEED)
             onAir = true
             airborneTime = MIN_AIRBORNE_TIME
-            jump()
+            PlayerRpcs.callLocalJump(this)
         }
         playerInput.jumping = false
 
@@ -155,7 +156,7 @@ class Player(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObje
             rootMotion = Transform3D(Basis(animationTree.getRootMotionRotation()), animationTree.getRootMotionPosition())
             if (playerInput.shooting && fireCooldown.getTimeLeft() == 0.0) {
                 shootBullet()
-                shoot()
+                PlayerRpcs.callLocalShoot(this)
             }
         } else {
             val target = cameraX * motion.x + cameraZ * motion.y

@@ -211,6 +211,12 @@ tasks.register("tpsBuildAndReloadSmokeGodot") {
     dependsOn(gradle.includedBuild("tps-demo").task(":buildAndReloadSmokeGodot"))
 }
 
+tasks.register("tpsBuildAndMultiplayerSmokeGodot") {
+    group = "kanama demos"
+    description = "Build Kotlin scripts, import assets, and run the headless two-peer TPS smoke (host + client over localhost ENet)."
+    dependsOn(gradle.includedBuild("tps-demo").task(":buildAndMultiplayerSmokeGodot"))
+}
+
 fun buildScriptsSequentially(demos: List<DemoBuild>) {
     runDemoTasksSequentially(demos, "buildScripts")
 }

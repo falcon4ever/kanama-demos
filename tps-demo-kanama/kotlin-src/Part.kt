@@ -19,6 +19,7 @@ import net.multigesture.kanama.api.RigidBody3D
 import net.multigesture.kanama.api.ShaderMaterial
 import net.multigesture.kanama.types.Vector3
 import kotlinx.coroutines.cancel
+import net.multigesture.kanama.generated.PartRpcs
 
 @ScriptClass(attachTo = "RigidBody3D")
 class Part(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::RigidBody3D) {
@@ -110,7 +111,7 @@ class Part(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::
         disappearingCounter += delta
         if (disappearingCounter >= disappearingTime - 0.2) {
             self.setProcess(false)
-            destroy()
+            PartRpcs.callLocalDestroy(this)
         }
     }
 

@@ -372,8 +372,7 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
                 onlineHost.disabled = true
                 onlineStatus.text = "Starting when every player finishes loading..."
                 GD.print("TPS lobby start requested peers=${self.multiplayerPeers().size}")
-                self.multiplayerPeers().forEach { MenuRpcs.rpcIdPrepareGame(this, it.toLong()) }
-                prepareGame()
+                MenuRpcs.callLocalPrepareGame(this)
             }
             return
         }
@@ -488,7 +487,7 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         if (lobbyStarting) enterLobbyWhenReady()
     }
 
-    @Rpc
+    @Rpc(callLocal = true)
     fun prepareGame() {
         joinedLobby = true
         lobbyStarting = true
@@ -519,11 +518,10 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
             return
         }
         GD.print("TPS lobby all players ready count=${expected.size}")
-        self.multiplayerPeers().forEach { MenuRpcs.rpcIdEnterGame(this, it.toLong()) }
-        enterGame()
+        MenuRpcs.callLocalEnterGame(this)
     }
 
-    @Rpc
+    @Rpc(callLocal = true)
     fun enterGame() {
         enterLoadedLevel()
     }

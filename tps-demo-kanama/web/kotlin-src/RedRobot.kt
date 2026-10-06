@@ -3,6 +3,7 @@ package tps
 import net.multigesture.kanama.annotations.OnExitTree
 import net.multigesture.kanama.annotations.OnPhysicsProcess
 import net.multigesture.kanama.annotations.OnReady
+import net.multigesture.kanama.annotations.Rpc
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.Export
 import net.multigesture.kanama.annotations.GodotName
@@ -138,6 +139,7 @@ class RedRobot(godotObject: GodotHandle) :
     shootCountdown = SHOOT_WAIT
   }
 
+  @Rpc(callLocal = true)
   fun hit() {
     if (dead) return
     animationTree.set("parameters/hit${(GD.randi() % 3) + 1}/request", 1L)
@@ -319,6 +321,7 @@ class RedRobot(godotObject: GodotHandle) :
     self.globalTransform = self.globalTransform.withBasis(orientation.basis)
   }
 
+  @Rpc(callLocal = true)
   fun playShoot() {
     shootAnimation.play("shoot")
   }
