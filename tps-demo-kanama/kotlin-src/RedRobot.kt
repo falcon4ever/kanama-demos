@@ -31,6 +31,7 @@ import net.multigesture.kanama.types.Transform3D
 import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector3
 import kotlinx.coroutines.cancel
+import net.multigesture.kanama.generated.RedRobotRpcs
 
 @ScriptClass(attachTo = "CharacterBody3D")
 class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotObject, ::CharacterBody3D) {
@@ -264,7 +265,7 @@ class RedRobot(godotObject: GodotHandle) : KanamaScript<CharacterBody3D>(godotOb
 					if (hasLineOfSight(activePlayer)) {
 						state = State.SHOOTING.id
 						shootCountdown = SHOOT_WAIT
-						playShoot()
+						RedRobotRpcs.callLocalPlayShoot(this)
 					} else {
 						resumeApproach()
 					}
