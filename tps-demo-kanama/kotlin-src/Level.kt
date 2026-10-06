@@ -75,6 +75,8 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
             if (!shouldQuitAfterReady) {
                 runSmokeRobotDeathCheckIfRequested()
             }
+        } else {
+            quitWhenHostLeavesIfRequested()
         }
         GD.print("TPS Level ready: complete")
         if (shouldQuitAfterReady) {
@@ -127,6 +129,33 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         }
     }
 
+    /**
+     * Multiplayer-smoke exit check: the host quits normally (`SceneTree.quit`) with the client
+     * still connected, so the harness can assert a clean process exit.
+     */
+    private fun quitAfterSmokeRobotDeathIfRequested(lastKill: Boolean) {
+        if (!lastKill || System.getenv("KANAMA_TPS_SMOKE_QUIT_AFTER_ROBOT_DEATH") != "1") return
+        launch {
+            wait(System.getenv("KANAMA_TPS_SMOKE_QUIT_AFTER_ROBOT_DEATH_DELAY")?.toDoubleOrNull() ?: 2.0)
+            GD.print("TPS smoke host quitting with peers connected=${self.multiplayerPeers().size}")
+            requireNotNull(self.getTree()).quit()
+        }
+    }
+
+    /** Multiplayer-smoke exit check, client side: quit normally once the host has gone. */
+    private fun quitWhenHostLeavesIfRequested() {
+        if (System.getenv("KANAMA_TPS_SMOKE_QUIT_WHEN_HOST_LEAVES") != "1") return
+        self.withMultiplayer { api ->
+            api.serverDisconnected.connect {
+                launch {
+                    wait(1.0)
+                    GD.print("TPS smoke client quitting after the host left")
+                    requireNotNull(self.getTree()).quit()
+                }
+            }
+        }
+    }
+
     private fun runSmokeRobotDeathCheckIfRequested() {
         if (System.getenv("KANAMA_TPS_SMOKE_KILL_ROBOT") != "1") return
         val robotCount = System.getenv("KANAMA_TPS_SMOKE_KILL_ROBOTS")?.toIntOrNull()?.coerceAtLeast(1) ?: 1
@@ -166,6 +195,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
                             }
                             wait(2.0)
                             GD.print("TPS smoke robot death complete ${index + 1}/$robotCount")
+                            quitAfterSmokeRobotDeathIfRequested(index + 1 == robotCount)
                         }
                     } else {
                         val script = robot.kotlinScriptInstance<RedRobot>()
@@ -177,6 +207,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
                             script.hit()
                         }
                         GD.print("TPS smoke robot death complete ${index + 1}/$robotCount")
+                        quitAfterSmokeRobotDeathIfRequested(index + 1 == robotCount)
                     }
                 }
                 if (index == 0 && System.getenv("KANAMA_TPS_SMOKE_RETURN_TO_MENU_AFTER_FIRST_KILL") == "1") {
