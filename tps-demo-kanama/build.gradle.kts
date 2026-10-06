@@ -521,7 +521,7 @@ tasks.register("smokeGodotReloadChecked") {
 // Part's RPC, so the line proves `destroy` arrived, not `hit`.
 tasks.register("smokeGodotMultiplayerChecked") {
     group = "kanama"
-    description = "Run a headless host and client over localhost ENet and check a server RPC reaches the client."
+    description = "Run a headless host and client over localhost ENet, check a server RPC reaches the client and both peers quit cleanly."
     dependsOn("buildScripts", "importGodot")
 
     doLast {
@@ -530,21 +530,29 @@ tasks.register("smokeGodotMultiplayerChecked") {
         val hostLogFile = File(reports, "tps-multiplayer-host.log")
         val clientLogFile = File(reports, "tps-multiplayer-client.log")
         val common = listOf(godotBin, "--headless", "--path", projectDir.absolutePath, "--quit-after", "6000", "--verbose")
-        // Both peers are stopped with SIGKILL once the markers are in: a normal quit or SIGTERM
-        // with the ENet peer still open has crashed the JVM (SIGBUS in an upcall from Godot's
-        // exit-time destructors) on some runs. This smoke proves RPC delivery, not shutdown.
+        // Both peers quit normally (SceneTree.quit) and must exit cleanly: the host five seconds
+        // after the robot dies, with the client still connected; the client a second after the
+        // host has gone. A JVM fatal error writes its hs_err file
+        // into the reports dir, which the checks below treat as a failure.
+        reports.listFiles { f -> f.name.startsWith("hs_err_") }?.forEach { it.delete() }
+        fun errorFileOption(peer: String) = "-XX:ErrorFile=${File(reports, "hs_err_${peer}_%p.log").absolutePath}"
         val host = ProcessBuilder(common)
             .redirectErrorStream(true)
             .redirectOutput(hostLogFile)
             .apply {
+                environment()["JAVA_TOOL_OPTIONS"] = errorFileOption("host")
                 environment()["KANAMA_TPS_SMOKE_PORT"] = port
                 environment()["KANAMA_TPS_SMOKE_WAIT_FOR_PEER"] = "1"
                 environment()["KANAMA_TPS_SMOKE_KILL_ROBOT"] = "1"
                 environment()["KANAMA_TPS_SMOKE_REAL_BULLETS"] = "1"
+                environment()["KANAMA_TPS_SMOKE_QUIT_AFTER_ROBOT_DEATH"] = "1"
+                environment()["KANAMA_TPS_SMOKE_QUIT_AFTER_ROBOT_DEATH_DELAY"] = "5.0"
             }
             .start()
         var client: Process? = null
         var timedOut = false
+        var hostExit: Int? = null
+        var clientExit: Int? = null
         try {
             val hostDeadline = System.currentTimeMillis() + 60_000
             while ("TPS lobby hosting" !in hostLogFile.readText()) {
@@ -552,32 +560,36 @@ tasks.register("smokeGodotMultiplayerChecked") {
                 if (System.currentTimeMillis() > hostDeadline) throw GradleException("TPS multiplayer host never started hosting; see ${hostLogFile.absolutePath}")
                 Thread.sleep(200)
             }
-            client = ProcessBuilder(common)
+            val clientProcess = ProcessBuilder(common)
                 .redirectErrorStream(true)
                 .redirectOutput(clientLogFile)
                 .apply {
+                    environment()["JAVA_TOOL_OPTIONS"] = errorFileOption("client")
                     environment()["KANAMA_TPS_SMOKE_PORT"] = port
                     environment()["KANAMA_TPS_SMOKE_JOIN_ADDRESS"] = "127.0.0.1"
-                    // Turns on the client's "TPS smoke part destroyed" line (Part.destroy).
+                    // Turns on the client's "TPS smoke part destroyed" line (Part.destroy); the
+                    // client quits when the host leaves, long before this delayed quit.
                     environment()["KANAMA_TPS_SMOKE_QUIT_AFTER_PARTS_DESTROYED"] = "1"
                     environment()["KANAMA_TPS_SMOKE_QUIT_AFTER_PARTS_DESTROYED_DELAY"] = "60.0"
+                    // The robot's parts break at once, well before the host quits.
+                    environment()["KANAMA_TPS_SMOKE_FAST_PARTS"] = "1"
+                    environment()["KANAMA_TPS_SMOKE_QUIT_WHEN_HOST_LEAVES"] = "1"
                 }
                 .start()
+            client = clientProcess
+            // Both peers exit by themselves; a hang (no exit within the deadline) fails the smoke.
             val deadline = System.currentTimeMillis() + 180_000
-            while (true) {
-                val done = "TPS smoke part destroyed" in clientLogFile.readText() &&
-                    "TPS smoke robot death complete 1/1" in hostLogFile.readText()
-                if (done || !host.isAlive || !client.isAlive) break
-                if (System.currentTimeMillis() > deadline) {
+            for (process in listOf(host, clientProcess)) {
+                val remaining = deadline - System.currentTimeMillis()
+                if (remaining <= 0 || !process.waitFor(remaining, TimeUnit.MILLISECONDS)) {
                     timedOut = true
                     break
                 }
-                Thread.sleep(250)
             }
-            // Let the logs settle (a late RPC error would land here).
-            Thread.sleep(2_000)
+            if (!host.isAlive) hostExit = host.exitValue()
+            if (!clientProcess.isAlive) clientExit = clientProcess.exitValue()
         } finally {
-            listOfNotNull(client, host).forEach { process ->
+            listOfNotNull(client, host).filter { it.isAlive }.forEach { process ->
                 process.destroyForcibly()
                 process.waitFor(10, TimeUnit.SECONDS)
             }
@@ -611,7 +623,14 @@ tasks.register("smokeGodotMultiplayerChecked") {
             "TPS smoke part destroyed",
         )
         val problems = buildList {
-            if (timedOut) add("timed out after 180 s")
+            if (timedOut) add("timed out after 180 s (a peer did not exit)")
+            if (hostExit != null && hostExit != 0) add("host exit code $hostExit (want 0)")
+            if (clientExit != null && clientExit != 0) add("client exit code $clientExit (want 0)")
+            reports.listFiles { f -> f.name.startsWith("hs_err_") }?.forEach { add("JVM fatal error: ${it.absolutePath}") }
+            if ("A fatal error has been detected" in hostLog) add("host JVM fatal error")
+            if ("A fatal error has been detected" in clientLog) add("client JVM fatal error")
+            if ("TPS smoke host quitting with peers connected=1" !in hostLog) add("host did not quit with the client connected")
+            if ("TPS smoke client quitting after the host left" !in clientLog) add("client did not quit after the host left")
             hostRequired.filterNot { it in hostLog }.forEach { add("host missing: $it") }
             clientRequired.filterNot { it in clientLog }.forEach { add("client missing: $it") }
             forbidden.filter { it in hostLog }.forEach { add("host forbidden: $it") }
@@ -623,7 +642,7 @@ tasks.register("smokeGodotMultiplayerChecked") {
                     problems.joinToString("\n"),
             )
         }
-        println("TPS multiplayer smoke: server RPCs reached the client (logs in ${reports.absolutePath})")
+        println("TPS multiplayer smoke: server RPCs reached the client; both peers quit cleanly (logs in ${reports.absolutePath})")
     }
 }
 
