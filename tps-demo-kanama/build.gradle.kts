@@ -1,4 +1,5 @@
 import java.io.ByteArrayOutputStream
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import org.gradle.process.ExecOperations
 
@@ -509,6 +510,123 @@ tasks.register("smokeGodotReloadChecked") {
     }
 }
 
+// Two-peer smoke (Kanama task 131 item 4): a headless host and a headless client on one machine,
+// over localhost ENet. The host lobby waits for the client, both load the level, and the host
+// kills one robot with real bullets. The client runs no gameplay physics (bullets, robots and the
+// kill are server-side), so the client's "TPS smoke part destroyed" line appears only when an RPC
+// from the server reaches it: the parts' `destroy` (Part.kt), or the robot's `hit` (Bullet.kt),
+// whose death explodes the parts on the client too. Both go through the generated *Rpcs senders.
+// With the tps sources of demos main before Kanama task 131 item 4 (both ported as plain local
+// calls) the client never printed the line; with only Bullet.kt reverted it still did, through
+// Part's RPC, so the line proves `destroy` arrived, not `hit`.
+tasks.register("smokeGodotMultiplayerChecked") {
+    group = "kanama"
+    description = "Run a headless host and client over localhost ENet and check a server RPC reaches the client."
+    dependsOn("buildScripts", "importGodot")
+
+    doLast {
+        val port = providers.gradleProperty("kanama.tps.multiplayerSmokePort").getOrElse("19427")
+        val reports = layout.buildDirectory.dir("reports").get().asFile.also { it.mkdirs() }
+        val hostLogFile = File(reports, "tps-multiplayer-host.log")
+        val clientLogFile = File(reports, "tps-multiplayer-client.log")
+        val common = listOf(godotBin, "--headless", "--path", projectDir.absolutePath, "--quit-after", "6000", "--verbose")
+        // Both peers are stopped with SIGKILL once the markers are in: a normal quit or SIGTERM
+        // with the ENet peer still open has crashed the JVM (SIGBUS in an upcall from Godot's
+        // exit-time destructors) on some runs. This smoke proves RPC delivery, not shutdown.
+        val host = ProcessBuilder(common)
+            .redirectErrorStream(true)
+            .redirectOutput(hostLogFile)
+            .apply {
+                environment()["KANAMA_TPS_SMOKE_PORT"] = port
+                environment()["KANAMA_TPS_SMOKE_WAIT_FOR_PEER"] = "1"
+                environment()["KANAMA_TPS_SMOKE_KILL_ROBOT"] = "1"
+                environment()["KANAMA_TPS_SMOKE_REAL_BULLETS"] = "1"
+            }
+            .start()
+        var client: Process? = null
+        var timedOut = false
+        try {
+            val hostDeadline = System.currentTimeMillis() + 60_000
+            while ("TPS lobby hosting" !in hostLogFile.readText()) {
+                if (!host.isAlive) throw GradleException("TPS multiplayer host exited before hosting; see ${hostLogFile.absolutePath}")
+                if (System.currentTimeMillis() > hostDeadline) throw GradleException("TPS multiplayer host never started hosting; see ${hostLogFile.absolutePath}")
+                Thread.sleep(200)
+            }
+            client = ProcessBuilder(common)
+                .redirectErrorStream(true)
+                .redirectOutput(clientLogFile)
+                .apply {
+                    environment()["KANAMA_TPS_SMOKE_PORT"] = port
+                    environment()["KANAMA_TPS_SMOKE_JOIN_ADDRESS"] = "127.0.0.1"
+                    // Turns on the client's "TPS smoke part destroyed" line (Part.destroy).
+                    environment()["KANAMA_TPS_SMOKE_QUIT_AFTER_PARTS_DESTROYED"] = "1"
+                    environment()["KANAMA_TPS_SMOKE_QUIT_AFTER_PARTS_DESTROYED_DELAY"] = "60.0"
+                }
+                .start()
+            val deadline = System.currentTimeMillis() + 180_000
+            while (true) {
+                val done = "TPS smoke part destroyed" in clientLogFile.readText() &&
+                    "TPS smoke robot death complete 1/1" in hostLogFile.readText()
+                if (done || !host.isAlive || !client.isAlive) break
+                if (System.currentTimeMillis() > deadline) {
+                    timedOut = true
+                    break
+                }
+                Thread.sleep(250)
+            }
+            // Let the logs settle (a late RPC error would land here).
+            Thread.sleep(2_000)
+        } finally {
+            listOfNotNull(client, host).forEach { process ->
+                process.destroyForcibly()
+                process.waitFor(10, TimeUnit.SECONDS)
+            }
+        }
+        val hostLog = hostLogFile.readText()
+        val clientLog = clientLogFile.readText()
+
+        val forbidden = listOf(
+            "Unable to get the RPC configuration",
+            "is not allowed on node",
+            "script method failed",
+            "Parse Error:",
+            "SIGBUS",
+            "SIGABRT",
+            "handle_crash:",
+            "Program crashed",
+            "Exception in thread",
+            "NoClassDefFoundError",
+            "ClassNotFoundException",
+            "UnsatisfiedLinkError",
+        )
+        val hostRequired = listOf(
+            "TPS lobby peer connected",
+            "TPS lobby all players ready count=2",
+            "TPS Level ready: server spawning robots",
+            "TPS smoke robot death complete 1/1",
+        )
+        val clientRequired = listOf(
+            "TPS lobby connected",
+            "TPS Level ready: complete",
+            "TPS smoke part destroyed",
+        )
+        val problems = buildList {
+            if (timedOut) add("timed out after 180 s")
+            hostRequired.filterNot { it in hostLog }.forEach { add("host missing: $it") }
+            clientRequired.filterNot { it in clientLog }.forEach { add("client missing: $it") }
+            forbidden.filter { it in hostLog }.forEach { add("host forbidden: $it") }
+            forbidden.filter { it in clientLog }.forEach { add("client forbidden: $it") }
+        }
+        if (problems.isNotEmpty()) {
+            throw GradleException(
+                "Godot TPS multiplayer smoke failed; see ${hostLogFile.absolutePath} and ${clientLogFile.absolutePath}\n" +
+                    problems.joinToString("\n"),
+            )
+        }
+        println("TPS multiplayer smoke: server RPCs reached the client (logs in ${reports.absolutePath})")
+    }
+}
+
 tasks.register<Exec>("runtimeNodeLookupAudit") {
     group = "verification"
     description = "Audit TPS Kotlin scripts for required node lookups in runtime callbacks."
@@ -560,6 +678,13 @@ tasks.register("buildAndBulletSmokeGodot") {
     description = "buildScripts, import assets, then run the bounded TPS real-bullet smoke check."
     dependsOn("runtimeNodeLookupAudit", "replicatedScriptPropertiesAudit", "smokeGodotBulletChecked")
     tasks.named("smokeGodotBulletChecked").get().mustRunAfter("runtimeNodeLookupAudit", "replicatedScriptPropertiesAudit")
+}
+
+tasks.register("buildAndMultiplayerSmokeGodot") {
+    group = "kanama"
+    description = "buildScripts, import assets, then run the headless two-peer (host + client) TPS smoke."
+    dependsOn("runtimeNodeLookupAudit", "replicatedScriptPropertiesAudit", "smokeGodotMultiplayerChecked")
+    tasks.named("smokeGodotMultiplayerChecked").get().mustRunAfter("runtimeNodeLookupAudit", "replicatedScriptPropertiesAudit")
 }
 
 tasks.register("buildAndReloadSmokeGodot") {
