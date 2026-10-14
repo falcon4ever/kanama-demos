@@ -395,7 +395,7 @@ LOG
   grep -v 'PTRCALL SELFTEST MATRIX' "$good" >"$dir/r6.log"
   case_log "ObjectCalls summary present, matrix summary missing" fail "no 'PTRCALL SELFTEST MATRIX: N passed, 0 failed'" "$dir/r6.log"
   printf '[kanama][ios] runtime up\n' >"$dir/r7.log"
-  case_log "no self-test text at all (the default requires it: kanama task 138 item 24)" fail "did not run" "$dir/r7.log"
+  case_log "no self-test text at all (the default requires it: kanama task 138 item 24)" fail "did not run" "$dir/r7.log" 1
   case_log "no self-test text at all, KANAMA_IOS_REQUIRE_SELFTEST=0 (a KANAMA_ROOT that cannot build it)" pass - "$dir/r7.log" 0
   { cat "$good"; echo '[kanama][ios][c] FAULT kanama_ios_godot_ptrcall: null-bind'; } >"$dir/r8.log"
   case_log "a real FAULT line" fail "reported a FAULT" "$dir/r8.log"

@@ -4,8 +4,10 @@ name: check
 #
 # `check` (task 92) is this repository's static gate -- the demo parity audit plus
 # Kanama's two guardrail audits (runtime node lookups, replicated script
-# properties). All three are Python scans of `kotlin-src/` and the scenes: no
-# Godot, no Kanama build and no compiled demo scripts are needed, so it runs on a
+# properties). All three are Python scans of `kotlin-src/` and the scenes; the
+# fourth task, iosConsoleChecksSelfTest, runs the iOS device runner's console
+# verdict on fixture logs (bash + grep, kanama task 138 item 24). No Godot, no
+# Kanama build, no device and no compiled demo scripts are needed, so it runs on a
 # plain Ubuntu runner against a sparse `scripts/` checkout of Kanama.
 #
 # `desktop-scripts` (task 109) compiles every demo's `kotlin-src` for desktop, the
