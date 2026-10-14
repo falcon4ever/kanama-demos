@@ -25,7 +25,9 @@ class Main(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         }
         self.withMultiplayer { SceneMultiplayer.fromApi(it)?.serverRelay = false }
         net.multigesture.kanama.api.GD.randomize()
-        self.getWindow()?.mode = Window.Mode(Autoloads.Settings.videoLong("display_mode"))
+        if (Autoloads.Settings.appliesSavedWindowModeAtLoad()) {
+            self.getWindow()?.mode = Window.Mode(Autoloads.Settings.videoLong("display_mode"))
+        }
         goToMainMenu()
     }
 
