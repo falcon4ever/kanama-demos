@@ -84,7 +84,13 @@ Kotlin scripts and imports Godot assets before launching.
   evidence in the demo's porting notes.
 - Put Kanama gameplay ports under each demo's `kotlin-src/`.
 - Keep smoke harness code in `Smoke.kt` or `SmokeQuit.kt`; do not mix smoke
-  behavior into gameplay scripts.
+  behavior into gameplay scripts. Match3, FPS, Racing, City-Builder and TPS hold
+  every smoke hook in one `Smoke` autoload (`Smoke="*res://kotlin-src/Smoke.kt"`)
+  that finds the gameplay nodes from outside; the other demos keep their older
+  scene-child `SmokeQuit`. The Web harness calls either by name through the
+  export manifest. `demoParityAudit` fails on a smoke/probe member,
+  `@GodotName`, or environment/command-line read in a gameplay class, and on a
+  `KANAMA_DEMO_SMOKE_QUIT=1` demo the iOS runner would not recognise.
 - Prefer typed Kanama wrappers over raw `Object.call`, `Object.get`,
   `Object.set`, and string signal wiring when a typed API exists.
 - If a port exposes missing framework support, fix Kanama first instead of

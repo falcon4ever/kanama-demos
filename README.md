@@ -367,7 +367,14 @@ Some demos include small Kotlin scripts named `Smoke.kt` or `SmokeQuit.kt`.
 These are demo-local automated validation harnesses, not gameplay code. They
 usually do nothing unless a `KANAMA_*_SMOKE` or
 `KANAMA_DEMO_SMOKE_QUIT` environment variable is set by a headless test
-launch.
+launch. Match3, FPS, Racing, City-Builder and the TPS demo register theirs as a
+`Smoke` autoload, so no gameplay class carries a smoke hook, probe or
+environment read (`demoParityAudit` enforces it, and its self-test is a red run
+of that rule). Every smoke that `scripts/desktop_smoke_all.sh` runs prints
+`[kanama:smoke] SmokeQuit complete` once its checks ran, and the script requires
+the line. The TPS Gradle smokes assert their own log markers instead. The iOS
+runner launches a demo with `KANAMA_DEMO_SMOKE_QUIT=1` only when a
+`kotlin-src/Smoke*.kt` reads that variable (`scripts/demo_has_smoke_quit.sh`).
 
 ## Adding A Demo
 

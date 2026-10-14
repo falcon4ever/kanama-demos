@@ -59,7 +59,7 @@ class Main(godotObject: GodotHandle) :
   private var comboCount = 0
   private val activeTweens = mutableSetOf<Tween>()
 
-  // Read by SmokeQuit / SmokeTouchSwipe: the drag releases the input handler saw and the swipes it
+  // Read by Smoke / SmokeTouchSwipe: the drag releases the input handler saw and the swipes it
   // accepted as moves. On the player's path they only count. Internal, so none of this is a
   // registered script member.
   internal var dragReleases = 0
@@ -78,37 +78,6 @@ class Main(godotObject: GodotHandle) :
   internal fun cellCenter(cell: Vector2i): Vector2 = gridToPixel(cell.x, cell.y)
 
   // Functions
-  /**
-   * Task 80 slice 6: a deterministic dump of this script's HYDRATED state.
-   *
-   * The same Kotlin compiles for desktop and Web, so identical output is expected and
-   * any difference is by definition a bug. It deliberately samples the three hydration
-   * paths the task-88 audit found bugs in: plain scalar exports (the literal path),
-   * an exported ARRAY of objects (the path where a null element used to mint a live
-   * handle), and object references (the path where a property-pushed script handle used
-   * to be pinned forever).
-   *
-   * Object fields report presence, not identity: a handle number legitimately differs
-   * between platforms, so comparing it would report a difference that is not a defect.
-   *
-   * Web reads it by CALLING differential_probe through the bridge; desktop reads the
-   * `KANAMA-DIFF match3.Main ...` line that SmokeQuit prints under its smoke gate. The gate
-   * lives in SmokeQuit, not here, so no smoke logic can ride a player's default path -- the
-   * exact accident shape task 88 found in the emitter's `47` echo probe.
-   */
-  fun differentialProbe(): String =
-    listOf(
-        "width=$width",
-        "height=$height",
-        "offset=$offset",
-        "textures=${textures.size}",
-        "tileScene=${if (tileScene != null) 1 else 0}",
-        "sparklesScene=${if (sparklesScene != null) 1 else 0}",
-        "openHandCursor=${if (openHandCursor != null) 1 else 0}",
-        "closedHandCursor=${if (closedHandCursor != null) 1 else 0}",
-      )
-      .joinToString(";")
-
   @OnReady
   fun ready() {
     container = self.requireAs("Board", ::Node2D)
