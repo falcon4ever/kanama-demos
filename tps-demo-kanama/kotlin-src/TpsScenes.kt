@@ -13,6 +13,7 @@ import net.multigesture.kanama.api.Material
 import net.multigesture.kanama.api.MeshInstance3D
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.MultiplayerAPI
+import net.multigesture.kanama.api.MultiplayerPeer
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.OfflineMultiplayerPeer
 import net.multigesture.kanama.api.PackedScene
@@ -96,6 +97,20 @@ fun Node.isMultiplayerServer(): Boolean = withMultiplayer { it.isServer() } == t
 fun Node.multiplayerPeers(): List<Int> = withMultiplayer { it.getPeers() } ?: emptyList()
 
 fun Node.multiplayerUniqueId(): Int = withMultiplayer { it.getUniqueId() } ?: 0
+
+// This peer's unique id for the debug readout, 0 while no peer is connected. Once the host has left,
+// the client's peer stays assigned but closed, and ENet's get_unique_id then logs "The multiplayer
+// instance isn't currently active" on every call (DebugLabel reads it each frame: ~5,000 errors
+// before the client quit). The GDScript debug label would do the same; this read is guarded by
+// has_multiplayer_peer() and the peer's connection status. Authority checks keep
+// multiplayerUniqueId().
+fun Node.connectedMultiplayerUniqueId(): Int = withMultiplayer { api ->
+    if (!api.hasMultiplayerPeer()) return@withMultiplayer 0
+    val connected = api.getMultiplayerPeer()?.use {
+        it.getConnectionStatus() == MultiplayerPeer.ConnectionStatus.CONNECTED
+    } == true
+    if (connected) api.getUniqueId() else 0
+} ?: 0
 
 fun Node.multiplayerRemoteSenderId(): Int = withMultiplayer { it.getRemoteSenderId() } ?: 0
 
