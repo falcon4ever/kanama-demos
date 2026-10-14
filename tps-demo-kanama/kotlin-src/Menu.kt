@@ -63,8 +63,11 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
     private var joinedLobby = false
     private var hostingLobby = false
     private var lobbyStarting = false
-    private var autoStartHostedGame = false
-    private var autoStartAfterPeer = false
+    // Dedicated server: a headless run hosts and starts a game at once (upstream menu.gd calls
+    // _on_host_pressed when headless). The port hosts a lobby first, so "start" is a second press of
+    // the same button. Internal so the smoke harness can set both before ready() runs.
+    internal var autoStartHostedGame = DisplayServer.getName() == "headless"
+    internal var autoStartAfterPeer = false
     private var loadedLevelScene: PackedScene? = null
     private val readyPeers = mutableSetOf<Long>()
 
@@ -104,16 +107,7 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         }
         Autoloads.Settings.applyGraphicsSettings(self.getWindow(), worldEnvironment.environment, self)
 
-        System.getenv("KANAMA_TPS_SMOKE_PORT")?.toDoubleOrNull()?.let { onlinePort.value = it }
-        val smokeJoinAddress = System.getenv("KANAMA_TPS_SMOKE_JOIN_ADDRESS")
-        if (!smokeJoinAddress.isNullOrBlank()) {
-            onlineAddress.text = smokeJoinAddress
-            self.callDeferred("_on_connect_pressed")
-        } else if (DisplayServer.getName() == "headless" || System.getenv("KANAMA_TPS_SMOKE_AUTOSTART") == "1") {
-            autoStartHostedGame = true
-            autoStartAfterPeer = System.getenv("KANAMA_TPS_SMOKE_WAIT_FOR_PEER") == "1"
-            self.callDeferred("_on_host_pressed")
-        }
+        if (autoStartHostedGame) self.callDeferred("_on_host_pressed")
 
         playButton.grabFocus()
         if (!metalFxSupported) {

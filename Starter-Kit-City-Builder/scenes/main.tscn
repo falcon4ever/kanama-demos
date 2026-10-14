@@ -24,7 +24,6 @@
 [ext_resource type="Texture2D" uid="uid://bng0d1sou7c8a" path="res://sprites/coin.png" id="17_cjamx"]
 [ext_resource type="Texture2D" uid="uid://ciwbdik3tmxtp" path="res://sprites/instructions.png" id="22_pm3ni"]
 [ext_resource type="AudioStream" uid="uid://wvfsgkl8qob6" path="res://sounds/ambience.ogg" id="24_y6deb"]
-[ext_resource type="Script" path="res://kotlin-src/Smoke.kt" id="25_smoke"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_q176i"]
 font = ExtResource("16_vlub6")
@@ -118,6 +117,3 @@ texture = ExtResource("22_pm3ni")
 stream = ExtResource("24_y6deb")
 volume_db = -30.0
 autoplay = true
-
-[node name="Smoke" type="Node" parent="."]
-script = ExtResource("25_smoke")

@@ -7,7 +7,6 @@
 [ext_resource type="PackedScene" uid="uid://c44tfiddyjjm1" path="res://models/vehicle-truck-green.glb" id="9_cmq2j"]
 [ext_resource type="PackedScene" uid="uid://c5e64mpylh1ge" path="res://models/vehicle-truck-purple.glb" id="10_p3c1o"]
 [ext_resource type="PackedScene" uid="uid://b34e2pvbemfac" path="res://models/vehicle-truck-red.glb" id="11_wocnk"]
-[ext_resource type="Script" path="res://kotlin-src/Smoke.kt" id="12_smoke"]
 [ext_resource type="Script" path="res://scripts/mobile_controls.gd" id="13_mobile"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ya4ey"]
@@ -44,9 +43,6 @@ corner_radius_bottom_left = 72
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_mobile_button_focus"]
 
 [node name="Main" type="Node3D" unique_id=1145999287]
-
-[node name="Smoke" type="Node3D" parent="."]
-script = ExtResource("12_smoke")
 
 [node name="Environment" type="WorldEnvironment" parent="." unique_id=1097254880]
 environment = ExtResource("1_q4t1r")

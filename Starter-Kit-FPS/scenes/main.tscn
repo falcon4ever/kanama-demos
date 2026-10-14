@@ -2,7 +2,6 @@
 
 [ext_resource type="Environment" uid="uid://jvmpkdwaeaq" path="res://scenes/main-environment.tres" id="1_q8fpv"]
 [ext_resource type="PackedScene" uid="uid://dl2ed4gkybggf" path="res://objects/player.tscn" id="2_elriq"]
-[ext_resource type="Script" path="res://kotlin-src/Smoke.kt" id="2_q36pm"]
 [ext_resource type="Script" path="res://kotlin-src/Hud.kt" id="3_s8mkj"]
 [ext_resource type="FontFile" uid="uid://biqtga8moh7ah" path="res://fonts/lilita_one_regular.ttf" id="3_w27de"]
 [ext_resource type="PackedScene" uid="uid://dpm3l05d7fu35" path="res://objects/platform.tscn" id="5_3s40e"]
@@ -46,7 +45,6 @@ corner_radius_bottom_left = 72
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_mobile_button_focus"]
 
 [node name="Main" type="Node3D" unique_id=1176673032]
-script = ExtResource("2_q36pm")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=529470734]
 environment = ExtResource("1_q8fpv")

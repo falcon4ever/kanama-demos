@@ -114,6 +114,14 @@ tasks.register<Exec>("demoParityAudit") {
     commandLine(resolvePythonCommand(), "scripts/demo_parity_audit.py", "--root", projectDir.absolutePath)
 }
 
+// Red run of the smoke-hook rules (Kanama task 131 item 17): a gameplay class holding a smoke/probe member or an env
+// read must fail the audit, while Smoke.kt may hold them.
+tasks.register<Exec>("demoParityAuditSelfTest") {
+    group = "verification"
+    description = "Prove the demo parity audit rejects smoke hooks in gameplay classes."
+    commandLine(resolvePythonCommand(), "scripts/demo_parity_audit.py", "--self-test")
+}
+
 tasks.register<Exec>("runtimeNodeLookupAudit") {
     group = "verification"
     description = "Audit Kotlin demo scripts for risky runtime node lookups and raw string dispatch."
@@ -168,7 +176,7 @@ tasks.register<Exec>("desktopSmokeAll") {
 tasks.register("check") {
     group = "verification"
     description = "Run kanama-demos repository checks."
-    dependsOn("demoParityAudit", "runtimeNodeLookupAudit", "replicatedScriptPropertiesAudit")
+    dependsOn("demoParityAudit", "demoParityAuditSelfTest", "runtimeNodeLookupAudit", "replicatedScriptPropertiesAudit")
 }
 
 tasks.register("buildStarterKitScripts") {

@@ -18,7 +18,6 @@ import net.multigesture.kanama.api.OS
 import net.multigesture.kanama.api.RigidBody3D
 import net.multigesture.kanama.api.ShaderMaterial
 import net.multigesture.kanama.types.Vector3
-import kotlinx.coroutines.cancel
 import net.multigesture.kanama.generated.PartRpcs
 
 @ScriptClass(attachTo = "RigidBody3D")
@@ -93,12 +92,7 @@ class Part(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::
         self.angularVelocity =
             (Vector3(net.multigesture.kanama.api.GD.randf(), net.multigesture.kanama.api.GD.randf(), net.multigesture.kanama.api.GD.randf()).normalized() * 2.0 - Vector3.ONE) * 10.0
         launch {
-            val delay = if (System.getenv("KANAMA_TPS_SMOKE_FAST_PARTS") == "1") {
-                0.1
-            } else {
-                lifetime + lifetimeRandom * net.multigesture.kanama.api.GD.randf()
-            }
-            wait(delay)
+            wait(lifetime + lifetimeRandom * net.multigesture.kanama.api.GD.randf())
             if (!self.isQueuedForDeletion() && self.isInsideTree()) {
                 self.setProcess(true)
             }
@@ -128,14 +122,6 @@ class Part(godotObject: GodotHandle) : KanamaScript<RigidBody3D>(godotObject, ::
         meshInstance = null
         self.hide()
         releaseDuplicatedMaterials()
-        if (System.getenv("KANAMA_TPS_SMOKE_QUIT_AFTER_PARTS_DESTROYED") == "1") {
-            net.multigesture.kanama.api.GD.print("TPS smoke part destroyed")
-            launch {
-                val delay = System.getenv("KANAMA_TPS_SMOKE_QUIT_AFTER_PARTS_DESTROYED_DELAY")?.toDoubleOrNull() ?: 4.0
-                wait(delay)
-                requireNotNull(self.getTree()).quit()
-            }
-        }
     }
 
     @OnExitTree

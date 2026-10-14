@@ -25,6 +25,7 @@ config/icon="res://icon.png"
 [autoload]
 
 Audio="*res://kotlin-src/Audio.kt"
+Smoke="*res://kotlin-src/Smoke.kt"
 
 [editor]
 

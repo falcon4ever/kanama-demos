@@ -7,7 +7,7 @@ import net.multigesture.kanama.types.Vector2
 import net.multigesture.kanama.types.Vector2i
 
 /**
- * Smoke-only (called by SmokeQuit under its smoke switch): one tile swipe made of TOUCH events.
+ * Smoke-only (called by Smoke under its smoke switch): one tile swipe made of TOUCH events.
  *
  * It feeds `Input.parse_input_event` an `InputEventScreenTouch` (index 0) pressed on a tile
  * centre and released 0.8 x spacing to the right, so the swipe reaches the game the way a finger

@@ -5,21 +5,29 @@ import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.GridMap
 import net.multigesture.kanama.api.KanamaScript
+import net.multigesture.kanama.api.MainThread
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.types.Vector3i
 
+/** Desktop smoke of the City Builder demo, as an autoload (Kanama task 131 item 17). */
 @ScriptClass(attachTo = "Node")
 class Smoke(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
     @OnReady
     fun ready() {
         if (System.getenv("KANAMA_CITY_BUILDER_SMOKE") != "1") return
+        launch {
+            MainThread.awaitNextFrame() // the scene root is added after the autoloads' ready
+            runChecks(self.getParent()?.getNodeOrNull("Main") ?: error("City Builder smoke could not find the Main scene root"))
+        }
+    }
 
-        val builderNode = self.requireAs("../Builder", ::Node3D)
+    private fun runChecks(main: Node) {
+        val builderNode = main.requireAs("Builder", ::Node3D)
         val builder = builderNode.kotlinScriptInstance<Builder>()
             ?: error("City Builder smoke expected Builder script instance")
-        val grid = self.requireAs("../GridMap", ::GridMap)
+        val grid = main.requireAs("GridMap", ::GridMap)
 
         for (structureIndex in builder.structures.indices) {
             val smokeCell = Vector3i(structureIndex, 0, 3)
@@ -31,6 +39,9 @@ class Smoke(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) 
         check(grid.getUsedCells().size >= builder.structures.size) {
             "GridMap smoke cells were not reported as used"
         }
+        // The completion line scripts/desktop_smoke_all.sh requires (task 118/131). The iOS runner does not: this demo reads
+        // KANAMA_CITY_BUILDER_SMOKE, not KANAMA_DEMO_SMOKE_QUIT, so it is launch-only on the phone.
+        println("[kanama:smoke] SmokeQuit complete")
         requireNotNull(self.getTree()).quit()
     }
 }

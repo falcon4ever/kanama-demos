@@ -22,6 +22,10 @@ boot_splash/bg_color=Color(0.921875, 0.921875, 0.957031, 1)
 boot_splash/image="res://splash-screen.png"
 config/icon="res://icon.png"
 
+[autoload]
+
+Smoke="*res://kotlin-src/Smoke.kt"
+
 [display]
 
 window/size/viewport_width=1280

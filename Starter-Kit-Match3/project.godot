@@ -25,6 +25,7 @@ config/icon="uid://bk67gaj8ly6sy"
 [autoload]
 
 Audio="*res://kotlin-src/Audio.kt"
+Smoke="*res://kotlin-src/Smoke.kt"
 
 [editor_plugins]
 
