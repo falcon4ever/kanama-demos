@@ -5,7 +5,6 @@ import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.GodotObject
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
-import net.multigesture.kanama.api.call
 import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.types.Vector3
 
