@@ -65,7 +65,8 @@ Self-check:
   scripts/ios_device_run.sh --self-test-console-checks
       Run the console checks (runtime self-test verdict, FAULT lines, fault counts) against built-in fixture logs,
       including the one that reported exit 0 over `OBJECTCALLS SELFTEST FAIL:` and `2 failed`; no device. Exit 0/1.
-      KANAMA_IOS_REQUIRE_SELFTEST=1 makes a console with no self-test text at all fail too.
+      A console with no self-test text at all fails too (this runner builds the self-test in,
+      kanama task 138 item 24); KANAMA_IOS_REQUIRE_SELFTEST=0 accepts one, for a KANAMA_ROOT that cannot.
   scripts/ios_device_run.sh --self-test-app-pids
       Run the app-pid parser (used to close the app after a run) against built-in samples of the
       `devicectl device info processes` output; no device needed. Exit 0/1.
@@ -117,13 +118,14 @@ SELFTEST_RAN_MARKER='PTRCALL SELFTEST MATRIX'
 #     with a non-zero failed count fails the run;
 #   * a console that shows the self-test ran must carry BOTH summaries, `PTRCALL SELFTEST MATRIX: N passed, 0 failed`
 #     and `OBJECTCALLS SELFTEST: N passed, 0 failed`; a missing one means the self-test did not finish.
-# How the runner knows the app prints self-tests: it does not assume it. This runner always builds Debug, which
-# prints them, but an older KANAMA_ROOT or a release build prints none; so the self-test is "expected" when the
-# console shows any self-test text (the matrix marker, a FAIL line or a summary), or when
-# KANAMA_IOS_REQUIRE_SELFTEST=1 is set (then a console with none at all fails too). The default stays marker-based so
-# a runtime that predates self-tests is not failed for lacking them.
+#   * and the frame-1 summary, `OBJECTCALLS SELFTEST (frame 1): N passed, 0 failed` (kanama task 138 item 24).
+# Since kanama task 138 item 24 the self-tests are a Kanama test hook compiled only into a build made with
+# -PkanamaIosSelfTest=true, which this runner passes (users' builds carry none), so they are REQUIRED by default: a
+# console with no self-test text at all fails (the build lost the flag). KANAMA_IOS_REQUIRE_SELFTEST=0 goes back to
+# the marker-based check (expected only when the console shows any self-test text), for a KANAMA_ROOT that cannot
+# build them.
 SELFTEST_ANY_RE='SELFTEST( MATRIX)?[:( ]'
-REQUIRE_SELFTEST="${KANAMA_IOS_REQUIRE_SELFTEST:-0}"
+REQUIRE_SELFTEST="${KANAMA_IOS_REQUIRE_SELFTEST:-1}"
 
 check_selftest_verdict() {
   local log="$1" fail_lines bad_summaries any
@@ -149,11 +151,15 @@ check_selftest_verdict() {
   : "${any:=0}"
   if (( any > 0 || REQUIRE_SELFTEST == 1 )); then
     if ! grep -q -E 'PTRCALL SELFTEST MATRIX: [0-9]+ passed, 0 failed' "$log" 2>/dev/null; then  # justified: the grep status is the test
-      echo "[ios_device_run] console: no 'PTRCALL SELFTEST MATRIX: N passed, 0 failed' summary line; the self-test did not finish (or did not run, with KANAMA_IOS_REQUIRE_SELFTEST=1): $log"
+      echo "[ios_device_run] console: no 'PTRCALL SELFTEST MATRIX: N passed, 0 failed' summary line; the self-test did not finish (or did not run: a build without -PkanamaIosSelfTest=true has none): $log"
       return 1
     fi
     if ! grep -q -E 'OBJECTCALLS SELFTEST: [0-9]+ passed, 0 failed' "$log" 2>/dev/null; then  # justified: the grep status is the test
-      echo "[ios_device_run] console: no 'OBJECTCALLS SELFTEST: N passed, 0 failed' summary line; the self-test did not finish (or did not run, with KANAMA_IOS_REQUIRE_SELFTEST=1): $log"
+      echo "[ios_device_run] console: no 'OBJECTCALLS SELFTEST: N passed, 0 failed' summary line; the self-test did not finish (or did not run: a build without -PkanamaIosSelfTest=true has none): $log"
+      return 1
+    fi
+    if ! grep -q -E 'OBJECTCALLS SELFTEST \(frame 1\): [0-9]+ passed, 0 failed' "$log" 2>/dev/null; then  # justified: the grep status is the test
+      echo "[ios_device_run] console: no 'OBJECTCALLS SELFTEST (frame 1): N passed, 0 failed' summary line; the app never reached its first frame or the self-test did not finish: $log"
       return 1
     fi
   fi
@@ -360,11 +366,12 @@ self_test_console_checks() {
 PTRCALL SELFTEST MATRIX: 120 passed, 0 failed
 [kanama][ios][c] FAULT-PROBE kanama_ios_godot_get_method_bind: bind-lookup-failed Node3D.set_visible
 OBJECTCALLS SELFTEST: 308 passed, 0 failed faults=7 expected=7
+[kanama][ios][kn] OBJECTCALLS SELFTEST (frame 1): 25 passed, 0 failed faults=7 expected=7
 [kanama:smoke] SmokeQuit complete
 LOG
   case_log() {  # <label> <expect: pass|fail> <expected text in output, or -> <log file> [REQUIRE_SELFTEST]
     local out rc=0
-    out="$(REQUIRE_SELFTEST="${5:-0}" check_console_faults "$4" 2>&1)" || rc=$?
+    out="$(REQUIRE_SELFTEST="${5:-$REQUIRE_SELFTEST}" check_console_faults "$4" 2>&1)" || rc=$?
     if [[ "$2" == "pass" && "$rc" -eq 0 ]] ||
        [[ "$2" == "fail" && "$rc" -ne 0 && ( "$3" == "-" || "$out" == *"$3"* ) ]]; then
       echo "[ios_device_run] console self-test ok:   $1 -> $2"
@@ -385,11 +392,11 @@ LOG
   case_log "early summary clean, final summary failed" fail "summary has failures" "$dir/r4.log"
   grep -v 'OBJECTCALLS SELFTEST' "$good" >"$dir/r5.log"
   case_log "self-test ran, ObjectCalls summary missing" fail "no 'OBJECTCALLS SELFTEST: N passed, 0 failed'" "$dir/r5.log"
-  { echo '[kanama][ios] runtime up'; echo 'OBJECTCALLS SELFTEST: 308 passed, 0 failed faults=7 expected=7'; } >"$dir/r6.log"
+  grep -v 'PTRCALL SELFTEST MATRIX' "$good" >"$dir/r6.log"
   case_log "ObjectCalls summary present, matrix summary missing" fail "no 'PTRCALL SELFTEST MATRIX: N passed, 0 failed'" "$dir/r6.log"
   printf '[kanama][ios] runtime up\n' >"$dir/r7.log"
-  case_log "no self-test text at all, not required (older runtime)" pass - "$dir/r7.log"
-  case_log "no self-test text at all, KANAMA_IOS_REQUIRE_SELFTEST=1" fail "did not run" "$dir/r7.log" 1
+  case_log "no self-test text at all (the default requires it: kanama task 138 item 24)" fail "did not run" "$dir/r7.log"
+  case_log "no self-test text at all, KANAMA_IOS_REQUIRE_SELFTEST=0 (a KANAMA_ROOT that cannot build it)" pass - "$dir/r7.log" 0
   { cat "$good"; echo '[kanama][ios][c] FAULT kanama_ios_godot_ptrcall: null-bind'; } >"$dir/r8.log"
   case_log "a real FAULT line" fail "reported a FAULT" "$dir/r8.log"
   sed 's/faults=7 expected=7/faults=8 expected=7/' "$good" >"$dir/r9.log"
@@ -401,8 +408,8 @@ LOG
   case_log "frame-1 FAIL line + frame-1 summary with a failure" fail "reported a FAILURE" "$dir/r10.log"
   grep -v 'SELFTEST (frame 1) FAIL' "$dir/r10.log" >"$dir/r11.log"
   case_log "frame-1 summary with a failure, no FAIL line" fail "summary has failures" "$dir/r11.log"
-  { cat "$good"; echo '[kanama][ios][kn] OBJECTCALLS SELFTEST (frame 1): 25 passed, 0 failed faults=7 expected=7'; } >"$dir/r12.log"
-  case_log "clean frame-1 summary" pass - "$dir/r12.log"
+  grep -v 'SELFTEST (frame 1)' "$good" >"$dir/r12.log"
+  case_log "frame-1 summary missing (kanama task 138 item 24)" fail "no 'OBJECTCALLS SELFTEST (frame 1)" "$dir/r12.log"
   rm -rf "$dir"
   if (( failures > 0 )); then
     echo "[ios_device_run] console checks self-test: FAIL ($failures)"
@@ -512,6 +519,7 @@ echo "[ios_device_run] installing Kanama iOS addon: $DEMO_DIR"
   DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" ./gradlew \
     ${KANAMA_IOS_RUN_GRADLE_ARGS:-} \
     installIosAddon \
+    -PkanamaIosSelfTest=true \
     "-PkanamaIosProjectDir=$DEMO_DIR" \
     "-PkanamaIosProjectScriptsDir=$DEMO_DIR/kotlin-src" \
     "-PkanamaProjectScriptsDir=$DEMO_DIR/kotlin-src" \
