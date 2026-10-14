@@ -173,10 +173,22 @@ tasks.register<Exec>("desktopSmokeAll") {
     commandLine("scripts/desktop_smoke_all.sh", godotBin)
 }
 
+tasks.register<Exec>("iosConsoleChecksSelfTest") {
+    group = "verification"
+    description = "Self-test the iOS device runner's console verdict on fixture logs (no device, no Xcode)."
+    commandLine("bash", "scripts/ios_device_run.sh", "--self-test-console-checks")
+}
+
 tasks.register("check") {
     group = "verification"
     description = "Run kanama-demos repository checks."
-    dependsOn("demoParityAudit", "demoParityAuditSelfTest", "runtimeNodeLookupAudit", "replicatedScriptPropertiesAudit")
+    dependsOn(
+        "demoParityAudit",
+        "demoParityAuditSelfTest",
+        "runtimeNodeLookupAudit",
+        "replicatedScriptPropertiesAudit",
+        "iosConsoleChecksSelfTest",
+    )
 }
 
 tasks.register("buildStarterKitScripts") {
