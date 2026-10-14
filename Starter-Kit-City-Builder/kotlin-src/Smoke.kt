@@ -39,7 +39,8 @@ class Smoke(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) 
         check(grid.getUsedCells().size >= builder.structures.size) {
             "GridMap smoke cells were not reported as used"
         }
-        // The completion line scripts/desktop_smoke_all.sh and the iOS runner require (task 111/131).
+        // The completion line scripts/desktop_smoke_all.sh requires (task 118/131). The iOS runner does not: this demo reads
+        // KANAMA_CITY_BUILDER_SMOKE, not KANAMA_DEMO_SMOKE_QUIT, so it is launch-only on the phone.
         println("[kanama:smoke] SmokeQuit complete")
         requireNotNull(self.getTree()).quit()
     }

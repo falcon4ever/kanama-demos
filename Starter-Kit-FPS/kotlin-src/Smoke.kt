@@ -77,7 +77,8 @@ class Smoke(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) 
         assignedCrosshair.close() // owned +1 read-back; the Crosshair node keeps its own
 
         stopAudio()
-        // The completion line scripts/desktop_smoke_all.sh and the iOS runner require (task 111/131).
+        // The completion line scripts/desktop_smoke_all.sh requires (task 118/131). The iOS runner does not: this demo reads
+        // KANAMA_FPS_SMOKE, not KANAMA_DEMO_SMOKE_QUIT, so it is launch-only on the phone.
         println("[kanama:smoke] SmokeQuit complete")
         requireNotNull(self.getTree()).quit()
     }

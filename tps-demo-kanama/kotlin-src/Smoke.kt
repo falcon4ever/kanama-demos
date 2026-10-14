@@ -71,6 +71,7 @@ class Smoke(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) 
     // Level: the reload count, the scripted robot kills and the multiplayer exit checks.
     private suspend fun onLevel(level: Level) {
         MainThread.awaitNextFrame() // the level's own ready (robots, players) has run by now
+        if (!alive(level.self)) return // these coroutines run in this autoload's scope, so they outlive a freed level
         val reloaded = observeLevelReady()
         val server = level.self.isMultiplayerServer()
         if (server && !reloaded) {
@@ -127,6 +128,7 @@ class Smoke(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) 
     private suspend fun quitAfterRobotDeathIfRequested(level: Level, lastKill: Boolean) {
         if (!lastKill || System.getenv("KANAMA_TPS_SMOKE_QUIT_AFTER_ROBOT_DEATH") != "1") return
         wait(System.getenv("KANAMA_TPS_SMOKE_QUIT_AFTER_ROBOT_DEATH_DELAY")?.toDoubleOrNull() ?: 2.0)
+        if (!alive(level.self)) return // the level went during the delay: nothing left to report, let the harness time out
         GD.print("TPS smoke host quitting with peers connected=${level.self.multiplayerPeers().size}")
         requireNotNull(self.getTree()).quit()
     }
@@ -178,6 +180,7 @@ class Smoke(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) 
                         }
                     }
                     wait(2.0)
+                    if (!alive(level.self)) return@launch
                     GD.print("TPS smoke robot death complete ${index + 1}/$robotCount")
                     quitAfterRobotDeathIfRequested(level, index + 1 == robotCount)
                 }
@@ -233,7 +236,8 @@ class Smoke(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) 
         }
     }
 
-    private fun alive(node: Node): Boolean = !node.isQueuedForDeletion() && node.isInsideTree()
+    // The instance check first: the coroutines here belong to the autoload, so the node they hold can already be freed.
+    private fun alive(node: Node): Boolean = GD.isInstanceValid(node) && !node.isQueuedForDeletion() && node.isInsideTree()
 
     private companion object {
         const val MARKER_SECTION = "smoke"

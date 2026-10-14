@@ -74,8 +74,12 @@ SMOKE_MEMBER_RE = re.compile(
 )
 GODOT_NAME_RE = re.compile(r"@GodotName\(\s*(?:name\s*=\s*)?\"(?P<name>[^\"]*(?:smoke|probe)[^\"]*)\"", re.IGNORECASE)
 ENV_READ_RE = re.compile(
-    r"\b(?:System\.getenv|(?:OS\.)?(?:getEnvironment|hasEnvironment)|(?:OS\.)?(?:getCmdlineUserArgs|getCmdlineArgs|cmdlineUserArgs|cmdlineArgs))\b"
+    r"\b(?:System\.getenv|(?<![\w.])getenv\s*\(|ProcessBuilder|(?:OS\.)?(?:getEnvironment|hasEnvironment)|(?:OS\.)?(?:getCmdlineUserArgs|getCmdlineArgs|cmdlineUserArgs|cmdlineArgs))(?!\w)"
 )
+# A gameplay class must not know the Smoke autoload at all: the hooks reach the gameplay, never the other way round.
+SMOKE_AUTOLOAD_REF_RE = re.compile(r"\bSmoke\b")
+# String literals or comments; blank_comments() keeps the former and blanks the latter (same offsets).
+STRING_OR_COMMENT_RE = re.compile(r'"(?:\\.|[^"\\\n])*"|//[^\n]*|/\*.*?\*/', re.DOTALL)
 # The in-game smoke EFFECT (puffs of smoke when a bot dies), not a test hook.
 SMOKE_EFFECT_FILES = {"SmokePuff.kt"}
 SMOKE_EFFECT_NAMES = {"SMOKE_PUFF"}
@@ -128,6 +132,16 @@ def is_smoke_file(path: Path) -> bool:
     return path.name in SMOKE_NAMES
 
 
+def blank_comments(text: str) -> str:
+    """The source with every comment replaced by spaces (newlines kept), so a rule can read code and strings only."""
+
+    def blank(match: re.Match[str]) -> str:
+        token = match.group(0)
+        return token if token.startswith('"') else re.sub(r"[^\n]", " ", token)
+
+    return STRING_OR_COMMENT_RE.sub(blank, text)
+
+
 def add_finding(findings: list[Finding], rel: str, text: str, offset: int, message: str) -> None:
     findings.append(Finding(rel, line_number(text, offset), message))
 
@@ -156,6 +170,8 @@ def audit_file(path: Path, root: Path) -> list[Finding]:
         if path.name not in SMOKE_EFFECT_FILES:
             for match in ENV_READ_RE.finditer(text):
                 add_finding(findings, rel, text, match.start(), "environment/command-line reads belong in Smoke.kt, not in a gameplay class")
+            for match in SMOKE_AUTOLOAD_REF_RE.finditer(blank_comments(text)):
+                add_finding(findings, rel, text, match.start(), "a gameplay class must not reference the Smoke autoload; Smoke.kt reaches gameplay, not the reverse")
             for match in GODOT_NAME_RE.finditer(text):
                 add_finding(findings, rel, text, match.start(), f"@GodotName(\"{match.group('name')}\") names a smoke/probe hook; it belongs in Smoke.kt")
             for match in SMOKE_MEMBER_RE.finditer(text):
@@ -291,8 +307,12 @@ def self_test() -> int:
         "extension function": "fun Main.smokeHook() {}",
         "extension property": "val Main.probeState: Int get() = 0",
         "backticked name": "class Main { fun `smoke hook`() {} }",
+        "smoke autoload reference": "class Main { fun ready() { Smoke.start() } }",
+        "smoke autoload node path": 'class Main { fun ready() { val s = self.getNode("/root/Smoke") } }',
+        "bare getenv": "import java.lang.System.*\nclass Level { fun ready() { val x = getenv(\"ANYTHING\") } }",
+        "process environment": "class Level { fun ready() { val x = ProcessBuilder().environment() } }",
     }
-    clean = "class Main { fun ready() { val reflection = 1 } }"
+    clean = "class Main {\n    // Read by Smoke: a comment may name the harness\n    fun ready() { val reflection = 1 }\n}"
     failures = []
     for name, source in {**cases, "clean": clean}.items():
         with tempfile.TemporaryDirectory() as tmp:
