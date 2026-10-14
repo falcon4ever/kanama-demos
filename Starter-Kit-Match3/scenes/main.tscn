@@ -11,7 +11,6 @@
 [ext_resource type="Texture2D" uid="uid://mpsuadf8lyxi" path="res://sprites/backgrounds/background.png" id="8_5vw27"]
 [ext_resource type="Texture2D" uid="uid://c26xoi1o70ttr" path="res://sprites/cursors/cursor-hand-open.png" id="9_4c57u"]
 [ext_resource type="Texture2D" uid="uid://eailhed83ju8" path="res://sprites/cursors/cursor-hand-closed.png" id="10_efxa6"]
-[ext_resource type="Script" path="res://kotlin-src/SmokeQuit.kt" id="11_smoke"]
 [ext_resource type="Script" uid="uid://dnlf0xyu0f6rc" path="res://scripts/responsive_background.gd" id="12_bg"]
 
 [node name="Main" type="Node2D" unique_id=1469547217]
@@ -38,6 +37,3 @@ stretch_mode = 6
 script = ExtResource("12_bg")
 
 [node name="Board" type="Node2D" parent="." unique_id=879210771]
-
-[node name="SmokeQuit" type="Node" parent="."]
-script = ExtResource("11_smoke")

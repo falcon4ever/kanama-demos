@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -60,7 +61,24 @@ DUCK_TYPED_METHODS = {
 SMOKE_NAMES = {
     "Smoke.kt",
     "SmokeQuit.kt",
+    "SmokeTouchSwipe.kt",
 }
+
+# Gameplay classes keep no smoke or probe hooks (Kanama task 131 item 17): every hook lives in the demo's
+# Smoke.kt autoload. These patterns catch the ways one creeps back into a gameplay class: a member named after
+# the hook (also as an extension function on the class, or backticked), a @GodotName string naming it, and any
+# read of the environment or the command line that gates it.
+SMOKE_MEMBER_RE = re.compile(
+    r"\b(?:fun|val|var)\s+(?:<[^>]*>\s*)?(?:[\w.?]+\.)?(?P<name>`[^`\n]*(?:smoke|probe)[^`\n]*`|\w*(?:smoke|probe)\w*)",
+    re.IGNORECASE,
+)
+GODOT_NAME_RE = re.compile(r"@GodotName\(\s*(?:name\s*=\s*)?\"(?P<name>[^\"]*(?:smoke|probe)[^\"]*)\"", re.IGNORECASE)
+ENV_READ_RE = re.compile(
+    r"\b(?:System\.getenv|(?:OS\.)?(?:getEnvironment|hasEnvironment)|(?:OS\.)?(?:getCmdlineUserArgs|getCmdlineArgs|cmdlineUserArgs|cmdlineArgs))\b"
+)
+# The in-game smoke EFFECT (puffs of smoke when a bot dies), not a test hook.
+SMOKE_EFFECT_FILES = {"SmokePuff.kt"}
+SMOKE_EFFECT_NAMES = {"SMOKE_PUFF"}
 
 ALLOWED_RAW_CALLS = {
     # The original 3D Platformer keeps Audio as an autoload and calls
@@ -90,16 +108,6 @@ ALLOWED_STRING_CONNECTS = {
     # web/ mirror of the accepted Match3 port above.
     ("Starter-Kit-Match3/web/kotlin-src/Main.kt", "center_grid_on_screen"),
 }
-
-ALLOWED_SMOKE_ENV_FILES = {
-    # TPS smoke coverage needs hooks at the level/menu/death-part lifecycle
-    # points that expose threaded load, robot death, and reload behavior.
-    "tps-demo-kanama/kotlin-src/Level.kt",
-    "tps-demo-kanama/kotlin-src/Menu.kt",
-    "tps-demo-kanama/kotlin-src/Part.kt",
-    "tps-demo-kanama/kotlin-src/PartDisappear.kt",
-}
-
 
 @dataclass(frozen=True)
 class Finding:
@@ -143,8 +151,16 @@ def audit_file(path: Path, root: Path) -> list[Finding]:
         for pattern in ("KANAMA_", "_SMOKE", "SMOKE_QUIT"):
             offset = text.find(pattern)
             if offset != -1:
-                if rel not in ALLOWED_SMOKE_ENV_FILES:
-                    add_finding(findings, rel, text, offset, "smoke/test environment logic belongs in Smoke*.kt")
+                add_finding(findings, rel, text, offset, "smoke/test environment logic belongs in Smoke*.kt")
+
+        if path.name not in SMOKE_EFFECT_FILES:
+            for match in ENV_READ_RE.finditer(text):
+                add_finding(findings, rel, text, match.start(), "environment/command-line reads belong in Smoke.kt, not in a gameplay class")
+            for match in GODOT_NAME_RE.finditer(text):
+                add_finding(findings, rel, text, match.start(), f"@GodotName(\"{match.group('name')}\") names a smoke/probe hook; it belongs in Smoke.kt")
+            for match in SMOKE_MEMBER_RE.finditer(text):
+                if match.group("name") not in SMOKE_EFFECT_NAMES:
+                    add_finding(findings, rel, text, match.start(), f"smoke/probe member '{match.group('name')}' belongs in Smoke.kt, not in a gameplay class")
 
         for pattern in ("kotlin.math", "java.util.Random", "kotlin.random.Random", "Random."):
             offset = text.find(pattern)
@@ -215,10 +231,101 @@ def audit_file(path: Path, root: Path) -> list[Finding]:
     return findings
 
 
+def has_smoke_quit(demo_dir: Path) -> bool:
+    """The iOS runner's rule (scripts/demo_has_smoke_quit.sh): a Smoke*.kt reads KANAMA_DEMO_SMOKE_QUIT."""
+    helper = Path(__file__).resolve().parent / "demo_has_smoke_quit.sh"
+    return subprocess.run(["bash", str(helper), str(demo_dir)], capture_output=True).returncode == 0
+
+
+def smoke_quit_detection_failures() -> list[str]:
+    """Red run of the runner's detection: Smoke.kt and the old SmokeQuit.kt are found by the variable, nothing else is."""
+    import tempfile
+
+    shapes = {
+        "Smoke.kt reading the variable": ("Smoke.kt", 'System.getenv("KANAMA_DEMO_SMOKE_QUIT")', True),
+        "SmokeQuit.kt reading the variable": ("SmokeQuit.kt", 'System.getenv("KANAMA_DEMO_SMOKE_QUIT")', True),
+        "Smoke.kt reading another variable": ("Smoke.kt", 'OS.getEnvironment("KANAMA_FPS_SMOKE")', False),
+        "gameplay file reading the variable": ("Main.kt", 'System.getenv("KANAMA_DEMO_SMOKE_QUIT")', False),
+    }
+    failures = []
+    for name, (file_name, source, expected) in shapes.items():
+        with tempfile.TemporaryDirectory() as tmp:
+            demo = Path(tmp)
+            (demo / "kotlin-src").mkdir()
+            (demo / "kotlin-src" / file_name).write_text(source, encoding="utf-8")
+            if has_smoke_quit(demo) != expected:
+                failures.append(f"iOS smoke detection: '{name}' should be {'detected' if expected else 'ignored'}")
+    return failures
+
+
+def runner_smoke_demo_failures(root: Path) -> list[str]:
+    """Every demo desktop_smoke_all.sh runs with KANAMA_DEMO_SMOKE_QUIT=1 must be detected by the iOS runner too."""
+    script = root / "scripts" / "desktop_smoke_all.sh"
+    if not script.is_file():
+        return []
+    folders = re.findall(r'^run_smoke "([^"]+)" KANAMA_DEMO_SMOKE_QUIT=1', script.read_text(encoding="utf-8"), re.MULTILINE)
+    failures = [f"desktop_smoke_all.sh runs no KANAMA_DEMO_SMOKE_QUIT=1 demo; the pattern is stale"] if not folders else []
+    for folder in folders:
+        if not has_smoke_quit(root / folder):
+            failures.append(
+                f"{folder}: desktop_smoke_all.sh runs it with KANAMA_DEMO_SMOKE_QUIT=1 but no kotlin-src/Smoke*.kt reads the "
+                "variable, so the iOS runner would launch it without the smoke and stay green"
+            )
+    return failures
+
+
+def self_test() -> int:
+    """Red run of the smoke-hook rules: a gameplay class with each hook shape must fail, a clean one must pass."""
+    import tempfile
+
+    cases = {
+        "env gate": 'class Level { fun ready() { if (System.getenv("KANAMA_DEMO_SMOKE_QUIT") == "1") return } }',
+        "env read": 'class Level { fun ready() { val x = OS.getEnvironment("ANYTHING") } }',
+        "probe member": "class Main { fun differentialProbe(): String = \"\" }",
+        "smoke member": "class Main { fun smokeStartGame() {} }",
+        "hasEnvironment gate": 'class Level { fun ready() { if (OS.hasEnvironment("ANYTHING")) return } }',
+        "cmdline user args gate": 'class Level { fun ready() { if ("--smoke" in OS.getCmdlineUserArgs()) return } }',
+        "cmdline args gate": 'class Level { fun ready() { val a = OS.getCmdlineArgs() } }',
+        "godot name probe": 'class Main { @GodotName("differential_probe") fun dump() {} }',
+        "godot name smoke": 'class Main { @GodotName(name = "smoke_hook") fun dump() {} }',
+        "extension function": "fun Main.smokeHook() {}",
+        "extension property": "val Main.probeState: Int get() = 0",
+        "backticked name": "class Main { fun `smoke hook`() {} }",
+    }
+    clean = "class Main { fun ready() { val reflection = 1 } }"
+    failures = []
+    for name, source in {**cases, "clean": clean}.items():
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            target = root / "Demo" / "kotlin-src" / "Main.kt"
+            target.parent.mkdir(parents=True)
+            target.write_text(source, encoding="utf-8")
+            found = audit_file(target, root)
+            if name == "clean" and found:
+                failures.append(f"clean source was flagged: {found}")
+            if name != "clean" and not found:
+                failures.append(f"'{name}' in a gameplay class was NOT flagged")
+            smoke_copy = root / "Demo" / "kotlin-src" / "Smoke.kt"
+            smoke_copy.write_text(source, encoding="utf-8")
+            if name != "clean" and any("belongs in" in f.message for f in audit_file(smoke_copy, root)):
+                failures.append(f"'{name}' in Smoke.kt was flagged but is allowed there")
+    failures.extend(smoke_quit_detection_failures())
+    if failures:
+        print("demo parity audit self-test FAILED:", file=sys.stderr)
+        for failure in failures:
+            print(f"  {failure}", file=sys.stderr)
+        return 1
+    print(f"[demo_parity_audit] self-test PASS ({len(cases)} smoke-hook shapes flagged, clean source and Smoke.kt accepted)")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--self-test", action="store_true", help="prove the smoke-hook rules fail on a bad gameplay class")
     args = parser.parse_args()
+    if args.self_test:
+        return self_test()
 
     root = args.root.resolve()
     files = sorted(root.glob("**/kotlin-src/**/*.kt"))
@@ -231,10 +338,13 @@ def main() -> int:
             continue  # justified: generated build output is not demo source
         findings.extend(audit_file(path, root))
 
-    if findings:
+    runner_failures = runner_smoke_demo_failures(root)
+    if findings or runner_failures:
         print("demo parity audit failed:", file=sys.stderr)
         for finding in findings:
             print(f"{finding.path}:{finding.line}: {finding.message}", file=sys.stderr)
+        for failure in runner_failures:
+            print(failure, file=sys.stderr)
         return 1
 
     print(f"[demo_parity_audit] PASS checked {len(files)} Kotlin demo script(s)")

@@ -29,10 +29,10 @@ Optional environment:
   KANAMA_IOS_RUN_GRADLE_ARGS="..."  extra arguments for the installIosAddon Gradle call
       (e.g. --no-daemon -Pkotlin.compiler.execution.strategy=in-process for concurrent builds).
   KANAMA_IOS_SMOKE_QUIT=1  launch with the demo's smoke switch (KANAMA_DEMO_SMOKE_QUIT=1 in the app's
-      environment, via devicectl --environment-variables) so its kotlin-src/SmokeQuit.kt runs on the phone —
+      environment, via devicectl --environment-variables) so its kotlin-src/Smoke*.kt smoke runs on the phone —
       spawn / damage / free / quit — inside the console window; the step then also REQUIRES the smoke's
       completion line (KANAMA_IOS_SMOKE_COMPLETE_PATTERN, default: [kanama:smoke] SmokeQuit complete).
-      Ignored for demos without kotlin-src/SmokeQuit.kt. Needs KANAMA_IOS_CONSOLE_SECONDS > 0. (task 111)
+      Ignored for demos whose kotlin-src/Smoke*.kt does not read KANAMA_DEMO_SMOKE_QUIT. Needs KANAMA_IOS_CONSOLE_SECONDS > 0. (task 111)
   KANAMA_IOS_CRASH_REPORTS=1  (default when KANAMA_IOS_CONSOLE_SECONDS > 0) snapshot the device's crash
       logs before the launch and again after the window; a NEW <AppName>-*.ips fails the step even when the
       crash left no signature in the console, and the report is copied to <output-dir>/crashes/. (task 111)
@@ -204,7 +204,7 @@ check_console_faults() {
 }
 
 # Task 119 item 41 — close the demo app after a console run. Godot's `get_tree().quit()` (the
-# demos' SmokeQuit) stops the main loop on iOS but does not end the process, and stopping the
+# demos' smokes) stops the main loop on iOS but does not end the process, and stopping the
 # `devicectl --console` stream does not reliably kill it either: the 2026-10-02 runs left
 # KanamaMatch3 and KanamaThirdPerson alive on a grey screen. So after the verdict is taken the run
 # finds the app's pid(s) in `devicectl device info processes` and terminates them itself.
@@ -621,7 +621,8 @@ fi
 CONSOLE_FAIL_PATTERN="${KANAMA_IOS_CONSOLE_FAIL_PATTERN:-App terminated due to signal|FATAL}"
 
 # Task 111: run the demo's smoke on the phone. Only meaningful with a console window (the smoke's
-# completion line is read from it) and only for demos that ship kotlin-src/SmokeQuit.kt.
+# completion line is read from it) and only for demos whose kotlin-src/Smoke*.kt reads KANAMA_DEMO_SMOKE_QUIT
+# (scripts/demo_has_smoke_quit.sh).
 SMOKE_QUIT="${KANAMA_IOS_SMOKE_QUIT:-0}"
 SMOKE_COMPLETE_PATTERN="${KANAMA_IOS_SMOKE_COMPLETE_PATTERN:-\[kanama:smoke\] SmokeQuit complete}"
 smoke_active=0
@@ -629,8 +630,8 @@ launch_env_args=()
 if [[ "$SMOKE_QUIT" == "1" ]]; then
   if [[ "$CONSOLE_SECONDS" -eq 0 ]]; then
     echo "[ios_device_run] KANAMA_IOS_SMOKE_QUIT=1 needs KANAMA_IOS_CONSOLE_SECONDS > 0 (the completion line is read from the console); ignoring." >&2
-  elif [[ ! -f "$DEMO_DIR/kotlin-src/SmokeQuit.kt" ]]; then
-    echo "[ios_device_run] smoke: $DEMO_DIR has no kotlin-src/SmokeQuit.kt; launch-only step"
+  elif ! "$(dirname "${BASH_SOURCE[0]}")/demo_has_smoke_quit.sh" "$DEMO_DIR"; then
+    echo "[ios_device_run] smoke: no kotlin-src/Smoke*.kt in $DEMO_DIR reads KANAMA_DEMO_SMOKE_QUIT; launch-only step"
   else
     smoke_active=1
     launch_env_args=(--environment-variables '{"KANAMA_DEMO_SMOKE_QUIT":"1"}')
@@ -771,7 +772,7 @@ else
     if grep -q -E "$SMOKE_COMPLETE_PATTERN" "$VERDICT_LOG"; then
       echo "[ios_device_run] smoke: completion line seen ($(grep -c -E "$SMOKE_COMPLETE_PATTERN" "$VERDICT_LOG")x)"
     else
-      echo "[ios_device_run] smoke: SmokeQuit ran but its completion line never appeared in ${waited}s — the smoke did not finish (crash without signature, hang, or the env var did not reach the app): $CONSOLE_LOG"
+      echo "[ios_device_run] smoke: the smoke ran but its completion line never appeared in ${waited}s — the smoke did not finish (crash without signature, hang, or the env var did not reach the app): $CONSOLE_LOG"
       echo "[ios_device_run] FAIL"
       exit 1
     fi

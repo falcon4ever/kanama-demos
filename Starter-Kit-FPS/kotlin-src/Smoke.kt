@@ -6,7 +6,9 @@ import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Label
+import net.multigesture.kanama.api.MainThread
 import net.multigesture.kanama.api.Mathf
+import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.OS
 import net.multigesture.kanama.api.TextureRect
@@ -14,17 +16,27 @@ import net.multigesture.kanama.generated.Autoloads
 import net.multigesture.kanama.types.Transform3D
 import net.multigesture.kanama.types.Vector3
 
-@ScriptClass(attachTo = "Node3D")
-class Smoke(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node3D) {
+/**
+ * Desktop smoke of the FPS demo, as an autoload (Kanama task 131 item 17): it reaches the scene
+ * through the root's "Main" child, so the scene itself carries no smoke script.
+ */
+@ScriptClass(attachTo = "Node")
+class Smoke(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
 
     @OnReady
     fun ready() {
         if (OS.getEnvironment("KANAMA_FPS_SMOKE") != "1") return
+        launch {
+            MainThread.awaitNextFrame() // the scene root is added after the autoloads' ready
+            runChecks(self.getParent()?.getNodeOrNull("Main") ?: error("FPS smoke could not find the Main scene root"))
+        }
+    }
 
-        val player = self.requireAs("Player", ::Node3D)
-        val health = self.requireAs("HUD/Health", ::Label)
-        val crosshair = self.requireAs("HUD/Crosshair", ::TextureRect)
-        val enemy = self.requireAs("Enemies/enemy-flying", ::Node3D)
+    private fun runChecks(main: Node) {
+        val player = main.requireAs("Player", ::Node3D)
+        val health = main.requireAs("HUD/Health", ::Label)
+        val crosshair = main.requireAs("HUD/Crosshair", ::TextureRect)
+        val enemy = main.requireAs("Enemies/enemy-flying", ::Node3D)
 
         val originalRotation = player.rotation
         player.rotation = Vector3(0.0, GD.degToRad(90.0), 0.0)
@@ -65,6 +77,8 @@ class Smoke(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         assignedCrosshair.close() // owned +1 read-back; the Crosshair node keeps its own
 
         stopAudio()
+        // The completion line scripts/desktop_smoke_all.sh and the iOS runner require (task 111/131).
+        println("[kanama:smoke] SmokeQuit complete")
         requireNotNull(self.getTree()).quit()
     }
 

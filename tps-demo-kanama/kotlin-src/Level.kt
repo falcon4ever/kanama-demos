@@ -1,6 +1,5 @@
 package tps
 
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import net.multigesture.kanama.annotations.GodotName
 import net.multigesture.kanama.annotations.OnExitTree
@@ -8,24 +7,18 @@ import net.multigesture.kanama.annotations.OnInput
 import net.multigesture.kanama.annotations.OnReady
 import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.Signal
-import net.multigesture.kanama.api.CharacterBody3D
-import net.multigesture.kanama.api.CollisionShape3D
 import net.multigesture.kanama.api.GD
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.Input
 import net.multigesture.kanama.api.InputEvent
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.LightmapGI
-import net.multigesture.kanama.api.MainThread
 import net.multigesture.kanama.api.Marker3D
-import net.multigesture.kanama.api.Node
 import net.multigesture.kanama.api.Node3D
 import net.multigesture.kanama.api.RenderingServer
 import net.multigesture.kanama.api.ResourceLoader
 import net.multigesture.kanama.api.WorldEnvironment
-import net.multigesture.kanama.api.kotlinScriptInstance
 import net.multigesture.kanama.generated.Autoloads
-import net.multigesture.kanama.generated.RedRobotNames
 import net.multigesture.kanama.generated.RedRobotSignals
 
 @ScriptClass(attachTo = "Node3D")
@@ -41,7 +34,6 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
     @OnReady
     fun ready() {
         GD.print("TPS Level ready: start")
-        val shouldQuitAfterReady = observeSmokeLevelReady()
         worldEnvironment = self.requireAs("WorldEnvironment", ::WorldEnvironment)
         robotSpawnPoints = self.requireAs("RobotSpawnpoints", ::Node3D)
         playerSpawnPoints = self.requireAs("PlayerSpawnpoints", ::Node3D)
@@ -72,163 +64,8 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
                 api.peerConnected.connect { id -> addPlayer(id, null) }
                 api.peerDisconnected.connect { id -> delPlayer(id) }
             }
-            if (!shouldQuitAfterReady) {
-                runSmokeRobotDeathCheckIfRequested()
-            }
-        } else {
-            quitWhenHostLeavesIfRequested()
         }
         GD.print("TPS Level ready: complete")
-        if (shouldQuitAfterReady) {
-            launch {
-                wait(5.0)
-                if (!self.isQueuedForDeletion() && self.isInsideTree()) {
-                    GD.print("TPS smoke second level ready; quitting")
-                    requireNotNull(self.getTree()).quit()
-                }
-            }
-        }
-    }
-
-    /**
-     * Reload-smoke bookkeeping: the desktop smoke enters the level twice in one run and quits on
-     * the second ready. The count lives in a marker file when the harness names one, so a reload
-     * that loses the in-process counter is still seen. The marker is a Godot `ConfigFile` -- the
-     * file API both backends share -- rather than `java.io.File`, which the Wasm target has no
-     * equivalent for. On Web the whole path is inert by construction: the export's `System.getenv`
-     * shim always answers null, so neither env var is ever set.
-     */
-    private fun observeSmokeLevelReady(): Boolean {
-        if (System.getenv("KANAMA_TPS_SMOKE_QUIT_AFTER_SECOND_LEVEL_READY") != "1") return false
-        val markerPath = System.getenv("KANAMA_TPS_SMOKE_RELOAD_MARKER")
-        val readyCount = if (markerPath.isNullOrBlank()) {
-            smokeLevelReadyCount += 1
-            smokeLevelReadyCount
-        } else {
-            bumpReloadMarker(markerPath)
-        }
-        return readyCount >= 2
-    }
-
-    private fun bumpReloadMarker(markerPath: String): Int {
-        // close what you create (Kanama task 61): the marker ConfigFile is ours for this call only.
-        val marker = TpsFactory.configFile()
-        try {
-            marker.load(markerPath)
-            val previous = if (marker.hasSectionKey(MARKER_SECTION, MARKER_KEY)) {
-                (marker.getValue(MARKER_SECTION, MARKER_KEY) as? Number)?.toInt() ?: 0
-            } else {
-                0
-            }
-            val nextCount = previous + 1
-            marker.setValue(MARKER_SECTION, MARKER_KEY, nextCount.toLong())
-            marker.save(markerPath)
-            return nextCount
-        } finally {
-            marker.close()
-        }
-    }
-
-    /**
-     * Multiplayer-smoke exit check: the host quits normally (`SceneTree.quit`) with the client
-     * still connected, so the harness can assert a clean process exit.
-     */
-    private fun quitAfterSmokeRobotDeathIfRequested(lastKill: Boolean) {
-        if (!lastKill || System.getenv("KANAMA_TPS_SMOKE_QUIT_AFTER_ROBOT_DEATH") != "1") return
-        launch {
-            wait(System.getenv("KANAMA_TPS_SMOKE_QUIT_AFTER_ROBOT_DEATH_DELAY")?.toDoubleOrNull() ?: 2.0)
-            GD.print("TPS smoke host quitting with peers connected=${self.multiplayerPeers().size}")
-            requireNotNull(self.getTree()).quit()
-        }
-    }
-
-    /** Multiplayer-smoke exit check, client side: quit normally once the host has gone. */
-    private fun quitWhenHostLeavesIfRequested() {
-        if (System.getenv("KANAMA_TPS_SMOKE_QUIT_WHEN_HOST_LEAVES") != "1") return
-        self.withMultiplayer { api ->
-            api.serverDisconnected.connect {
-                launch {
-                    wait(1.0)
-                    GD.print("TPS smoke client quitting after the host left")
-                    requireNotNull(self.getTree()).quit()
-                }
-            }
-        }
-    }
-
-    private fun runSmokeRobotDeathCheckIfRequested() {
-        if (System.getenv("KANAMA_TPS_SMOKE_KILL_ROBOT") != "1") return
-        val robotCount = System.getenv("KANAMA_TPS_SMOKE_KILL_ROBOTS")?.toIntOrNull()?.coerceAtLeast(1) ?: 1
-        val delayBetweenKills = System.getenv("KANAMA_TPS_SMOKE_KILL_ROBOT_DELAY")?.toDoubleOrNull() ?: 3.0
-        val useRealBullets = System.getenv("KANAMA_TPS_SMOKE_REAL_BULLETS") == "1"
-        launch {
-            repeat(robotCount) { index ->
-                if (index > 0) {
-                    wait(delayBetweenKills)
-                }
-                if (exiting || self.isQueuedForDeletion() || !self.isInsideTree()) return@launch
-                MainThread.postNextFrame {
-                    if (exiting || self.isQueuedForDeletion() || !self.isInsideTree()) return@postNextFrame
-                    val robot = spawnedNodes.getChildren()
-                        .map { Node3D(it.handle) }
-                        .firstOrNull {
-                            !it.isQueuedForDeletion() &&
-                                it.isInsideTree() &&
-                                it.kotlinScriptInstance<RedRobot>()?.dead != true
-                        }
-                    if (robot == null) {
-                        GD.print("TPS smoke robot death skipped: no live robot found for kill ${index + 1}")
-                        return@postNextFrame
-                    }
-                    if (useRealBullets) {
-                        scriptScope.launch {
-                            repeat(5) { shot ->
-                                if (exiting || robot.isQueuedForDeletion() || !robot.isInsideTree()) return@launch
-                                MainThread.postNextFrame {
-                                    if (!exiting && !robot.isQueuedForDeletion() && robot.isInsideTree()) {
-                                        spawnSmokeBullet(robot)
-                                    }
-                                }
-                                if (shot < 4) {
-                                    wait(0.35)
-                                }
-                            }
-                            wait(2.0)
-                            GD.print("TPS smoke robot death complete ${index + 1}/$robotCount")
-                            quitAfterSmokeRobotDeathIfRequested(index + 1 == robotCount)
-                        }
-                    } else {
-                        val script = robot.kotlinScriptInstance<RedRobot>()
-                        if (script == null) {
-                            GD.print("TPS smoke robot death skipped: robot script not ready for kill ${index + 1}")
-                            return@postNextFrame
-                        }
-                        repeat(5) {
-                            script.hit()
-                        }
-                        GD.print("TPS smoke robot death complete ${index + 1}/$robotCount")
-                        quitAfterSmokeRobotDeathIfRequested(index + 1 == robotCount)
-                    }
-                }
-                if (index == 0 && System.getenv("KANAMA_TPS_SMOKE_RETURN_TO_MENU_AFTER_FIRST_KILL") == "1") {
-                    wait(1.0)
-                    if (!exiting && !self.isQueuedForDeletion() && self.isInsideTree()) {
-                        GD.print("TPS smoke returning to menu after first kill")
-                        self.emitSignal("quit")
-                    }
-                    return@launch
-                }
-            }
-        }
-    }
-
-    private fun spawnSmokeBullet(target: Node3D) {
-        val bulletNode = TpsScenes.instantiate(TpsScenes.BULLET) ?: return
-        val bullet = CharacterBody3D(bulletNode.handle)
-        val targetPosition = target.globalTransform.origin + net.multigesture.kanama.types.Vector3.UP
-        val origin = targetPosition + net.multigesture.kanama.types.Vector3(0.0, 0.0, 4.0)
-        spawnedNodes.addChild(bulletNode, true)
-        bullet.lookAtFromPosition(origin, targetPosition)
     }
 
     private fun setupSdfgi() {
@@ -333,11 +170,4 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
 
     @Signal
     fun quit() = Unit
-
-    private companion object {
-        const val MARKER_SECTION = "smoke"
-        const val MARKER_KEY = "level_ready_count"
-
-        var smokeLevelReadyCount = 0
-    }
 }
