@@ -534,8 +534,15 @@ rm -rf "$DEMO_DIR/.godot/exported"
 
 EXPORT_LOG="$OUTPUT_DIR/export.log"
 echo "[ios_device_run] exporting Godot iOS project: $IPA_PATH (log: $EXPORT_LOG)"
-"$GODOT_BIN" --headless --path "$DEMO_DIR" --export-debug iOS "$IPA_PATH" 2>&1 | tee "$EXPORT_LOG"
-export_status="${PIPESTATUS[0]}"
+export_status=0
+# `|| export_status=` keeps errexit from aborting the pipeline before the status is read (pipefail is on).
+"$GODOT_BIN" --headless --path "$DEMO_DIR" --export-debug iOS "$IPA_PATH" 2>&1 | tee "$EXPORT_LOG" || export_status="${PIPESTATUS[0]}"
+# Kanama's editor export guard prints this line, and ends the export, when a .kt script the export uses
+# does not bind in the export-time editor (desktop addon missing, or kanama-scripts.jar stale).
+if grep -q 'Kanama: Export stopped' "$EXPORT_LOG"; then
+  echo "[ios_device_run] the Kanama export guard stopped the export: the export-time editor cannot bind the project's .kt scripts (see the 'Kanama: Export stopped' message above); log: $EXPORT_LOG" >&2
+  exit 1
+fi
 if [[ "$export_status" -ne 0 ]]; then
   echo "[ios_device_run] Godot export failed (exit $export_status)" >&2
   exit 1
@@ -555,7 +562,9 @@ fi
 # kanama (shared with the starter smoke); a KANAMA_ROOT that predates it is warned about, not failed.
 SCENE_PARITY_CHECK="$KANAMA_ROOT/scripts/check_exported_scene_properties.gd"
 if [[ -f "$SCENE_PARITY_CHECK" ]]; then
-  if ! "$GODOT_BIN" --headless --path "$DEMO_DIR" --script "$SCENE_PARITY_CHECK"; then
+  # --require-converted: an export that converted no scene (it wrote nothing, or wrote the scenes
+  # unconverted) must not pass as "nothing to compare". A KANAMA_ROOT that predates the option ignores it.
+  if ! "$GODOT_BIN" --headless --path "$DEMO_DIR" --script "$SCENE_PARITY_CHECK" -- --require-converted; then
     echo "[ios_device_run] exported scenes lost script properties (see [check_exported_scenes] lines above); refusing to build it." >&2
     exit 1
   fi
