@@ -105,7 +105,7 @@ class Menu(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Node) {
         if (isMobile() && onlineAddress.text == "127.0.0.1") {
             onlineAddress.text = ""
         }
-        Autoloads.Settings.applyGraphicsSettings(self.getWindow(), worldEnvironment.environment, self)
+        Autoloads.Settings.applyGraphicsSettings(self.getWindow(), worldEnvironment.environment, self, atLoad = true)
 
         if (autoStartHostedGame) self.callDeferred("_on_host_pressed")
 
