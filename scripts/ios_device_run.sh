@@ -36,13 +36,17 @@ Optional environment:
   KANAMA_IOS_CRASH_REPORTS=1  (default when KANAMA_IOS_CONSOLE_SECONDS > 0) snapshot the device's crash
       logs before the launch and again after the window; a NEW <AppName>-*.ips fails the step even when the
       crash left no signature in the console, and the report is copied to <output-dir>/crashes/. (task 111)
-  KANAMA_IOS_ENGINE_LOG=auto|1|0  (default auto: on when KANAMA_IOS_CONSOLE_SECONDS > 0 and `idevicesyslog` is installed,
-      otherwise a `SKIP: device engine-error check` line; 1 requires it, 0 skips it) after the console window, pull
-      the app's engine errors from the device's unified log: Godot iOS logs through os_log (subsystem = the bundle id,
-      category ERROR / SCRIPT ERROR / SHADER ERROR / WARNING / engine), which `devicectl --console` does not show. The
-      runner fetches a log archive with `idevicesyslog archive` (libimobiledevice; no sudo, ~12 s) for the window,
-      reads it with `log show --archive`, prints every ERROR / SHADER ERROR line into the step output
-      (<output-dir>/engine-errors.log) and FAILS on any SCRIPT ERROR line. (kanama task 111 item 3)
+  KANAMA_IOS_ENGINE_LOG=auto|1|0  after the console window, pull the app's engine errors from the device's unified log:
+      Godot iOS logs through os_log (subsystem = the bundle id, category ERROR / SCRIPT ERROR / SHADER ERROR / WARNING /
+      engine), which `devicectl --console` does not show. The runner fetches a log archive with `idevicesyslog archive`
+      (libimobiledevice; no sudo, ~12 s) for the window, reads it with `log show --archive`, prints every ERROR /
+      SHADER ERROR line, keeps only this app's error lines (<output-dir>/engine-errors.log; the archive itself, every
+      app's log, is deleted on every path) and FAILS on any SCRIPT ERROR line that is not one of the runtime
+      self-test's deliberate ones, and when the deliberate ones are not exactly the expected number (5 when the
+      self-test ran). auto (default): on when KANAMA_IOS_CONSOLE_SECONDS > 0, idevicesyslog has the `archive` command
+      and the device is attached over USB, otherwise a `SKIP: device engine-error check: <reason>` line; a capture
+      that fails is a loud SKIP too. 1 requires it (each of those is a FAIL). 0 skips it. (kanama task 111 item 3)
+      The engine-log verdict is taken after the crash-report check, so a failure of one never hides the other.
   KANAMA_IOS_CONSOLE_SECONDS=N  after launching, wait for the runtime's first [kanama][ios] line
       (bounded by KANAMA_IOS_LAUNCH_TIMEOUT, default 120 s), then stream the device console for N more seconds
       (devicectl --console) into <output-dir>/console.log and FAIL when it shows a crash
@@ -76,7 +80,9 @@ Self-check:
       kanama task 138 item 24); KANAMA_IOS_REQUIRE_SELFTEST=0 accepts one, for a KANAMA_ROOT that cannot.
   scripts/ios_device_run.sh --check-engine-errors /path/to/engine-errors.log bundle.id
       Run ONLY the engine-error verdict on a saved `log show --style compact` extract (the runner keeps
-      <output-dir>/engine-errors.log) and exit 0/1: a `[bundle.id:SCRIPT ERROR]` line fails. No device.
+      <output-dir>/engine-errors.log) and exit 0/1: a `[bundle.id:SCRIPT ERROR]` line that is not one of the
+      self-test's deliberate ones fails, and so does a deliberate count other than expected (5; 0 with
+      KANAMA_IOS_REQUIRE_SELFTEST=0). No device.
   scripts/ios_device_run.sh --self-test-app-pids
       Run the app-pid parser (used to close the app after a run) against built-in samples of the
       `devicectl device info processes` output; no device needed. Exit 0/1.
@@ -371,8 +377,25 @@ self_test_app_pids() {
 # `log show --style compact` prints a line as `<time> <type> <process>[pid:tid] [<subsystem>:<category>] <message>`.
 # The verdict reads that extract: SCRIPT ERROR lines of this app fail the step, ERROR / SHADER ERROR lines are printed
 # for a human (an engine ERROR is not always a Kanama bug). A literal match (grep -F), never a regex over a bundle id.
-check_engine_errors() {  # <engine-errors extract> <bundle id>
-  local log="$1" bundle="$2" script_errors other
+#
+# The runtime self-test this runner builds in (-PkanamaIosSelfTest=true) raises script errors ON PURPOSE: it proves that
+# a throwing script method, property setter (two export paths), property getter and KanamaScope coroutine are contained
+# and reported to Godot (kanama src/iosMain: KanamaIosRuntime.kt ThrowingProbeScript, ObjectCallsSelfTest.kt). Each
+# reaches the unified log as one `[<bundle>:SCRIPT ERROR]` line carrying the exception message below. Those lines, and
+# only those, are excluded from the verdict, and their number is ASSERTED (like the console's faults=/expected=): a
+# missing one means the report path or the capture broke, an extra one means a probe fired twice. Any other SCRIPT
+# ERROR line still fails the step. (The self-test's `throwSelfTestScriptError` report is built, never sent: no line.)
+DELIBERATE_SCRIPT_ERROR_TEXTS=(
+  "kanama self-test: deliberate script method failure"
+  "kanama self-test: deliberate property setter failure"
+  "kanama self-test: deliberate property getter failure"
+  "kanama self-test: deliberate coroutine failure"
+)
+DELIBERATE_SCRIPT_ERROR_COUNTS=(1 2 1 1)
+
+check_engine_errors() {  # <engine-errors extract> <bundle id> [<self-test ran: 1|0>, default 1]
+  local log="$1" bundle="$2" selftest_ran="${3:-1}" script_errors other unexpected idx text seen want
+  local total_seen=0 total_expected=0 mismatches="" status=0
   # justified: grep exits 1 when nothing matches, which is the clean case; both counts are read from the captured text.
   script_errors="$(grep -F "[$bundle:SCRIPT ERROR]" "$log" || true)"
   # justified: grep exits 1 when nothing matches, which is the clean case; the lines are printed, not judged.
@@ -381,12 +404,37 @@ check_engine_errors() {  # <engine-errors extract> <bundle id>
     echo "[ios_device_run] engine log: $(printf '%s\n' "$other" | wc -l | tr -d ' ') ERROR line(s) (printed, not failing):"
     printf '%s\n' "$other" | head -n 20 | sed 's/^/[ios_device_run]   /'
   fi
-  if [[ -n "$script_errors" ]]; then
-    echo "[ios_device_run] engine log: $(printf '%s\n' "$script_errors" | wc -l | tr -d ' ') SCRIPT ERROR line(s) from $bundle:"
-    printf '%s\n' "$script_errors" | head -n 20 | sed 's/^/[ios_device_run]   /'
-    return 1
+  unexpected="$script_errors"
+  for idx in "${!DELIBERATE_SCRIPT_ERROR_TEXTS[@]}"; do
+    text="${DELIBERATE_SCRIPT_ERROR_TEXTS[$idx]}"
+    want="${DELIBERATE_SCRIPT_ERROR_COUNTS[$idx]}"
+    [[ "$selftest_ran" == "1" ]] || want=0
+    # justified: grep -c prints 0 and exits 1 when nothing matches, which is the count.
+    seen="$(printf '%s\n' "$script_errors" | grep -c -F "$text" || true)"
+    # justified: grep -v exits 1 when every line was deliberate, which leaves nothing unexpected.
+    unexpected="$(printf '%s\n' "$unexpected" | grep -v -F "$text" || true)"
+    total_seen=$((total_seen + seen))
+    total_expected=$((total_expected + want))
+    if [[ "$seen" -ne "$want" ]]; then
+      mismatches="${mismatches}[ios_device_run]   '$text': seen=$seen expected=$want"$'\n'
+    fi
+  done
+  unexpected="$(printf '%s\n' "$unexpected" | sed '/^$/d')"
+  echo "[ios_device_run] engine log: deliberate self-test SCRIPT ERRORs=$total_seen expected=$total_expected (self-test ran: $selftest_ran)"
+  if [[ -n "$mismatches" ]]; then
+    echo "[ios_device_run] engine log: the self-test's deliberate SCRIPT ERROR count is wrong (a report did not reach the log, or a probe fired twice):"
+    printf '%s' "$mismatches"
+    status=1
   fi
-  echo "[ios_device_run] engine log: no SCRIPT ERROR from $bundle"
+  if [[ -n "$unexpected" ]]; then
+    echo "[ios_device_run] engine log: $(printf '%s\n' "$unexpected" | wc -l | tr -d ' ') SCRIPT ERROR line(s) from $bundle that are not the self-test's deliberate ones:"
+    printf '%s\n' "$unexpected" | head -n 20 | sed 's/^/[ios_device_run]   /'
+    status=1
+  fi
+  if [[ "$status" -eq 0 ]]; then
+    echo "[ios_device_run] engine log: no SCRIPT ERROR from $bundle besides the self-test's deliberate ones"
+  fi
+  return "$status"
 }
 
 # Device-free red runs of check_console_faults against fixture console logs (task 118): the clean log must pass,
@@ -445,11 +493,12 @@ LOG
   case_log "frame-1 summary with a failure, no FAIL line" fail "summary has failures" "$dir/r11.log"
   grep -v 'SELFTEST (frame 1)' "$good" >"$dir/r12.log"
   case_log "frame-1 summary missing (kanama task 138 item 24)" fail "no 'OBJECTCALLS SELFTEST (frame 1)" "$dir/r12.log"
-  # kanama task 111 item 3: the engine-error verdict over a `log show --style compact` extract.
-  local app_id=net.multigesture.kanama.redrun eng="$dir/engine.log"
-  case_engine() {  # <label> <expect: pass|fail> <expected text, or -> <extract file>
+  # kanama task 111 item 3: the engine-error verdict over a `log show --style compact` extract. The deliberate lines are
+  # the five an iPhone 12 run of KanamaMatch3 wrote (2026-10-15), verbatim.
+  local app_id=net.multigesture.kanama.match3 eng="$dir/engine.log"
+  case_engine() {  # <label> <expect: pass|fail> <expected text, or -> <extract file> [self-test ran: 1|0]
     local out rc=0
-    out="$(check_engine_errors "$4" "$app_id" 2>&1)" || rc=$?
+    out="$(check_engine_errors "$4" "$app_id" "${5:-1}" 2>&1)" || rc=$?
     if [[ "$2" == "pass" && "$rc" -eq 0 ]] ||
        [[ "$2" == "fail" && "$rc" -ne 0 && ( "$3" == "-" || "$out" == *"$3"* ) ]]; then
       echo "[ios_device_run] console self-test ok:   $1 -> $2"
@@ -458,20 +507,32 @@ LOG
       failures=$((failures + 1))
     fi
   }
-  : >"$eng"
-  case_engine "engine log: empty extract" pass - "$eng"
-  cat >"$eng" <<LOG
-2026-10-15 09:22:50.366 E  App[71953:a1ded8] [$app_id:ERROR] scene/main/node.cpp:2578:propagate_notification(): caller thread can't call is_current_thread()
-2026-10-15 09:22:50.366 Df App[71953:a1ded8] [$app_id:WARNING] some warning
+  cat >"$eng" <<'LOG'
+Timestamp               Ty Process[PID:TID]
+2026-10-15 10:07:21.009 E  KanamaMatch3[21157:b8f010] [net.multigesture.kanama.match3:ERROR] scene/main/node.cpp:3468:queue_free(): Can't queue free a node when no SceneTree is available. Parameter "tree" is null.
+2026-10-15 10:07:21.285 E  KanamaMatch3[21157:b8f010] [net.multigesture.kanama.match3:SCRIPT ERROR] :0:kanama_ios_throwing_probe.throw_probe(): kotlin.IllegalStateException: kanama self-test: deliberate script method failure kotlin.IllegalStateException
+2026-10-15 10:07:21.329 E  KanamaMatch3[21157:b8f010] [net.multigesture.kanama.match3:SCRIPT ERROR] :0:kanama_ios_throwing_probe property <property 0> set(): kotlin.IllegalStateException: kanama self-test: deliberate property setter failure kotlin.IllegalStateException
+2026-10-15 10:07:21.374 E  KanamaMatch3[21157:b8f010] [net.multigesture.kanama.match3:SCRIPT ERROR] :0:kanama_ios_throwing_probe property <property 0> set(): kotlin.IllegalStateException: kanama self-test: deliberate property setter failure kotlin.IllegalStateException
+2026-10-15 10:07:21.424 E  KanamaMatch3[21157:b8f010] [net.multigesture.kanama.match3:SCRIPT ERROR] :0:kanama_ios_throwing_probe property <property 0> get(): kotlin.IllegalStateException: kanama self-test: deliberate property getter failure kotlin.IllegalStateException
+2026-10-15 10:07:21.527 E  KanamaMatch3[21157:b8f010] [net.multigesture.kanama.match3:SCRIPT ERROR] :0:KanamaScope coroutine(): kotlin.IllegalStateException: kanama self-test: deliberate coroutine failure kotlin.IllegalStateException
+2026-10-15 10:07:21.569 E  KanamaMatch3[21157:b8f010] [net.multigesture.kanama.match3:ERROR] core/extension/gdextension_interface.cpp:1650:gdextension_classdb_get_method_bind(): Method 'Node3D.set_visible' has changed and no compatibility fallback has been provided.
+2026-10-15 10:07:21.600 Df KanamaMatch3[21157:b8f010] [net.multigesture.kanama.match3:WARNING] some warning
 LOG
-  case_engine "engine log: ERROR lines are printed, not failing" pass - "$eng"
-  cat >>"$eng" <<LOG
-2026-10-15 09:22:51.366 E  App[71953:a1ded8] [$app_id:SCRIPT ERROR] res://Foo.gd:12:_ready(): Invalid call. Nonexistent function 'x' in base 'Node'.
-LOG
-  case_engine "engine log: a SCRIPT ERROR line" fail "SCRIPT ERROR line(s) from $app_id" "$eng"
-  sed 's/SCRIPT ERROR/SHADER ERROR/' "$eng" >"$dir/engine.shader.log"
+  case_engine "engine log: the five deliberate self-test SCRIPT ERRORs + ERROR lines (an iPhone 12 run)" pass - "$eng"
+  echo "2026-10-15 10:07:22.366 E  KanamaMatch3[21157:b8f010] [$app_id:SCRIPT ERROR] res://Foo.gd:12:_ready(): Invalid call. Nonexistent function 'x' in base 'Node'." >"$dir/engine.unknown.line"
+  cat "$eng" "$dir/engine.unknown.line" >"$dir/engine.unknown.log"
+  case_engine "engine log: a SCRIPT ERROR not on the deliberate list" fail "not the self-test's deliberate ones" "$dir/engine.unknown.log"
+  grep -v 'deliberate coroutine failure' "$eng" >"$dir/engine.missing.log"
+  case_engine "engine log: a deliberate SCRIPT ERROR missing (deliberate=4 expected=5)" fail "SCRIPT ERRORs=4 expected=5" "$dir/engine.missing.log"
+  { cat "$eng"; grep 'deliberate script method failure' "$eng"; } >"$dir/engine.twice.log"
+  case_engine "engine log: a deliberate SCRIPT ERROR twice (deliberate=6 expected=5)" fail "SCRIPT ERRORs=6 expected=5" "$dir/engine.twice.log"
+  grep -v 'SCRIPT ERROR' "$eng" >"$dir/engine.none.log"
+  case_engine "engine log: no SCRIPT ERROR at all while the self-test ran" fail "SCRIPT ERRORs=0 expected=5" "$dir/engine.none.log"
+  case_engine "engine log: no SCRIPT ERROR, no self-test (KANAMA_IOS_REQUIRE_SELFTEST=0 and none ran)" pass - "$dir/engine.none.log" 0
+  case_engine "engine log: deliberate lines without a self-test run" fail "SCRIPT ERRORs=5 expected=0" "$eng" 0
+  sed 's/SCRIPT ERROR/SHADER ERROR/' "$dir/engine.unknown.line" | cat "$eng" - >"$dir/engine.shader.log"
   case_engine "engine log: SHADER ERROR is printed, not failing" pass - "$dir/engine.shader.log"
-  sed "s/\[$app_id:SCRIPT ERROR\]/[com.other.app:SCRIPT ERROR]/" "$eng" >"$dir/engine.other.log"
+  sed "s/\[$app_id:SCRIPT ERROR\]/[com.other.app:SCRIPT ERROR]/" "$dir/engine.unknown.line" | cat "$eng" - >"$dir/engine.other.log"
   case_engine "engine log: another app's SCRIPT ERROR is not this app's" pass - "$dir/engine.other.log"
   rm -rf "$dir"
   if (( failures > 0 )); then
@@ -490,7 +551,8 @@ if [[ "${1:-}" == "--check-engine-errors" ]]; then
     echo "usage: scripts/ios_device_run.sh --check-engine-errors /path/to/engine-errors.log bundle.id" >&2
     exit 2
   fi
-  if check_engine_errors "$2" "$3"; then
+  # The runner builds the self-test in, so its deliberate SCRIPT ERRORs are expected unless KANAMA_IOS_REQUIRE_SELFTEST=0.
+  if check_engine_errors "$2" "$3" "$REQUIRE_SELFTEST"; then
     echo "[ios_device_run] engine error check: PASS ($2)"
     exit 0
   fi
@@ -762,6 +824,20 @@ snapshot_crash_reports() {
   fi
   return 0  # a no-match glob must not fail the caller under set -e
 }
+# Device-wide data this step reads but never keeps: the unified-log archive of the window (~200 MB, every app's log;
+# see capture_engine_errors) and the crash-log snapshots (every app's crash reports). Only this app's filtered lines
+# (engine-errors.log) and its own new .ips (crashes/) stay next to the evidence. Removed on every exit path, also on a
+# failure or an interrupted run.
+ENGINE_TAR="$OUTPUT_DIR/device-log.tar"
+ENGINE_ARCHIVE="$OUTPUT_DIR/device-log.logarchive"
+remove_device_log() {
+  rm -rf "$ENGINE_TAR" "$ENGINE_ARCHIVE"
+}
+remove_device_data() {
+  remove_device_log
+  rm -rf "$OUTPUT_DIR/crashes.before" "$OUTPUT_DIR/crashes.after"
+}
+trap remove_device_data EXIT
 crashes_before=""
 if [[ "$CRASH_REPORTS" == "1" ]]; then
   crashes_before="$(snapshot_crash_reports "$OUTPUT_DIR/crashes.before")" || exit 1
@@ -769,10 +845,15 @@ else
   echo "SKIP: device crash-report check: KANAMA_IOS_CRASH_REPORTS=$CRASH_REPORTS"
 fi
 
-# Kanama task 111 item 3: engine errors from the device's unified log (see check_engine_errors). auto = on when there is a
-# console window and `idevicesyslog` is installed; 1 = required (a missing tool or a failed capture fails the step);
-# 0 = skipped. The archive is fetched by `idevicesyslog archive` (libimobiledevice), which needs no root, unlike
-# `log collect --device`; the window starts a few seconds before the launch to absorb clock skew between Mac and phone.
+# Kanama task 111 item 3: engine errors from the device's unified log (see check_engine_errors). The archive is fetched by
+# `idevicesyslog archive` (libimobiledevice), which needs no root, unlike `log collect --device`; the window starts a few
+# seconds before the launch to absorb clock skew between Mac and phone.
+#   auto (default): on when there is a console window, the installed idevicesyslog has the `archive` command and the
+#        device is reachable over USB (`idevice_id -l`); otherwise a `SKIP:` line says which. A capture that fails (no
+#        archive, an unreadable one, or one that holds no line of this app) is a loud `SKIP:` with the reason, not a FAIL.
+#   1:   required: each of those is a FAIL.
+#   0:   skipped.
+# The verdict over a capture that worked (check_engine_errors) fails the step in both modes.
 ENGINE_LOG="${KANAMA_IOS_ENGINE_LOG:-auto}"
 case "$ENGINE_LOG" in
   auto|1|0) ;;
@@ -781,52 +862,74 @@ case "$ENGINE_LOG" in
     exit 2
     ;;
 esac
+# Not usable: a SKIP line in auto mode, a FAIL with KANAMA_IOS_ENGINE_LOG=1.
+engine_log_unusable() {  # <reason>
+  if [[ "$ENGINE_LOG" == "1" ]]; then
+    echo "[ios_device_run] FAIL: KANAMA_IOS_ENGINE_LOG=1 but $1" >&2
+    exit 1
+  fi
+  echo "SKIP: device engine-error check: $1 (KANAMA_IOS_ENGINE_LOG=auto; set 1 to require it)"
+}
 engine_log_active=0
 if [[ "$ENGINE_LOG" == "0" ]]; then
   echo "SKIP: device engine-error check: KANAMA_IOS_ENGINE_LOG=0"
 elif [[ "$CONSOLE_SECONDS" -eq 0 ]]; then
   echo "SKIP: device engine-error check: needs a console window (KANAMA_IOS_CONSOLE_SECONDS > 0)"
-elif ! command -v idevicesyslog >/dev/null 2>&1; then  # justified: a presence probe; the branches below decide (auto skips with a SKIP line, 1 fails)
-  if [[ "$ENGINE_LOG" == "1" ]]; then
-    echo "[ios_device_run] FAIL: KANAMA_IOS_ENGINE_LOG=1 but idevicesyslog (brew install libimobiledevice) is not installed." >&2
-    exit 1
-  fi
-  echo "SKIP: device engine-error check: idevicesyslog not found (brew install libimobiledevice)"
+elif ! command -v idevicesyslog >/dev/null 2>&1; then  # justified: a presence probe; engine_log_unusable decides (auto: SKIP line, 1: FAIL)
+  engine_log_unusable "idevicesyslog is not installed (brew install libimobiledevice)"
+# justified: probes of the tool's help text and of the USB device list; engine_log_unusable decides (auto: SKIP line, 1: FAIL)
+elif ! idevicesyslog --help 2>&1 | grep -Eq '^[[:space:]]*archive[[:space:]]'; then
+  engine_log_unusable "this idevicesyslog has no 'archive' command (libimobiledevice 1.3.1+ has it)"
+# justified: idevice_id lists the USB-attached devices; an empty or failed listing is the "not reachable" answer
+elif ! idevice_id -l 2>/dev/null | grep -Fxq "$DEVICE_ID"; then
+  engine_log_unusable "the device is not reachable over USB (idevice_id -l does not list it; a Wi-Fi-only pairing cannot serve the log archive)"
 else
   engine_log_active=1
 fi
 ENGINE_LOG_START="$(( $(date +%s) - 15 ))"
 
+# A capture problem: FAIL with KANAMA_IOS_ENGINE_LOG=1 (return 1), a loud SKIP in auto mode (return 0).
+engine_capture_failed() {  # <reason> [<file whose tail explains it>]
+  if [[ "$ENGINE_LOG" == "1" ]]; then
+    echo "[ios_device_run] FAIL: device engine-error check: $1" >&2
+    [[ -n "${2:-}" && -f "$2" ]] && tail -n 20 "$2" >&2
+    echo "[ios_device_run]   Without the device log this step cannot see the engine's SCRIPT ERROR output, so it fails instead of" >&2
+    echo "[ios_device_run]   passing quietly. KANAMA_IOS_ENGINE_LOG=auto skips with a SKIP line instead; 0 skips it. Usual causes: a locked device, a dropped USB connection." >&2
+    return 1
+  fi
+  echo "SKIP: device engine-error check: capture failed: $1 (KANAMA_IOS_ENGINE_LOG=auto; set 1 to require it)"
+  [[ -n "${2:-}" && -f "$2" ]] && tail -n 20 "$2" | sed 's/^/SKIP:   /'
+  return 0
+}
+
 capture_engine_errors() {
   # Fetch the device log archive for the run window, extract this app's error-category lines and judge them.
-  local tar_file="$OUTPUT_DIR/device-log.tar" archive="$OUTPUT_DIR/device-log.logarchive" capture_log="$OUTPUT_DIR/device-log.capture.log"
-  local predicate
+  local capture_log="$OUTPUT_DIR/device-log.capture.log" predicate selftest_ran=0 app_lines
   predicate="subsystem == \"$BUNDLE_ID\" AND (category == \"ERROR\" OR category == \"SCRIPT ERROR\" OR category == \"SHADER ERROR\")"
-  rm -rf "$tar_file" "$archive"
-  mkdir -p "$archive"
-  if ! idevicesyslog -u "$DEVICE_ID" archive "$tar_file" --start-time "$ENGINE_LOG_START" >"$capture_log" 2>&1 ||
-     ! tar -xf "$tar_file" -C "$archive" >>"$capture_log" 2>&1; then
-    echo "[ios_device_run] FAIL: could not fetch the device's log archive (idevicesyslog output below)." >&2
-    echo "[ios_device_run]   Without it this step cannot see the engine's ERROR / SCRIPT ERROR output, so it fails instead of passing" >&2
-    echo "[ios_device_run]   quietly. To run without the check, set KANAMA_IOS_ENGINE_LOG=0. Usual causes: a locked device, a dropped USB connection." >&2
-    tail -n 20 "$capture_log" >&2
-    return 1
+  remove_device_log
+  rm -f "$OUTPUT_DIR/engine-errors.log" "$OUTPUT_DIR/engine-errors.stderr.log"
+  mkdir -p "$ENGINE_ARCHIVE"
+  if ! idevicesyslog -u "$DEVICE_ID" archive "$ENGINE_TAR" --start-time "$ENGINE_LOG_START" >"$capture_log" 2>&1 ||
+     ! tar -xf "$ENGINE_TAR" -C "$ENGINE_ARCHIVE" >>"$capture_log" 2>&1; then
+    engine_capture_failed "could not fetch the device's log archive (idevicesyslog output below)" "$capture_log"
+    return
   fi
-  rm -f "$tar_file"
-  if ! /usr/bin/log show --archive "$archive" --info --style compact --predicate "$predicate" >"$OUTPUT_DIR/engine-errors.log" 2>"$OUTPUT_DIR/engine-errors.stderr.log"; then
-    echo "[ios_device_run] FAIL: log show could not read the device log archive $archive:" >&2
-    tail -n 10 "$OUTPUT_DIR/engine-errors.stderr.log" >&2
-    return 1
+  rm -f "$ENGINE_TAR"
+  if ! /usr/bin/log show --archive "$ENGINE_ARCHIVE" --info --style compact --predicate "$predicate" >"$OUTPUT_DIR/engine-errors.log" 2>"$OUTPUT_DIR/engine-errors.stderr.log"; then
+    engine_capture_failed "log show could not read the device log archive" "$OUTPUT_DIR/engine-errors.stderr.log"
+    return
   fi
-  # Evidence that the capture saw the app at all (a log that held none of its lines would make "no SCRIPT ERROR" blind).
-  local app_lines
-  app_lines="$(/usr/bin/log show --archive "$archive" --info --style compact --predicate "subsystem == \"$BUNDLE_ID\"" 2>/dev/null | grep -c -F "[$BUNDLE_ID:" || true)"  # justified: grep -c exits 1 on a count of 0, which is reported below
+  # Evidence that the capture saw the app at all: an archive that holds none of its lines (a window that missed the run)
+  # would make "no SCRIPT ERROR" blind, so it is a capture failure, not a pass.
+  app_lines="$(/usr/bin/log show --archive "$ENGINE_ARCHIVE" --info --style compact --predicate "subsystem == \"$BUNDLE_ID\"" 2>/dev/null | grep -c -F "[$BUNDLE_ID:" || true)"  # justified: grep -c exits 1 on a count of 0, which is judged on the next line
   if [[ "$app_lines" -eq 0 ]]; then
-    echo "[ios_device_run] engine log: WARNING: the device log archive holds no line from $BUNDLE_ID at all; 'no SCRIPT ERROR' below proves nothing (check $archive)"
-  else
-    echo "[ios_device_run] engine log: ${app_lines} line(s) from $BUNDLE_ID in the device log archive"
+    engine_capture_failed "the device log archive holds no line from $BUNDLE_ID at all (the window missed the run)"
+    return
   fi
-  check_engine_errors "$OUTPUT_DIR/engine-errors.log" "$BUNDLE_ID"
+  echo "[ios_device_run] engine log: ${app_lines} line(s) from $BUNDLE_ID in the device log archive"
+  # The self-test's deliberate SCRIPT ERRORs are expected when it ran, which the console window shows.
+  if grep -q -F "$SELFTEST_RAN_MARKER" "$VERDICT_LOG"; then selftest_ran=1; fi  # justified: the grep status is the answer
+  check_engine_errors "$OUTPUT_DIR/engine-errors.log" "$BUNDLE_ID" "$selftest_ran"
 }
 
 echo "[ios_device_run] launching app: $BUNDLE_ID"
@@ -932,25 +1035,36 @@ else
   echo "[ios_device_run] console: ${console_lines} lines in ${waited}s, no crash signature and no bridge FAULT: $CONSOLE_LOG"
 fi
 
+# The engine-log verdict is DEFERRED until the crash-report check has run: a failed capture or a SCRIPT ERROR must never
+# hide a new crash report. Both results are printed; either one fails the step.
+final_status=0
 if [[ "$engine_log_active" -eq 1 ]]; then
-  capture_engine_errors || { echo "[ios_device_run] FAIL"; exit 1; }
+  capture_engine_errors || final_status=1
+  remove_device_log
 fi
 
 if [[ "$CRASH_REPORTS" == "1" ]]; then
-  crashes_after="$(snapshot_crash_reports "$OUTPUT_DIR/crashes.after")" || { echo "[ios_device_run] FAIL"; exit 1; }
-  new_crashes="$(comm -13 <(printf '%s\n' "$crashes_before" | sort -u) <(printf '%s\n' "$crashes_after" | sort -u) | sed '/^$/d')"
-  if [[ -n "$new_crashes" ]]; then
-    mkdir -p "$OUTPUT_DIR/crashes"
-    while IFS= read -r ips; do
-      # justified: keeping a copy of the report for humans; the step exits 1 below because of the NEW report either way.
-      cp "$OUTPUT_DIR/crashes.after/$ips" "$OUTPUT_DIR/crashes/" 2>/dev/null || true
-      echo "[ios_device_run] crash report: NEW $ips -> $OUTPUT_DIR/crashes/$ips"
-    done <<<"$new_crashes"
-    echo "[ios_device_run] FAIL"
-    exit 1
+  if crashes_after="$(snapshot_crash_reports "$OUTPUT_DIR/crashes.after")"; then
+    new_crashes="$(comm -13 <(printf '%s\n' "$crashes_before" | sort -u) <(printf '%s\n' "$crashes_after" | sort -u) | sed '/^$/d')"
+    if [[ -n "$new_crashes" ]]; then
+      mkdir -p "$OUTPUT_DIR/crashes"
+      while IFS= read -r ips; do
+        # justified: keeping a copy of the report for humans; the step fails below because of the NEW report either way.
+        cp "$OUTPUT_DIR/crashes.after/$ips" "$OUTPUT_DIR/crashes/" 2>/dev/null || true
+        echo "[ios_device_run] crash report: NEW $ips -> $OUTPUT_DIR/crashes/$ips"
+      done <<<"$new_crashes"
+      final_status=1
+    else
+      echo "[ios_device_run] crash reports: no new $APP_NAME report on the device"
+      rm -f "$OUTPUT_DIR/crashes.before.copy.log" "$OUTPUT_DIR/crashes.after.copy.log"
+    fi
+  else
+    final_status=1  # snapshot_crash_reports printed the FAIL and its reason
   fi
-  echo "[ios_device_run] crash reports: no new $APP_NAME report on the device"
-  rm -rf "$OUTPUT_DIR/crashes.before" "$OUTPUT_DIR/crashes.after" "$OUTPUT_DIR/crashes.before.copy.log" "$OUTPUT_DIR/crashes.after.copy.log"
 fi
 
+if [[ "$final_status" -ne 0 ]]; then
+  echo "[ios_device_run] FAIL"
+  exit 1
+fi
 echo "[ios_device_run] PASS"
