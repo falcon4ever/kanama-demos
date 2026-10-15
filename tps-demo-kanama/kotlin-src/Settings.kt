@@ -11,6 +11,7 @@ import net.multigesture.kanama.api.InputEvent
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
 import net.multigesture.kanama.api.Node
+import net.multigesture.kanama.api.OS
 import net.multigesture.kanama.api.RenderingServer
 import net.multigesture.kanama.api.Viewport
 import net.multigesture.kanama.api.Window
@@ -98,8 +99,16 @@ class Settings(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Nod
     internal fun renderBool(key: String): Boolean = configFile.getValue("rendering", key) as Boolean
     internal fun videoDouble(key: String): Double = (configFile.getValue("video", key) as Number).toDouble()
 
-    internal fun applyGraphicsSettings(window: Window?, environment: Environment?, sceneRoot: Node) {
-        if (DisplayServer.getName() != "headless") {
+    /**
+     * Whether the saved window mode may be applied when a scene loads. A browser grants fullscreen
+     * only from an input callback (Godot logs "The request was denied"), so on Web the saved mode
+     * waits for the player's own button press; it is applied at load everywhere else.
+     */
+    internal fun appliesSavedWindowModeAtLoad(): Boolean = !OS.hasFeature("web")
+
+    /** [atLoad]: called from a scene's `ready`, not from an input callback (see [appliesSavedWindowModeAtLoad]). */
+    internal fun applyGraphicsSettings(window: Window?, environment: Environment?, sceneRoot: Node, atLoad: Boolean = false) {
+        if (DisplayServer.getName() != "headless" && (!atLoad || appliesSavedWindowModeAtLoad())) {
             window?.mode = Window.Mode(videoLong("display_mode"))
         }
         DisplayServer.windowSetVsyncMode(DisplayServer.VSyncMode(videoLong("vsync")))

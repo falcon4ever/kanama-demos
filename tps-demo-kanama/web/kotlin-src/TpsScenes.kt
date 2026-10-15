@@ -91,6 +91,10 @@ fun Node.multiplayerPeers(): List<Int> = withMultiplayer { it.getPeers() } ?: em
 
 fun Node.multiplayerUniqueId(): Int = withMultiplayer { it.getUniqueId() } ?: 0
 
+// The debug readout's id. The desktop copy guards it by the peer's connection status; the Web facade
+// has no network peer and its get_unique_id never errors, so it is the plain id.
+fun Node.connectedMultiplayerUniqueId(): Int = multiplayerUniqueId()
+
 fun Node.multiplayerRemoteSenderId(): Int = withMultiplayer { it.getRemoteSenderId() } ?: 0
 
 fun Node.isOfflineMultiplayer(): Boolean =

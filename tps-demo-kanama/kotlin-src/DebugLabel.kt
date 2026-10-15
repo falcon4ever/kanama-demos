@@ -32,7 +32,7 @@ class DebugLabel(godotObject: GodotHandle) : KanamaScript<Label>(godotObject, ::
             append("\nVSync: ").append(if (DisplayServer.windowGetVsyncMode() != DisplayServer.VSyncMode.DISABLED) "Enabled" else "Disabled")
             append("\nMemory: ").append(twoDecimals(OS.getStaticMemoryUsage() / 1048576.0)).append(" MiB")
             append("\nOnline: ").append(if (online) "Yes" else "No")
-            if (online) append("\nMultiplayer ID: ").append(self.multiplayerUniqueId())
+            if (online) append("\nMultiplayer ID: ").append(self.connectedMultiplayerUniqueId())
         }
     }
 }

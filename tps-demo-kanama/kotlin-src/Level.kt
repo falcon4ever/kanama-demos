@@ -40,7 +40,7 @@ class Level(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObject, ::Node
         spawnedNodes = self.requireAs("SpawnedNodes", ::Node3D)
         GD.print("TPS Level ready: nodes resolved")
 
-        Autoloads.Settings.applyGraphicsSettings(self.getWindow(), worldEnvironment.environment, self)
+        Autoloads.Settings.applyGraphicsSettings(self.getWindow(), worldEnvironment.environment, self, atLoad = true)
         GD.print("TPS Level ready: graphics settings applied")
         when (Autoloads.Settings.renderLong("gi_type")) {
             Settings.SDFGI -> setupSdfgi()
