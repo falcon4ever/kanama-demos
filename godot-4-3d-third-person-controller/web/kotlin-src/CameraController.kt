@@ -151,7 +151,7 @@ class CameraController(godotObject: GodotHandle) : KanamaScript<Node3D>(godotObj
     pivot?.let {
       camera.globalTransform = camera.globalTransform.interpolateWith(it.globalTransform, 0.1)
     }
-    cameraSpringArm.addExcludedObject(anchorBody)
+    cameraSpringArm.addExcludedObject(anchorBody.getRid())
     cameraRaycast.addException(anchorBody)
   }
 
