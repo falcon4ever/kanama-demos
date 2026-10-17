@@ -4,8 +4,8 @@ import javax.inject.Inject
 import org.gradle.process.ExecOperations
 
 plugins {
-    kotlin("jvm") version "2.3.21"
-    id("com.google.devtools.ksp") version "2.3.9"
+    kotlin("jvm") version "2.4.21"
+    id("com.google.devtools.ksp") version "2.3.12"
 }
 
 abstract class ExecSupport @Inject constructor(
