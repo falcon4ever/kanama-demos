@@ -456,7 +456,7 @@ PTRCALL SELFTEST MATRIX: 120 passed, 0 failed
 [kanama][ios][c] FAULT-PROBE kanama_ios_godot_get_method_bind: bind-lookup-failed Node3D.set_visible
 OBJECTCALLS SELFTEST: 308 passed, 0 failed faults=7 expected=7 in 412 ms
 [kanama][ios][kn] OBJECTCALLS SELFTEST (frame 1): 25 passed, 0 failed faults=7 expected=7 in 38 ms
-[kanama][ios][kn] OBJECTCALLS SELFTEST (api exercise): 90 passed, 0 failed, 5 weak, 0 reach faults=7 expected=7 in 120 ms
+[kanama][ios][kn] OBJECTCALLS SELFTEST (api exercise): 81 passed, 0 failed, 5 weak, 9 known, 0 reach faults=7 expected=7 in 120 ms
 [kanama:smoke] SmokeQuit complete
 LOG
   case_log() {  # <label> <expect: pass|fail> <expected text in output, or -> <log file> [REQUIRE_SELFTEST]
@@ -502,9 +502,9 @@ LOG
   case_log "frame-1 summary missing (kanama task 138 item 24)" fail "no 'OBJECTCALLS SELFTEST (frame 1)" "$dir/r12.log"
   grep -v 'SELFTEST (api exercise)' "$good" >"$dir/r12b.log"
   case_log "API exercise summary missing" fail "no 'OBJECTCALLS SELFTEST (api exercise)" "$dir/r12b.log"
-  sed 's/(api exercise): 90 passed, 0 failed/(api exercise): 89 passed, 1 failed/' "$good" >"$dir/r12c.log"
+  sed 's/(api exercise): 81 passed, 0 failed/(api exercise): 80 passed, 1 failed/' "$good" >"$dir/r12c.log"
   case_log "API exercise summary with a failed row" fail "summary has failures" "$dir/r12c.log"
-  sed 's/(api exercise): 90 passed, 0 failed, 5 weak, 0 reach faults=7/(api exercise): 90 passed, 0 failed, 5 weak, 0 reach faults=8/' "$good" >"$dir/r12d.log"
+  sed 's/(api exercise): 81 passed, 0 failed, 5 weak, 9 known, 0 reach faults=7/(api exercise): 81 passed, 0 failed, 5 weak, 9 known, 0 reach faults=8/' "$good" >"$dir/r12d.log"
   case_log "API exercise row raised a FAULT (faults=8 expected=7)" fail "fault count disagrees" "$dir/r12d.log"
   # kanama task 111 item 3: the engine-error verdict over a `log show --style compact` extract. The deliberate lines are
   # the five an iPhone 12 run of KanamaMatch3 wrote (2026-10-15), verbatim.
