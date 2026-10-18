@@ -134,7 +134,9 @@ SELFTEST_RAN_MARKER='PTRCALL SELFTEST MATRIX'
 #     with a non-zero failed count fails the run;
 #   * a console that shows the self-test ran must carry BOTH summaries, `PTRCALL SELFTEST MATRIX: N passed, 0 failed`
 #     and `OBJECTCALLS SELFTEST: N passed, 0 failed`; a missing one means the self-test did not finish.
-#   * and the frame-1 summary, `OBJECTCALLS SELFTEST (frame 1): N passed, 0 failed` (kanama task 138 item 24).
+#   * and the frame-1 summary, `OBJECTCALLS SELFTEST (frame 1): N passed, 0 failed` (kanama task 138 item 24),
+#   * and the generated API exercise's, `OBJECTCALLS SELFTEST (api exercise): N passed, 0 failed, ...` (it runs after
+#     the frame-1 rows; one row per ObjectCalls helper with a static or property-pair row).
 # Since kanama task 138 item 24 the self-tests are a Kanama test hook compiled only into a build made with
 # -PkanamaIosSelfTest=true, which this runner passes (users' builds carry none), so they are REQUIRED by default: a
 # console with no self-test text at all fails (the build lost the flag). KANAMA_IOS_REQUIRE_SELFTEST=0 goes back to
@@ -176,6 +178,10 @@ check_selftest_verdict() {
     fi
     if ! grep -q -E 'OBJECTCALLS SELFTEST \(frame 1\): [0-9]+ passed, 0 failed' "$log" 2>/dev/null; then  # justified: the grep status is the test
       echo "[ios_device_run] console: no 'OBJECTCALLS SELFTEST (frame 1): N passed, 0 failed' summary line; the app never reached its first frame or the self-test did not finish: $log"
+      return 1
+    fi
+    if ! grep -q -E 'OBJECTCALLS SELFTEST \(api exercise\): [0-9]+ passed, 0 failed' "$log" 2>/dev/null; then  # justified: the grep status is the test
+      echo "[ios_device_run] console: no 'OBJECTCALLS SELFTEST (api exercise): N passed, 0 failed' summary line; the generated API exercise did not run or did not finish (a KANAMA_ROOT before it has none: KANAMA_IOS_REQUIRE_SELFTEST=0): $log"
       return 1
     fi
   fi
@@ -448,8 +454,9 @@ self_test_console_checks() {
 [kanama][ios] runtime up
 PTRCALL SELFTEST MATRIX: 120 passed, 0 failed
 [kanama][ios][c] FAULT-PROBE kanama_ios_godot_get_method_bind: bind-lookup-failed Node3D.set_visible
-OBJECTCALLS SELFTEST: 308 passed, 0 failed faults=7 expected=7
-[kanama][ios][kn] OBJECTCALLS SELFTEST (frame 1): 25 passed, 0 failed faults=7 expected=7
+OBJECTCALLS SELFTEST: 308 passed, 0 failed faults=7 expected=7 in 412 ms
+[kanama][ios][kn] OBJECTCALLS SELFTEST (frame 1): 25 passed, 0 failed faults=7 expected=7 in 38 ms
+[kanama][ios][kn] OBJECTCALLS SELFTEST (api exercise): 90 passed, 0 failed, 5 weak, 0 known, 0 reach faults=7 expected=7 in 120 ms
 [kanama:smoke] SmokeQuit complete
 LOG
   case_log() {  # <label> <expect: pass|fail> <expected text in output, or -> <log file> [REQUIRE_SELFTEST]
@@ -493,6 +500,12 @@ LOG
   case_log "frame-1 summary with a failure, no FAIL line" fail "summary has failures" "$dir/r11.log"
   grep -v 'SELFTEST (frame 1)' "$good" >"$dir/r12.log"
   case_log "frame-1 summary missing (kanama task 138 item 24)" fail "no 'OBJECTCALLS SELFTEST (frame 1)" "$dir/r12.log"
+  grep -v 'SELFTEST (api exercise)' "$good" >"$dir/r12b.log"
+  case_log "API exercise summary missing" fail "no 'OBJECTCALLS SELFTEST (api exercise)" "$dir/r12b.log"
+  sed 's/(api exercise): 90 passed, 0 failed/(api exercise): 89 passed, 1 failed/' "$good" >"$dir/r12c.log"
+  case_log "API exercise summary with a failed row" fail "summary has failures" "$dir/r12c.log"
+  sed 's/(api exercise): 90 passed, 0 failed, 5 weak, 0 known, 0 reach faults=7/(api exercise): 90 passed, 0 failed, 5 weak, 0 known, 0 reach faults=8/' "$good" >"$dir/r12d.log"
+  case_log "API exercise row raised a FAULT (faults=8 expected=7)" fail "fault count disagrees" "$dir/r12d.log"
   # kanama task 111 item 3: the engine-error verdict over a `log show --style compact` extract. The deliberate lines are
   # the five an iPhone 12 run of KanamaMatch3 wrote (2026-10-15), verbatim.
   local app_id=net.multigesture.kanama.match3 eng="$dir/engine.log"
