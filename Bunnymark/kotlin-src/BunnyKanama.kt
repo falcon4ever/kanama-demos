@@ -18,7 +18,7 @@ class BunnyKanama(godotObject: GodotHandle) : KanamaScript<Sprite2D>(godotObject
     // One generator per bunny, which is deliberate: this benchmark exists to measure what many small scripts cost,
     // and an object of its own per bunny is part of that. Seeded by the spawner rather than here, with a seed of its
     // own per bunny, because a shared seed would have every bunny bounce in exactly the same way.
-    private val bounceRandom = newRefCounted<RandomNumberGenerator>()
+    private val bounceRandom = RandomNumberGenerator.create()
 
     internal fun seedBounce(seed: Long) {
         bounceRandom.seed = seed

@@ -54,7 +54,7 @@ class Drone(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area
         self.position = Vector2(x, y)
         self.collisionLayer = Layers.DRONE
         self.collisionMask = Layers.TEAM_A or Layers.TEAM_B
-        self.addChild(newNode(::CollisionShape2D).also { it.shape = arena.droneShape })
+        self.addChild(CollisionShape2D.create().also { it.shape = arena.droneShape })
 
         // Three layers: the dark inside, the body's colour filling it as high as the hit points left, the face on top.
         val look = arena.droneLook
@@ -70,11 +70,11 @@ class Drone(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area
 
         // The sensor is a wider area that only watches bullets: nothing scans its layer, so bullets fly through it and
         // live long enough to be listed, unlike the ones that touch the drone's body.
-        sensor = newNode(::Area2D)
+        sensor = Area2D.create()
         sensor.collisionLayer = 0L
         sensor.collisionMask = Layers.TEAM_A or Layers.TEAM_B
         sensor.monitorable = false
-        sensor.addChild(newNode(::CollisionShape2D).also { it.shape = arena.sensorShape })
+        sensor.addChild(CollisionShape2D.create().also { it.shape = arena.sensorShape })
         self.addChild(sensor)
         self.addChild(Sprite2D.create().also { it.texture = look.sensor })
 

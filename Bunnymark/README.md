@@ -70,8 +70,8 @@ there, keeps earlier results in its JSON file, uses a 30 fps target and the safe
 
 - **`BunnymarkScripts`** creates each bunny as a `Sprite2D`, attaches `BunnyKanama.kt` with `setScript`, and sets its
   speed through the script object, since a Kanama script has no `new()`.
-- **Creating engine objects.** Most Kanama wrappers have no `create()` yet, so `NewObjects.kt` holds two small helpers
-  for GDScript's `Label.new()` and `RandomNumberGenerator.new()`.
+- **Creating engine objects.** GDScript's `Label.new()` and `RandomNumberGenerator.new()` are `Label.create()` and
+  `RandomNumberGenerator.create()`.
 - **The bounce generator** is a field rather than upstream's static, because Kanama does not release a static
   reference before the engine exits. A run has one benchmark node, so the bunnies bounce the same way.
 - **`BunnymarkComputation`** uses `kotlin.math`, not `Mathf`: `Mathf.sin` and `Mathf.cos` call into Godot, and this

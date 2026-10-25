@@ -37,7 +37,7 @@ class BunnymarkComputationKanama(godotObject: GodotHandle) : KanamaScript<Node2D
 
     private val bunnies = mutableListOf<Bunny>()
     private var bunnyTexture: Texture2D? = null
-    private val spawnRandom = newRefCounted<RandomNumberGenerator>()
+    private val spawnRandom = RandomNumberGenerator.create()
 
     // Zero until the first frame, as in GDScript: a run without a warm-up spawns its first bunnies before then.
     private var screenSize = Vector2(0.0, 0.0)

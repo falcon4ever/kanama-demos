@@ -25,14 +25,14 @@ class BunnymarkScriptsKanama(godotObject: GodotHandle) : KanamaScript<Node2D>(go
     @Signal
     fun benchmarkFinished(output: Long) = Unit
 
-    private val spawnRandom = newRefCounted<RandomNumberGenerator>()
+    private val spawnRandom = RandomNumberGenerator.create()
     private var spawned = 0L
     private var bunnyTexture: Texture2D? = null
     // Kanama has no `Bunny.new()`: a bunny is a new Sprite2D that the script is then attached to, which is what
     // `new()` does in GDScript.
     private var bunnyScript: Resource? = null
-    private val label = newNode(::Label)
-    private val bunnies = newNode(::Node2D)
+    private val label = Label.create()
+    private val bunnies = Node2D.create()
 
     // Zero until the first frame, as in GDScript: a run without a warm-up spawns its first bunnies before then.
     private var screenSize = Vector2(0.0, 0.0)

@@ -28,11 +28,11 @@ class BunnymarkDrawTextureKanama(godotObject: GodotHandle) : KanamaScript<Node2D
     private val bunnies = mutableListOf<Bunny>()
     private val gravity = 500.0
     private var bunnyTexture: Texture2D? = null
-    private val spawnRandom = newRefCounted<RandomNumberGenerator>()
+    private val spawnRandom = RandomNumberGenerator.create()
     // One generator for every bounce in the run, kept apart from the spawn generator so that the bounce sequence
     // does not shift when the ramp happens to spawn a different number of bunnies. A field rather than upstream's
     // static: a run has one benchmark node, and Kanama does not release a static reference before the engine exits.
-    private val bounceRandom = newRefCounted<RandomNumberGenerator>()
+    private val bounceRandom = RandomNumberGenerator.create()
 
     // Zero until the first frame, as in GDScript: a run without a warm-up spawns its first bunnies before then.
     private var screenSize = Vector2(0.0, 0.0)

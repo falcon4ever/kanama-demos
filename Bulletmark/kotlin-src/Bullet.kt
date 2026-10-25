@@ -46,7 +46,7 @@ class Bullet(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Are
         // Each team sits on its own layer and scans the other team and the drones, never its own bullets.
         self.collisionLayer = if (team == 0) Layers.TEAM_A else Layers.TEAM_B
         self.collisionMask = (if (team == 0) Layers.TEAM_B else Layers.TEAM_A) or Layers.DRONE
-        self.addChild(newNode(::CollisionShape2D).also { it.shape = shape })
+        self.addChild(CollisionShape2D.create().also { it.shape = shape })
         if (texture != null) self.addChild(Sprite2D.create().also { it.texture = texture })
         // Without hits the bullet neither detects nor is detected, so the engine tracks no overlaps for it either.
         if (arena.hits) self.areaEntered.connect { other -> onAreaEntered(other) } else self.monitoring = false

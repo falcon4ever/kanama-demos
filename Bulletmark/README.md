@@ -124,12 +124,12 @@ snapshot tooling.
 The Kotlin scene plays the same game as the GDScript one, with the same script calls per frame. Where it differs from
 upstream's Kotlin, it is because of how Kanama works:
 
-- **`BulletArena`, not `Arena`.** Kanama's generated registration code imports `java.lang.foreign.Arena`, so a script
-  class named `Arena` does not compile.
+- **`BulletArena`, not `Arena`.** The port was written when Kanama's generated registration code imported
+  `java.lang.foreign.Arena`, so a script class named `Arena` did not compile; it does now, and the name stays.
 - **Spawning.** There is no `Bullet()` or `Bullet.new()` for a Kanama script: the arena creates an `Area2D`, attaches
   the preloaded script with `setScript`, and takes the script object with `asScript<Bullet>()`.
-- **Creating engine objects.** Most Kanama wrappers have no `create()` yet, so `Nodes.kt` holds two small helpers for
-  GDScript's `Area2D.new()` and `CircleShape2D.new()`.
+- **Creating engine objects.** GDScript's `Area2D.new()` and `CircleShape2D.new()` are `Area2D.create()` and
+  `CircleShape2D.create()`.
 - **The score** is a Kotlin map, as `var score := {}` becomes in a Kanama port; Kanama has no engine-backed Dictionary.
 - **Totals for the runner.** A script function cannot return a Dictionary to Godot, so `stats_json()` and
   `runtime_counters_json()` return JSON text that the runner parses.

@@ -56,11 +56,11 @@ class BulletArena(godotObject: GodotHandle) : KanamaScript<Node2D>(godotObject, 
     private val bulletScript by preload<Resource>("res://kotlin-src/Bullet.kt")
     private val droneScript by preload<Resource>("res://kotlin-src/Drone.kt")
 
-    private val random = newRefCounted<RandomNumberGenerator>()
+    private val random = RandomNumberGenerator.create()
     // One shape per kind of body, shared as a scene would share its sub-resource.
-    private val bulletShape = newRefCounted<CircleShape2D>()
-    internal val droneShape = newRefCounted<CircleShape2D>()
-    internal val sensorShape = newRefCounted<CircleShape2D>()
+    private val bulletShape = CircleShape2D.create()
+    internal val droneShape = CircleShape2D.create()
+    internal val sensorShape = CircleShape2D.create()
     // Filled only when bullets are nodes, one texture per team; otherwise the arena draws them.
     private val bulletTextures = arrayOfNulls<Texture2D>(2)
     internal lateinit var droneLook: DroneLook
@@ -141,13 +141,13 @@ class BulletArena(godotObject: GodotHandle) : KanamaScript<Node2D>(godotObject, 
             score[CHILDREN] = 0L
         }
 
-        bulletContainer = newNode(::Node2D).also { it.name = BULLETS }
-        droneContainer = newNode(::Node2D).also { it.name = DRONES }
+        bulletContainer = Node2D.create().also { it.name = BULLETS }
+        droneContainer = Node2D.create().also { it.name = DRONES }
         self.addChild(bulletContainer)
         self.addChild(droneContainer)
-        val teams = newNode(::Label)
-        val drones = newNode(::Label)
-        status = newNode(::Label)
+        val teams = Label.create()
+        val drones = Label.create()
+        status = Label.create()
         teams.text = "Blue turrets fire right, orange turrets fire left. Bullets that meet destroy each other; " +
             "the rest fly off the far edge."
         drones.text = "Drones patrol the middle and drain as they are hit; the ring is the sensor each one scans. " +
@@ -157,7 +157,7 @@ class BulletArena(godotObject: GodotHandle) : KanamaScript<Node2D>(godotObject, 
             label.setPosition(Vector2(8.0 - TURRET_MARGIN, HUD_TOP + line * HUD_LINE_HEIGHT))
         }
         // Bottom right, on the row of the live counts: the one corner nothing else uses.
-        framesPerSecond = newNode(::Label)
+        framesPerSecond = Label.create()
         framesPerSecond.horizontalAlignment = HorizontalAlignment.RIGHT
         framesPerSecond.setPosition(Vector2(WIDTH + TURRET_MARGIN - 8 - FPS_LABEL_WIDTH, HUD_TOP + 2 * HUD_LINE_HEIGHT))
         framesPerSecond.setSize(Vector2(FPS_LABEL_WIDTH, HUD_LINE_HEIGHT))
@@ -193,7 +193,7 @@ class BulletArena(godotObject: GodotHandle) : KanamaScript<Node2D>(godotObject, 
             val team = i % 2
             val firstLane = if (team == 0) 0 else LANES - LANES_PER_TEAM
             val lane = random.randiRange(firstLane, firstLane + LANES_PER_TEAM - 1)
-            val body = newNode(::Area2D)
+            val body = Area2D.create()
             body.setScript(bulletScript)
             val bullet = body.asScript<Bullet>()!!
             bullet.launch(
@@ -306,7 +306,7 @@ class BulletArena(godotObject: GodotHandle) : KanamaScript<Node2D>(godotObject, 
     }
 
     private fun spawnDrone(x: Double, y: Double, original: Boolean) {
-        val body = newNode(::Area2D)
+        val body = Area2D.create()
         body.setScript(droneScript)
         val drone = body.asScript<Drone>()!!
         drone.place(this, x, y, randomDirection() * DRONE_SPEED_X, randomDirection() * DRONE_SPEED_Y, original)
