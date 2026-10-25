@@ -113,6 +113,12 @@ ALLOWED_STRING_CONNECTS = {
     ("Starter-Kit-Match3/web/kotlin-src/Main.kt", "center_grid_on_screen"),
 }
 
+ALLOWED_KOTLIN_RANDOM = {
+    # Web copy of the Sprites benchmark: Kanama's Web backend has no RandomNumberGenerator wrapper, and the
+    # benchmark's two seeded generators must not cross the bridge per draw (the desktop script uses Godot's).
+    "Bunnymark/web/kotlin-src/BunnymarkSpritesKanama.kt",
+}
+
 @dataclass(frozen=True)
 class Finding:
     path: str
@@ -180,6 +186,8 @@ def audit_file(path: Path, root: Path) -> list[Finding]:
 
         # `Random.` as a word of its own (Kotlin's `Random.nextInt()`), not the end of a name such as `spawnRandom.seed`.
         for pattern in (r"kotlin\.math", r"java\.util\.Random", r"kotlin\.random\.Random", r"(?<![\w.])Random\."):
+            if pattern == r"kotlin\.random\.Random" and rel in ALLOWED_KOTLIN_RANDOM:
+                continue
             match = re.search(pattern, text)
             offset = match.start() if match else -1
             if offset != -1:

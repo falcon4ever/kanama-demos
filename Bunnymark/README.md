@@ -74,5 +74,8 @@ there, keeps earlier results in its JSON file, uses a 30 fps target and the safe
   `RandomNumberGenerator.create()`.
 - **The bounce generator** is a field rather than upstream's static, because Kanama does not release a static
   reference before the engine exits. A run has one benchmark node, so the bunnies bounce the same way.
+- **On Web** only `BunnymarkSprites` runs, from the copy in `web/kotlin-src/`: Kanama's Web backend has no
+  `RandomNumberGenerator` yet, so the copy draws from `kotlin.random.Random` with the same seeds and distributions.
+  Its population is fixed but not the desktop one, so Web and desktop scores are not compared.
 - **`BunnymarkComputation`** uses `Mathf`, which runs in Kotlin, so its loop stays inside the language runtime as the
   benchmark requires.
