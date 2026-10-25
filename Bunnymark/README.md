@@ -74,5 +74,5 @@ there, keeps earlier results in its JSON file, uses a 30 fps target and the safe
   `RandomNumberGenerator.create()`.
 - **The bounce generator** is a field rather than upstream's static, because Kanama does not release a static
   reference before the engine exits. A run has one benchmark node, so the bunnies bounce the same way.
-- **`BunnymarkComputation`** uses `kotlin.math`, not `Mathf`: `Mathf.sin` and `Mathf.cos` call into Godot, and this
-  benchmark's loop must stay inside the language runtime.
+- **`BunnymarkComputation`** uses `Mathf`, which runs in Kotlin, so its loop stays inside the language runtime as the
+  benchmark requires.

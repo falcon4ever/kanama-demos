@@ -8,6 +8,7 @@ import net.multigesture.kanama.annotations.ScriptClass
 import net.multigesture.kanama.annotations.Signal
 import net.multigesture.kanama.api.GodotHandle
 import net.multigesture.kanama.api.KanamaScript
+import net.multigesture.kanama.api.Mathf
 import net.multigesture.kanama.api.Node2D
 import net.multigesture.kanama.api.RandomNumberGenerator
 import net.multigesture.kanama.api.ResourceLoader
@@ -15,11 +16,6 @@ import net.multigesture.kanama.api.Texture2D
 import net.multigesture.kanama.generated.benchmarkFinished
 import net.multigesture.kanama.types.Color
 import net.multigesture.kanama.types.Vector2
-import kotlin.math.PI
-import kotlin.math.abs
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.sqrt
 
 @ScriptClass(attachTo = "Node2D")
 class BunnymarkComputationKanama(godotObject: GodotHandle) : KanamaScript<Node2D>(godotObject, ::Node2D) {
@@ -64,8 +60,7 @@ class BunnymarkComputationKanama(godotObject: GodotHandle) : KanamaScript<Node2D
         }
     }
 
-    // kotlin.math rather than Mathf: Mathf.sin and Mathf.cos call into Godot, and this loop is meant to stay inside
-    // the language runtime, as it does in the GDScript and C# versions.
+    // Mathf runs in Kotlin, so this loop stays inside the language runtime, as it does in the GDScript and C# versions.
     @OnProcess
     fun process(delta: Double) {
         screenSize = self.getViewportRect().size
@@ -74,12 +69,13 @@ class BunnymarkComputationKanama(godotObject: GodotHandle) : KanamaScript<Node2D
             bunny.phase += bunny.frequency * delta
             val phase = bunny.phase
 
-            val offsetX = sin(phase) * bunny.radius.x
-            val offsetY = cos(phase * 1.7) * bunny.radius.y
-            val distance = sqrt(offsetX * offsetX + offsetY * offsetY)
-            val angle = fastAtan2(offsetY, offsetX) + sin(phase * 0.5) * 0.75
+            val offsetX = Mathf.sin(phase) * bunny.radius.x
+            val offsetY = Mathf.cos(phase * 1.7) * bunny.radius.y
+            val distance = Mathf.sqrt(offsetX * offsetX + offsetY * offsetY)
+            val angle = fastAtan2(offsetY, offsetX) + Mathf.sin(phase * 0.5) * 0.75
 
-            bunny.position = Vector2(bunny.center.x + cos(angle) * distance, bunny.center.y + sin(angle) * distance)
+            bunny.position =
+                Vector2(bunny.center.x + Mathf.cos(angle) * distance, bunny.center.y + Mathf.sin(angle) * distance)
         }
         self.queueRedraw()
     }
@@ -117,14 +113,14 @@ class BunnymarkComputationKanama(godotObject: GodotHandle) : KanamaScript<Node2D
     }
 
     private fun fastAtan2(y: Double, x: Double): Double {
-        val ax = abs(x)
-        val ay = abs(y)
+        val ax = Mathf.abs(x)
+        val ay = Mathf.abs(y)
         var a = if (ax >= ay) {
             atanUnit(if (ax == 0.0) 0.0 else ay / ax)
         } else {
-            PI * 0.5 - atanUnit(ax / ay)
+            Mathf.PI * 0.5 - atanUnit(ax / ay)
         }
-        if (x < 0.0) a = PI - a
+        if (x < 0.0) a = Mathf.PI - a
         return if (y < 0.0) -a else a
     }
 

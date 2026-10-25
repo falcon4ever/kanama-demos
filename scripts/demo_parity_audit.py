@@ -107,13 +107,6 @@ ALLOWED_RAW_SIGNALS = {
     ("Starter-Kit-Match3/web/kotlin-src/Main.kt", "size_changed"),
 }
 
-ALLOWED_KOTLIN_MATH = {
-    # The benchmark's own contract is that nothing in its loop crosses the engine boundary: it measures the language
-    # runtime's floating-point throughput, and Mathf.sin and Mathf.cos call into Godot. The upstream Kotlin uses
-    # kotlin.math for the same reason.
-    "Bunnymark/kotlin-src/BunnymarkComputationKanama.kt",
-}
-
 ALLOWED_STRING_CONNECTS = {
     ("Starter-Kit-Match3/kotlin-src/Main.kt", "center_grid_on_screen"),
     # web/ mirror of the accepted Match3 port above.
@@ -187,8 +180,6 @@ def audit_file(path: Path, root: Path) -> list[Finding]:
 
         # `Random.` as a word of its own (Kotlin's `Random.nextInt()`), not the end of a name such as `spawnRandom.seed`.
         for pattern in (r"kotlin\.math", r"java\.util\.Random", r"kotlin\.random\.Random", r"(?<![\w.])Random\."):
-            if pattern == r"kotlin\.math" and rel in ALLOWED_KOTLIN_MATH:
-                continue
             match = re.search(pattern, text)
             offset = match.start() if match else -1
             if offset != -1:
