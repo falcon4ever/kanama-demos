@@ -24,6 +24,10 @@ window/size/viewport_width=1040
 window/size/viewport_height=652
 window/vsync/vsync_mode=0
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/kanama_tools/plugin.cfg")
+
 [rendering]
 
 environment/defaults/default_clear_color=Color(0.07, 0.08, 0.1, 1)
