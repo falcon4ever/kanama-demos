@@ -115,7 +115,7 @@ Bulletmark is the godot-kotlin-jvm project's benchmark, ported to Kanama with th
 
 The scene, its counts and timings, the GDScript (`gd/`) and C# (`cs/`) sides and the runner's measurement are
 upstream's. **Changed for Kanama:** the Kotlin side is rewritten as Kanama scripts in `kotlin-src/` (`KanamaScript`,
-`self`, typed signals) with the arena class named `BulletArena`, the runner attaches the Kotlin arena to a node and
+`self`, typed signals), the runner attaches the Kotlin arena to a node and
 reads its totals as JSON, and the Gradle tasks start Godot with a timeout instead of godot-jvm's build and A/B
 snapshot tooling.
 
@@ -124,8 +124,8 @@ snapshot tooling.
 The Kotlin scene plays the same game as the GDScript one, with the same script calls per frame. Where it differs from
 upstream's Kotlin, it is because of how Kanama works:
 
-- **`BulletArena`, not `Arena`.** The port was written when Kanama's generated registration code imported
-  `java.lang.foreign.Arena`, so a script class named `Arena` did not compile; it does now, and the name stays.
+- **`Arena`, as upstream.** The class was `BulletArena` until Kanama's generated registration code stopped importing
+  `java.lang.foreign.Arena` under its simple name, which made a script class named `Arena` fail to compile.
 - **Spawning.** There is no `Bullet()` or `Bullet.new()` for a Kanama script: the arena creates an `Area2D`, attaches
   the preloaded script with `setScript`, and takes the script object with `asScript<Bullet>()`.
 - **Creating engine objects.** GDScript's `Area2D.new()` and `CircleShape2D.new()` are `Area2D.create()` and

@@ -29,12 +29,9 @@ import net.multigesture.kanama.types.Vector2
  * The switches passed to [configure] each remove one part of that workload, so a change can be traced to the
  * subsystem it touches. Every random choice comes from one generator seeded by the runner, so two runs of a build with
  * the same switches play the same game.
- *
- * Upstream calls this class `Arena`. Kanama generates its script registration with an import of
- * `java.lang.foreign.Arena`, so a script class of that name does not compile; the name is the only difference.
  */
 @ScriptClass(attachTo = "Node2D")
-class BulletArena(godotObject: GodotHandle) : KanamaScript<Node2D>(godotObject, ::Node2D) {
+class Arena(godotObject: GodotHandle) : KanamaScript<Node2D>(godotObject, ::Node2D) {
     /** Whether bullets and drones connect `area_entered`. Off, nothing ever hits: bullets only expire. */
     internal var hits = true
         private set

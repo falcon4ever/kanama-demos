@@ -12,7 +12,7 @@ import net.multigesture.kanama.api.Texture2D
 import net.multigesture.kanama.api.asScript
 import net.multigesture.kanama.api.isScript
 import net.multigesture.kanama.api.tree
-import net.multigesture.kanama.generated.BulletArenaNames
+import net.multigesture.kanama.generated.ArenaNames
 import net.multigesture.kanama.types.Color
 import net.multigesture.kanama.types.Vector2
 
@@ -33,7 +33,7 @@ import net.multigesture.kanama.types.Vector2
  */
 @ScriptClass(attachTo = "Area2D")
 class Drone(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area2D) {
-    private lateinit var arena: BulletArena
+    private lateinit var arena: Arena
     private lateinit var fill: Sprite2D
     private lateinit var sensor: Area2D
     private var original = true
@@ -44,7 +44,7 @@ class Drone(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area
     private var framesUntilScan = SCAN_INTERVAL_FRAMES
     private var dead = false
 
-    internal fun place(arena: BulletArena, x: Double, y: Double, velocityX: Double, velocityY: Double, original: Boolean) {
+    internal fun place(arena: Arena, x: Double, y: Double, velocityX: Double, velocityY: Double, original: Boolean) {
         this.arena = arena
         this.original = original
         this.velocityX = velocityX
@@ -98,13 +98,13 @@ class Drone(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area
         val position = self.position
         var x = position.x + velocityX * delta
         var y = position.y + velocityY * delta
-        if (x < BulletArena.MIDDLE_LEFT || x > BulletArena.MIDDLE_RIGHT) {
+        if (x < Arena.MIDDLE_LEFT || x > Arena.MIDDLE_RIGHT) {
             velocityX = -velocityX
-            x = x.coerceIn(BulletArena.MIDDLE_LEFT, BulletArena.MIDDLE_RIGHT)
+            x = x.coerceIn(Arena.MIDDLE_LEFT, Arena.MIDDLE_RIGHT)
         }
-        if (y < BulletArena.TOP || y > BulletArena.BOTTOM) {
+        if (y < Arena.TOP || y > Arena.BOTTOM) {
             velocityY = -velocityY
-            y = y.coerceIn(BulletArena.TOP, BulletArena.BOTTOM)
+            y = y.coerceIn(Arena.TOP, Arena.BOTTOM)
         }
         self.position = Vector2(x, y)
     }
@@ -168,7 +168,7 @@ class Drone(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area
         arena.recordKill(original)
         if (original) {
             val at = self.position
-            arena.self.callDeferred(BulletArenaNames.Methods.split, at.x, at.y)
+            arena.self.callDeferred(ArenaNames.Methods.split, at.x, at.y)
             if (arena.reactions) {
                 // Bound to the arena, not to this drone, which is freed before the timer fires and would take the
                 // connection with it.
@@ -186,10 +186,10 @@ class Drone(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area
 
     /** Crops the fill from the top, so the body empties as the hit points drop. */
     private fun showHitPoints() {
-        val size = 2 * BulletArena.DRONE_DRAWN_RADIUS
+        val size = 2 * Arena.DRONE_DRAWN_RADIUS
         val top = size * (1.0 - hitPoints.coerceAtLeast(0).toDouble() / maxHitPoints)
         fill.regionRect = rect(0.0, top, size, size - top)
-        fill.offset = Vector2(-BulletArena.DRONE_DRAWN_RADIUS, top - BulletArena.DRONE_DRAWN_RADIUS)
+        fill.offset = Vector2(-Arena.DRONE_DRAWN_RADIUS, top - Arena.DRONE_DRAWN_RADIUS)
     }
 
     internal companion object {

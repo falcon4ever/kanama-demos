@@ -21,7 +21,7 @@ import net.multigesture.kanama.types.Vector2
  */
 @ScriptClass(attachTo = "Area2D")
 class Bullet(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Area2D) {
-    private lateinit var arena: BulletArena
+    private lateinit var arena: Arena
     internal var team = 0
         private set
     private var velocityX = 0.0
@@ -29,7 +29,7 @@ class Bullet(godotObject: GodotHandle) : KanamaScript<Area2D>(godotObject, ::Are
     private var finished = false
 
     internal fun launch(
-        arena: BulletArena,
+        arena: Arena,
         team: Int,
         x: Double,
         y: Double,

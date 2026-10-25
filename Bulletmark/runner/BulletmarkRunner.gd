@@ -5,9 +5,9 @@ extends Node
 ## same game: what varies between runs is only how long the frames took to compute.
 
 ## The same scene in each language, each a line-for-line port of the others that plays exactly the same game. The Kotlin
-## scene runs on Kanama, whose arena class is BulletArena (see kotlin-src/BulletArena.kt).
+## scene runs on Kanama (kotlin-src/Arena.kt).
 const ARENAS := {
-	"kt": "res://kotlin-src/BulletArena.kt",
+	"kt": "res://kotlin-src/Arena.kt",
 	"cs": "res://cs/Arena.cs",
 	"gd": "res://gd/Arena.gd",
 }
