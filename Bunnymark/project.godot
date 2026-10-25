@@ -17,6 +17,10 @@ project/assembly_name="Bunnymark"
 window/vsync/vsync_mode=false
 window/handheld/orientation=0
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/kanama_tools/plugin.cfg")
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"
