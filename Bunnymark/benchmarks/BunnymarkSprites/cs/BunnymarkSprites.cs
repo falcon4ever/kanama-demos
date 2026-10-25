@@ -1,0 +1,117 @@
+using System.Collections.Generic;
+using Godot;
+
+public partial class BunnymarkSprites : Node2D
+{
+    private sealed class BunnyData
+    {
+        public Sprite2D Sprite;
+        public Vector2 Speed;
+
+        public BunnyData(Sprite2D sprite, Vector2 speed)
+        {
+            Sprite = sprite;
+            Speed = speed;
+        }
+    }
+
+    private readonly List<BunnyData> _bunnies = new();
+    private const float Gravity = 500f;
+    private readonly Texture2D _bunnyTexture = ResourceLoader.Load<Texture2D>("res://images/godot_bunny.png");
+    private readonly RandomNumberGenerator _spawnRandom = new();
+
+    // One generator for every bounce in the run, kept apart from the spawn generator so that the bounce sequence
+    // does not shift when the ramp happens to spawn a different number of bunnies.
+    private static readonly RandomNumberGenerator BounceRandom = new();
+
+    private Vector2 _screenSize;
+
+    public override void _Ready()
+    {
+        // Fixed seeds rather than Randomize(): every run then spawns the same population and bounces it the same
+        // way, so a difference in the score is a difference in the code.
+        _spawnRandom.Seed = 20260921;
+        BounceRandom.Seed = 20260922;
+    }
+
+    public override void _Process(double delta)
+    {
+        float dt = (float)delta;
+        _screenSize = GetViewportRect().Size;
+
+        foreach (BunnyData bunny in _bunnies)
+        {
+            Vector2 pos = bunny.Sprite.Position;
+            Vector2 speed = bunny.Speed;
+
+            pos.X += speed.X * dt;
+            pos.Y += speed.Y * dt;
+
+            speed.Y += Gravity * dt;
+
+            if (pos.X > _screenSize.X)
+            {
+                speed.X *= -1f;
+                pos.X = _screenSize.X;
+            }
+
+            if (pos.X < 0f)
+            {
+                speed.X *= -1f;
+                pos.X = 0f;
+            }
+
+            if (pos.Y > _screenSize.Y)
+            {
+                pos.Y = _screenSize.Y;
+                if (BounceRandom.Randf() > 0.5f)
+                {
+                    speed.Y = -(BounceRandom.Randi() % 1100 + 50);
+                }
+                else
+                {
+                    speed.Y *= -0.85f;
+                }
+            }
+
+            if (pos.Y < 0f)
+            {
+                speed.Y = 0f;
+                pos.Y = 0f;
+            }
+
+            bunny.Sprite.Position = pos;
+            bunny.Speed = speed;
+        }
+    }
+
+    public void add_bunny()
+    {
+        // A ninety degree arc centred straight down -- +Y is down in 2D, so Pi / 2 points at the floor.
+        // Angle and speed are drawn separately, so every direction gets the same range of speeds.
+        float angle = _spawnRandom.RandfRange(Mathf.Pi * 0.25f, Mathf.Pi * 0.75f);
+        float speed = _spawnRandom.RandfRange(50f, 250f);
+        var bunny = new Sprite2D();
+        bunny.Texture = _bunnyTexture;
+        AddChild(bunny);
+        bunny.Position = new Vector2(_screenSize.X / 2, _screenSize.Y / 2);
+        _bunnies.Add(new BunnyData(
+            bunny,
+            new Vector2(Mathf.Cos(angle) * speed, Mathf.Sin(angle) * speed)
+        ));
+    }
+
+    public void remove_bunny()
+    {
+        if (_bunnies.Count == 0) return;
+        BunnyData bunny = _bunnies[_bunnies.Count - 1];
+        RemoveChild(bunny.Sprite);
+        _bunnies.RemoveAt(_bunnies.Count - 1);
+        bunny.Sprite.QueueFree();
+    }
+
+    public void finish()
+    {
+        EmitSignal("benchmark_finished", _bunnies.Count);
+    }
+}

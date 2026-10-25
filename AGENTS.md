@@ -37,7 +37,8 @@ wording.
   `../kanama/docs/game-dev/signals.md`.
 - For TPS-specific work: `tps-demo-kanama/README.md`,
   `tps-demo-kanama/PORTING_NOTES.md`, and `tps-demo-kanama/UPSTREAM.md`.
-- For benchmark work: `Bunnymark/BENCHMARK_RESULTS.md` and
+- For benchmark work: `Bunnymark/README.md`, `Bulletmark/README.md`, their
+  `BENCHMARK_HOWTO.md`, and `Bunnymark/BENCHMARK_RESULTS.md` and
   `Bunnymark/BENCHMARK_TASKS.md`.
 
 Use targeted `rg` searches after reading the relevant files above. Do not
@@ -58,6 +59,7 @@ start by loading every demo's `kotlin-src/` tree.
 | `characterController` | `godot-4-3d-character-controller-tutorial` | GDQuest demo. |
 | `thirdPerson` | `godot-4-3d-third-person-controller` | GDQuest demo. |
 | `tps` | `tps-demo-kanama` | Godot TPS demo. |
+| `bulletmark` | `Bulletmark` | Benchmark harness. |
 
 Per-demo task patterns are:
 

@@ -3,6 +3,16 @@
 Desktop results for the Bunnymark demo. The benchmark adds bunnies until the
 scene stabilizes near 60 FPS, so higher numbers are better.
 
+**The tables below predate the 2026-10 refresh** to godot-kotlin-jvm commit
+`0b0599b3`, which brought in the current benchmarks and benchmarker (see
+`README.md`). They were measured with the earlier benchmarker, which searched
+for the target by adding and removing bunnies, with no warm-up and random
+seeds, so they do not compare with runs of the current one. The old rows map
+to the current benchmarks as V1 Sprites to `BunnymarkSprites`, V1 DrawTexture
+to `BunnymarkDrawTexture`, V2 to `BunnymarkSceneTree` and V3 to
+`BunnymarkScripts`; `BunnymarkComputation` is new. `BENCHMARK_HOWTO.md` says
+how to measure and what to record here.
+
 ## Latest Cross-Runtime Snapshot
 
 This table lines up the latest Kanama-side numbers with the latest Godot/JVM

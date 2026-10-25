@@ -8,6 +8,10 @@ config/name="Kanama Bunnymark"
 run/main_scene="res://Benchmarker.tscn"
 config/features=PackedStringArray("4.7")
 
+[dotnet]
+
+project/assembly_name="Bunnymark"
+
 [display]
 
 window/vsync/vsync_mode=false

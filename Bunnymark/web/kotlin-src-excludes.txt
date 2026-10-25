@@ -1,7 +1,8 @@
 # Desktop-only benchmark variants: selected at runtime by their res://kotlin-src/
 # paths, so they must stay in the shared kotlin-src for desktop, but they are not
-# ported to the Web API surface (the Web port drives BunnymarkV1Sprites only).
+# ported to the Web API surface (the Web port drives BunnymarkSprites only).
 BunnyKanama.kt
-BunnymarkV1DrawTextureKanama.kt
-BunnymarkV2Kanama.kt
-BunnymarkV3Kanama.kt
+BunnymarkComputationKanama.kt
+BunnymarkDrawTextureKanama.kt
+BunnymarkSceneTreeKanama.kt
+BunnymarkScriptsKanama.kt

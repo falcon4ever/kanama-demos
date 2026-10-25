@@ -12,6 +12,7 @@ val demos = listOf(
     "godot-4-3d-character-controller-tutorial" to "godot-4-3d-character-controller-tutorial",
     "godot-4-3d-third-person-controller" to "godot-4-3d-third-person-controller",
     "tps-demo-kanama" to "tps-demo",
+    "Bulletmark" to "bulletmark",
 )
 
 for ((path, buildName) in demos) {
