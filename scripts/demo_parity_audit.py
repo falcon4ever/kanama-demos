@@ -113,6 +113,12 @@ ALLOWED_STRING_CONNECTS = {
     ("Starter-Kit-Match3/web/kotlin-src/Main.kt", "center_grid_on_screen"),
 }
 
+ALLOWED_KOTLIN_RANDOM = {
+    # Web copy of the Sprites benchmark: Kanama's Web backend has no RandomNumberGenerator wrapper, and the
+    # benchmark's two seeded generators must not cross the bridge per draw (the desktop script uses Godot's).
+    "Bunnymark/web/kotlin-src/BunnymarkSpritesKanama.kt",
+}
+
 @dataclass(frozen=True)
 class Finding:
     path: str
@@ -178,8 +184,12 @@ def audit_file(path: Path, root: Path) -> list[Finding]:
                 if match.group("name") not in SMOKE_EFFECT_NAMES:
                     add_finding(findings, rel, text, match.start(), f"smoke/probe member '{match.group('name')}' belongs in Smoke.kt, not in a gameplay class")
 
-        for pattern in ("kotlin.math", "java.util.Random", "kotlin.random.Random", "Random."):
-            offset = text.find(pattern)
+        # `Random.` as a word of its own (Kotlin's `Random.nextInt()`), not the end of a name such as `spawnRandom.seed`.
+        for pattern in (r"kotlin\.math", r"java\.util\.Random", r"kotlin\.random\.Random", r"(?<![\w.])Random\."):
+            if pattern == r"kotlin\.random\.Random" and rel in ALLOWED_KOTLIN_RANDOM:
+                continue
+            match = re.search(pattern, text)
+            offset = match.start() if match else -1
             if offset != -1:
                 add_finding(findings, rel, text, offset, "demo ports should prefer Godot helpers when the original used Godot helpers")
 
@@ -311,8 +321,10 @@ def self_test() -> int:
         "smoke autoload node path": 'class Main { fun ready() { val s = self.getNode("/root/Smoke") } }',
         "bare getenv": "import java.lang.System.*\nclass Level { fun ready() { val x = getenv(\"ANYTHING\") } }",
         "process environment": "class Level { fun ready() { val x = ProcessBuilder().environment() } }",
+        "kotlin random": "class Level { fun ready() { val x = Random.nextInt() } }",
     }
-    clean = "class Main {\n    // Read by Smoke: a comment may name the harness\n    fun ready() { val reflection = 1 }\n}"
+    # A name ending in Random (a RandomNumberGenerator field) is not Kotlin's Random.
+    clean = "class Main {\n    // Read by Smoke: a comment may name the harness\n    fun ready() { val reflection = 1; spawnRandom.seed = 1 }\n}"
     failures = []
     for name, source in {**cases, "clean": clean}.items():
         with tempfile.TemporaryDirectory() as tmp:

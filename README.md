@@ -24,7 +24,8 @@ Kotlin under `kotlin-src/`. Not everything is Kotlin:
   overrides the main script with `web/kotlin-src/Main.kt`. The Kotlin scripts call
   the autoload through `GodotObject.call`, so this demo is also a mixed
   GDScript/Kotlin example.
-- The Bunnymark GDScript baselines (see Benchmarking) and the
+- The GDScript and C# sides of the two benchmarks, Bunnymark and Bulletmark (see
+  Benchmarking), and the
   `godot-4-3d-character-controller-tutorial/lesson_reference/` lesson scripts.
 
 ## Repository Layout
@@ -301,18 +302,27 @@ logcat captures, and screenshots under `/tmp/kanama-android-smokes` by default.
 
 ## Benchmarking
 
-`Bunnymark` is a benchmark project for comparing GDScript and Kotlin script
-throughput in a simple 2D stress test. It includes Kanama ports of the
-Godot/JVM Bunnymark harness plus local GDScript baselines.
+Two benchmark projects, both from the godot-kotlin-jvm project, compare Kanama
+with GDScript, C# and godot-kotlin-jvm on the same machine. Each runs the same
+workload in all three languages:
 
-Run it the same way as the gameplay demos:
+- `Bunnymark` adds bouncing sprites until the frame rate drops to 60 fps and
+  reports how many the scene held, in five variants from scene-tree API use to
+  plain computation.
+- `Bulletmark` plays a fixed, deterministic bullet-hell game at 60 frames per
+  second of game time and reports frame times: spawning and freeing, a physics
+  script per entity, signals from physics, tweens, timers and scene queries.
+
+Run them the same way as the gameplay demos:
 
 ```sh
 ./gradlew bunnymarkBuildAndRunGodot
+./gradlew bulletmarkBuildAndRunGodot
 ```
 
-Current one-pass desktop results and the exact Godot/JVM commit used for
-comparison are recorded in `Bunnymark/BENCHMARK_RESULTS.md`.
+Each folder's `README.md` explains the benchmark and its options, and
+`BENCHMARK_HOWTO.md` gives the commands for a cross-runtime comparison. Earlier
+results are in `Bunnymark/BENCHMARK_RESULTS.md`.
 
 ## Ported Demos
 
@@ -343,7 +353,8 @@ comparison are recorded in `Bunnymark/BENCHMARK_RESULTS.md`.
 | `tps-demo-kanama` | Godot `tps-demo` | Code MIT; assets and music CC BY 3.0; includes GameTextures.com material attribution | https://github.com/godotengine/tps-demo |
 | `godot-demo-3d-squash-the-creeps` | Godot demo projects `3d/squash_the_creeps` | Code MIT; `House In a Forest Loop.ogg` CC BY 3.0; Montserrat OFL 1.1 | https://github.com/godotengine/godot-demo-projects/tree/master/3d/squash_the_creeps |
 | `godot-demo-2d-dodge-the-creeps` | Godot demo projects `2d/dodge_the_creeps` | Code MIT; images CC0; `House In a Forest Loop.ogg` CC BY 3.0; Xolonium OFL 1.1 | https://github.com/godotengine/godot-demo-projects/tree/master/2d/dodge_the_creeps |
-| `Bunnymark` | Godot/JVM Bunnymark harness | MIT | https://github.com/utopia-rise/godot-kotlin-jvm/tree/master/harness/bunnymark |
+| `Bunnymark` | godot-kotlin-jvm `harness/bunnymark` | MIT | https://github.com/utopia-rise/godot-jvm/tree/master/harness/bunnymark |
+| `Bulletmark` | godot-kotlin-jvm `harness/bulletmark` | MIT | https://github.com/utopia-rise/godot-jvm/tree/master/harness/bulletmark |
 
 ## Porting Guidelines
 

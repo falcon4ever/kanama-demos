@@ -38,6 +38,7 @@ val demoBuilds = listOf(
     DemoBuild("godot-4-3d-character-controller-tutorial", "godot-4-3d-character-controller-tutorial", "characterController", "GDQuest Character Controller"),
     DemoBuild("godot-4-3d-third-person-controller", "godot-4-3d-third-person-controller", "thirdPerson", "GDQuest Third Person Controller"),
     DemoBuild("tps-demo", "tps-demo-kanama", "tps", "Godot TPS Demo"),
+    DemoBuild("bulletmark", "Bulletmark", "bulletmark", "Bulletmark"),
 )
 
 val kanamaRoot = providers.gradleProperty("kanamaRoot")
