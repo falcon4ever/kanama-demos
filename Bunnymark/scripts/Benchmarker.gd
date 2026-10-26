@@ -81,6 +81,11 @@ var bunny_number := 0
 ## Kanama: a phone measures against 30 fps unless `--target=` says otherwise, the target the earlier mobile runs of
 ## this port used; vsync is turned off there too, so the panel's refresh rate does not cap the frame rate.
 const MOBILE_TARGET := 30.0
+## Kanama: a smoke run holds this many bunnies and measures nothing: no warm-up, no ramp, no result, no quit. A smoke
+## run is the Android smoke's `kanama/debug/demo_smoke` project setting or the iOS device run's KANAMA_DEMO_SMOKE_QUIT=1;
+## the benchmark's warm-up and ramp load a phone to a few frames a minute, which says nothing about whether it works.
+const SMOKE_BUNNIES := 500
+var smoke := false
 ## Kanama: the top-left readouts are moved past a phone's rounded corner or notch by this inset.
 var safe_inset := Vector2.ZERO
 const SAFE_AREA_MARGIN := Vector2(24, 24)
@@ -106,6 +111,8 @@ func _ready():
             warm_up_override = arg.split("=")[1]
     if language == "kanama":
         language = "kt"
+    smoke = OS.get_environment("KANAMA_DEMO_SMOKE_QUIT") == "1" \
+        or bool(ProjectSettings.get_setting("kanama/debug/demo_smoke", false))
 
     # Every benchmark and language pair has its own scene under `scenes/`, and that scene is where the pair's
     # expected score lives. A command line run starts at the project's main scene instead, and choosing the pair from
@@ -165,7 +172,7 @@ func start_benchmark(benchmark_name: String, language: String):
     bunny_number = 0
     below_target_time = 0.0
     awaiting_settle = false
-    if not language in bunnymark_warm_up_languages:
+    if not language in bunnymark_warm_up_languages or smoke:
         bunnymark_warm_up_enabled = false
     if warm_up_override != "":
         bunnymark_warm_up_enabled = warm_up_override == "true"
@@ -219,6 +226,13 @@ func write_result(output):
     print("Results written to " + ProjectSettings.globalize_path(output_path))
 
 func update_bunnymark(delta):
+    if smoke:
+        if bunny_number == 0:
+            bunny_number = SMOKE_BUNNIES
+            for i in range(SMOKE_BUNNIES):
+                benchmark_node.call("add_bunny")
+            print("Smoke run: " + str(SMOKE_BUNNIES) + " bunnies, no measurement")
+        return
     if not warmed_up:
         warm_up(delta)
         return
