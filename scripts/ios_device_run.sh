@@ -950,7 +950,7 @@ if [[ "$CONSOLE_SECONDS" -eq 0 ]]; then
   DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device process launch \
     --device "$DEVICE_ID" \
     --terminate-existing \
-    "${launch_env_args[@]}" \
+    ${launch_env_args[@]+"${launch_env_args[@]}"} \
     "$BUNDLE_ID"
 else
   # Task 105: `--console` streams the device's stdout/stderr to the host and blocks until the app
@@ -964,7 +964,7 @@ else
     --device "$DEVICE_ID" \
     --terminate-existing \
     --console \
-    "${launch_env_args[@]}" \
+    ${launch_env_args[@]+"${launch_env_args[@]}"} \
     "$BUNDLE_ID" \
     >>"$CONSOLE_LOG" 2>&1 &
   console_pid="$!"
