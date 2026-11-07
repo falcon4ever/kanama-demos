@@ -6,7 +6,7 @@ config_version=5
 
 config/name="Kanama Bunnymark"
 run/main_scene="res://Benchmarker.tscn"
-config/features=PackedStringArray("4.7")
+config/features=PackedStringArray("4.8")
 
 [dotnet]
 
