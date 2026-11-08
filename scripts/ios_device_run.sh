@@ -32,6 +32,8 @@ Optional environment:
       environment, via devicectl --environment-variables) so its kotlin-src/Smoke*.kt smoke runs on the phone —
       spawn / damage / free / quit — inside the console window; the step then also REQUIRES the smoke's
       completion line (KANAMA_IOS_SMOKE_COMPLETE_PATTERN, default: [kanama:smoke] SmokeQuit complete).
+      That line also ends the console window early (plus a 3 s settle): the smoke's quit leaves the app
+      on a grey screen, which the rest of the window would only have kept on the phone.
       Ignored for demos whose kotlin-src/Smoke*.kt does not read KANAMA_DEMO_SMOKE_QUIT. Needs KANAMA_IOS_CONSOLE_SECONDS > 0. (task 111)
   KANAMA_IOS_CRASH_REPORTS=1  (default when KANAMA_IOS_CONSOLE_SECONDS > 0) snapshot the device's crash
       logs before the launch and again after the window; a NEW <AppName>-*.ips fails the step even when the
@@ -991,6 +993,12 @@ else
     if [[ -z "$launched_at" ]] && grep -q '\[kanama\]\[ios\]' "$CONSOLE_LOG" 2>/dev/null; then  # justified: poll of the log being written; the verdict is read from the window copy afterwards
       launched_at="$waited"
       echo "[ios_device_run] console: runtime reported after ${launched_at}s; watching ${CONSOLE_SECONDS}s more"
+    fi
+    # A finished smoke ends the window: its quit leaves the app on Godot's grey clear colour (iOS
+    # ignores SceneTree.quit()), and watching that for the rest of the window only kept a grey
+    # screen on the phone for half a minute. The 3 s settle below still catches a teardown crash.
+    if [[ "$smoke_active" -eq 1 ]] && grep -q -E "$SMOKE_COMPLETE_PATTERN" "$CONSOLE_LOG" 2>/dev/null; then  # justified: poll of the log being written; the verdict is read from the window copy afterwards
+      break
     fi
     if [[ -z "$launched_at" ]]; then
       [[ "$waited" -ge "$launch_timeout" ]] && break
