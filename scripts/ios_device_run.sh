@@ -947,6 +947,11 @@ capture_engine_errors() {
   check_engine_errors "$OUTPUT_DIR/engine-errors.log" "$BUNDLE_ID" "$selftest_ran"
 }
 
+# iOS can prewarm the app as a suspended process (DAS prewarm); while that process exists,
+# `devicectl device process launch --terminate-existing` fails with "Invalid argument (error 22)".
+# Terminating any running copy by pid first makes the launch reliable.
+echo "[ios_device_run] before launch: ending any running $APP_NAME (prewarmed or left over)"
+terminate_demo_app
 echo "[ios_device_run] launching app: $BUNDLE_ID"
 if [[ "$CONSOLE_SECONDS" -eq 0 ]]; then
   DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device process launch \
