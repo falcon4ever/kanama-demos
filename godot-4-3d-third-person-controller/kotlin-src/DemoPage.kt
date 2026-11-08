@@ -138,8 +138,11 @@ class DemoPage(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Nod
 
     private fun exitDemo() {
         if (exiting) return
-        if (isWeb()) {
+        if (isWeb() || isIos()) {
             // A browser page has no app to quit: Exit just resumes gameplay (the former Web override).
+            // iOS neither: Godot ignores SceneTree.quit() there (the app keeps running), so the
+            // unload below would leave a grey screen with nothing to tap. Upstream's quit() is a
+            // no-op on iOS; resuming keeps the button useful.
             resumeDemo()
             return
         }
@@ -230,6 +233,8 @@ class DemoPage(godotObject: GodotHandle) : KanamaScript<Node>(godotObject, ::Nod
         OS.hasFeature("mobile") || OS.hasFeature("android") || OS.hasFeature("Android")
 
     private fun isWeb(): Boolean = OS.hasFeature("web")
+
+    private fun isIos(): Boolean = OS.hasFeature("ios")
 
     private fun Color.withAlpha(alpha: Double): Color =
         Color(r, g, b, alpha)
