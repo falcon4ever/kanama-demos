@@ -5,7 +5,7 @@ Godot demo projects ported from GDScript to Kotlin with
 
 <p>
   <img alt="Godot 4.8 beta 2" src="https://img.shields.io/badge/Godot-4.8_beta_2-478cbf.svg">
-  <img alt="Kanama 0.4.0" src="https://img.shields.io/badge/Kanama-0.4.0-6f42c1.svg">
+  <img alt="Kanama main branch" src="https://img.shields.io/badge/Kanama-main-6f42c1.svg">
   <img alt="JDK 25+" src="https://img.shields.io/badge/JDK-25%2B-f89820.svg">
   <img alt="Status: experimental" src="https://img.shields.io/badge/status-experimental-yellow.svg">
   <img alt="Demo code: MIT" src="https://img.shields.io/badge/Kotlin%20ports-MIT-blue.svg">
