@@ -32,6 +32,8 @@ Optional environment:
       environment, via devicectl --environment-variables) so its kotlin-src/Smoke*.kt smoke runs on the phone —
       spawn / damage / free / quit — inside the console window; the step then also REQUIRES the smoke's
       completion line (KANAMA_IOS_SMOKE_COMPLETE_PATTERN, default: [kanama:smoke] SmokeQuit complete).
+      That line also ends the console window early (plus a 3 s settle): the smoke's quit leaves the app
+      on a grey screen, which the rest of the window would only have kept on the phone.
       Ignored for demos whose kotlin-src/Smoke*.kt does not read KANAMA_DEMO_SMOKE_QUIT. Needs KANAMA_IOS_CONSOLE_SECONDS > 0. (task 111)
   KANAMA_IOS_CRASH_REPORTS=1  (default when KANAMA_IOS_CONSOLE_SECONDS > 0) snapshot the device's crash
       logs before the launch and again after the window; a NEW <AppName>-*.ips fails the step even when the
@@ -282,30 +284,30 @@ parse_app_pids() {
   '
 }
 
-# Never fails the run: every step is best effort and the function always returns 0. Justified: it runs after
-# the verdict is on disk and only closes the app; each `|| true` / `2>/dev/null` below is that cleanup. A pid
-# that could not be terminated prints a WARNING.
+# Never fails the run: every step is best effort and the function always returns 0. Justified: it runs before
+# the launch (to end a prewarmed or left-over copy) and after the verdict is on disk, and only closes the app;
+# each `|| true` / `2>/dev/null` below is that cleanup. A pid that could not be terminated prints a WARNING.
 terminate_demo_app() {
   local list_file="$OUTPUT_DIR/processes.json" listing pids pid
   device_process_listing() {
     rm -f "$list_file"
     if DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device info processes --device "$DEVICE_ID" \
-        --timeout 30 --json-output "$list_file" >/dev/null 2>&1 && [[ -s "$list_file" ]]; then  # justified: cleanup after the verdict; falls back to the table listing below
+        --timeout 30 --json-output "$list_file" >/dev/null 2>&1 && [[ -s "$list_file" ]]; then  # justified: best-effort cleanup (before launch, after the verdict); falls back to the table listing below
       cat "$list_file"
     else
       DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device info processes --device "$DEVICE_ID" \
-        --timeout 30 2>/dev/null || true  # justified: cleanup after the verdict; an empty listing means nothing to terminate
+        --timeout 30 2>/dev/null || true  # justified: best-effort cleanup (before launch, after the verdict); an empty listing means nothing to terminate
     fi
   }
   listing="$(device_process_listing)"
-  pids="$(printf '%s\n' "$listing" | parse_app_pids "$APP_NAME" || true)"  # justified: cleanup after the verdict; an empty result means nothing to terminate
+  pids="$(printf '%s\n' "$listing" | parse_app_pids "$APP_NAME" || true)"  # justified: best-effort cleanup (before launch, after the verdict); an empty result means nothing to terminate
   if [[ -z "$pids" ]]; then
     echo "[ios_device_run] cleanup: no running $APP_NAME process on the device (nothing to terminate)"
     return 0
   fi
   for pid in $pids; do
     if DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device process terminate --device "$DEVICE_ID" \
-        --pid "$pid" --timeout 30 >/dev/null 2>&1; then  # justified: cleanup after the verdict; failure prints a WARNING in the else branch
+        --pid "$pid" --timeout 30 >/dev/null 2>&1; then  # justified: best-effort cleanup (before launch, after the verdict); failure prints a WARNING in the else branch
       echo "[ios_device_run] cleanup: terminated $APP_NAME (pid $pid)"
     else
       echo "[ios_device_run] cleanup: WARNING: could not terminate $APP_NAME (pid $pid); continuing" >&2
@@ -314,10 +316,10 @@ terminate_demo_app() {
   # A Godot app that already quit its main loop can sit through SIGTERM; check, and SIGKILL what is left.
   sleep 2
   listing="$(device_process_listing)"
-  pids="$(printf '%s\n' "$listing" | parse_app_pids "$APP_NAME" || true)"  # justified: cleanup after the verdict; an empty result means nothing to terminate
+  pids="$(printf '%s\n' "$listing" | parse_app_pids "$APP_NAME" || true)"  # justified: best-effort cleanup (before launch, after the verdict); an empty result means nothing to terminate
   for pid in $pids; do
     if DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device process terminate --device "$DEVICE_ID" \
-        --pid "$pid" --kill --timeout 30 >/dev/null 2>&1; then  # justified: cleanup after the verdict; failure prints a WARNING in the else branch
+        --pid "$pid" --kill --timeout 30 >/dev/null 2>&1; then  # justified: best-effort cleanup (before launch, after the verdict); failure prints a WARNING in the else branch
       echo "[ios_device_run] cleanup: $APP_NAME (pid $pid) survived SIGTERM; killed it"
     else
       echo "[ios_device_run] cleanup: WARNING: $APP_NAME (pid $pid) is still running and could not be killed; continuing" >&2
@@ -945,6 +947,11 @@ capture_engine_errors() {
   check_engine_errors "$OUTPUT_DIR/engine-errors.log" "$BUNDLE_ID" "$selftest_ran"
 }
 
+# iOS can prewarm the app as a suspended process (DAS prewarm); while that process exists,
+# `devicectl device process launch --terminate-existing` fails with "Invalid argument (error 22)".
+# Terminating any running copy by pid first makes the launch reliable.
+echo "[ios_device_run] before launch: ending any running $APP_NAME (prewarmed or left over)"
+terminate_demo_app
 echo "[ios_device_run] launching app: $BUNDLE_ID"
 if [[ "$CONSOLE_SECONDS" -eq 0 ]]; then
   DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device process launch \
@@ -991,6 +998,12 @@ else
     if [[ -z "$launched_at" ]] && grep -q '\[kanama\]\[ios\]' "$CONSOLE_LOG" 2>/dev/null; then  # justified: poll of the log being written; the verdict is read from the window copy afterwards
       launched_at="$waited"
       echo "[ios_device_run] console: runtime reported after ${launched_at}s; watching ${CONSOLE_SECONDS}s more"
+    fi
+    # A finished smoke ends the window: its quit leaves the app on Godot's grey clear colour (iOS
+    # ignores SceneTree.quit()), and watching that for the rest of the window only kept a grey
+    # screen on the phone for half a minute. The 3 s settle below still catches a teardown crash.
+    if [[ "$smoke_active" -eq 1 ]] && grep -q -E "$SMOKE_COMPLETE_PATTERN" "$CONSOLE_LOG" 2>/dev/null; then  # justified: poll of the log being written; the verdict is read from the window copy afterwards
+      break
     fi
     if [[ -z "$launched_at" ]]; then
       [[ "$waited" -ge "$launch_timeout" ]] && break
