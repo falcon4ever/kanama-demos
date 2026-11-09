@@ -445,6 +445,27 @@ check_engine_errors() {  # <engine-errors extract> <bundle id> [<self-test ran: 
   return "$status"
 }
 
+# A launch iOS refused, from devicectl's launch output. An untrusted developer reads "Unable to launch <id> because it
+# has an invalid code signature, inadequate entitlements or its profile has not been explicitly trusted by the user":
+# with a free Apple account iOS drops the trust when the last app that developer signed leaves the phone, and only a
+# tap on the phone restores it (kanama's ios_device_gate.sh stops its matrix on the "VPN & Device Management" text).
+# A locked phone reads "the device was not, or could not be, unlocked". Prints the reason and returns 1 on a refusal.
+launch_refusal_verdict() {
+  if grep -q -E "has not been explicitly trusted|invalid code signature, inadequate entitlements" "$1"; then
+    echo "[ios_device_run] console: iOS refused the launch: the developer that signed this app is not trusted on the phone. On the phone open Settings > General > VPN & Device Management, tap the Apple Development entry under Developer App and Trust it, then re-run. (A free Apple account loses this trust whenever its last app leaves the phone.)"
+    return 1
+  fi
+  if grep -q -E "could not be, unlocked" "$1"; then
+    echo "[ios_device_run] console: iOS refused the launch: the device is locked. Unlock it and keep it awake (Settings > Display & Brightness > Auto-Lock: Never), then re-run."
+    return 1
+  fi
+  if grep -q -E "failed to launch|RequestDenied" "$1"; then
+    echo "[ios_device_run] console: iOS refused the launch — $(grep -m1 -o 'Unable to launch[^(]*' "$1" | head -1)"
+    return 1
+  fi
+  return 0
+}
+
 # Device-free red runs of check_console_faults against fixture console logs (task 118): the clean log must pass,
 # and each broken one must fail with its own message. Includes the 2026-10 device run that reported exit 0 over
 # `OBJECTCALLS SELFTEST FAIL: ...` and `306 passed, 2 failed`. Exit 0/1.
@@ -508,6 +529,32 @@ LOG
   case_log "API exercise summary with a failed row" fail "summary has failures" "$dir/r12c.log"
   sed 's/(api exercise): 90 passed, 0 failed, 5 weak, 0 known, 0 reach faults=7/(api exercise): 90 passed, 0 failed, 5 weak, 0 known, 0 reach faults=8/' "$good" >"$dir/r12d.log"
   case_log "API exercise row raised a FAULT (faults=8 expected=7)" fail "fault count disagrees" "$dir/r12d.log"
+  # The launch refusals (kanama 4.8 beta 2 rehearsal): devicectl's own text from an iPhone that no longer trusted the
+  # developer, and the locked-phone reason; each must name its own fix.
+  case_refusal() {  # <label> <expected text, or - for no refusal> <log file>
+    local out rc=0
+    out="$(launch_refusal_verdict "$3" 2>&1)" || rc=$?
+    if [[ "$2" == "-" && "$rc" -eq 0 ]] || [[ "$2" != "-" && "$rc" -ne 0 && "$out" == *"$2"* ]]; then
+      echo "[ios_device_run] console self-test ok:   $1"
+    else
+      echo "[ios_device_run] console self-test FAIL: $1 expected ${2}, got rc=$rc: $out"
+      failures=$((failures + 1))
+    fi
+  }
+  case_refusal "launch refusal: a clean console is no refusal" - "$good"
+  cat >"$dir/untrusted.log" <<'LOG'
+ERROR: The application failed to launch. (com.apple.dt.CoreDeviceError error 10002 (0x2712))
+       BundleIdentifier = net.multigesture.kanama.match3
+           NSLocalizedFailureReason = The request was denied by service delegate (SBMainWorkspace) for reason: Security ("Unable to launch net.multigesture.kanama.match3 because it has an invalid code signature, inadequate entitlements or its profile has not been explicitly trusted by the user").
+           BSErrorCodeDescription = RequestDenied
+LOG
+  case_refusal "launch refusal: developer not trusted" "VPN & Device Management" "$dir/untrusted.log"
+  cat >"$dir/locked.log" <<'LOG'
+ERROR: The application failed to launch. (com.apple.dt.CoreDeviceError error 10002 (0x2712))
+           NSLocalizedFailureReason = The request was denied by service delegate (SBMainWorkspace) for reason: Locked ("Unable to launch net.multigesture.kanama.match3 because the device was not, or could not be, unlocked").
+           BSErrorCodeDescription = RequestDenied
+LOG
+  case_refusal "launch refusal: device locked" "the device is locked" "$dir/locked.log"
   # kanama task 111 item 3: the engine-error verdict over a `log show --style compact` extract. The deliberate lines are
   # the five an iPhone 12 run of KanamaMatch3 wrote (2026-10-15), verbatim.
   local app_id=net.multigesture.kanama.match3 eng="$dir/engine.log"
@@ -954,11 +1001,17 @@ echo "[ios_device_run] before launch: ending any running $APP_NAME (prewarmed or
 terminate_demo_app
 echo "[ios_device_run] launching app: $BUNDLE_ID"
 if [[ "$CONSOLE_SECONDS" -eq 0 ]]; then
-  DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device process launch \
+  LAUNCH_LOG="$OUTPUT_DIR/launch.log"
+  if ! DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" xcrun devicectl device process launch \
     --device "$DEVICE_ID" \
     --terminate-existing \
     ${launch_env_args[@]+"${launch_env_args[@]}"} \
-    "$BUNDLE_ID"
+    "$BUNDLE_ID" 2>&1 | tee "$LAUNCH_LOG"; then
+    # justified: the verdict only names the reason; the launch already failed and the exit below says so.
+    launch_refusal_verdict "$LAUNCH_LOG" || true
+    echo "[ios_device_run] FAIL: the launch failed: $LAUNCH_LOG"
+    exit 1
+  fi
 else
   # Task 105: `--console` streams the device's stdout/stderr to the host and blocks until the app
   # exits (the demos never self-quit), so run it in the background, watch the log for the window,
@@ -1035,8 +1088,8 @@ else
     echo "[ios_device_run] FAIL"
     exit 1
   fi
-  if grep -q -E "failed to launch|could not be, unlocked|RequestDenied" "$VERDICT_LOG"; then
-    echo "[ios_device_run] console: the launch was refused (device locked?) — $(grep -m1 -o 'Unable to launch[^(]*' "$VERDICT_LOG" | head -1): $CONSOLE_LOG"
+  if ! launch_refusal_verdict "$VERDICT_LOG"; then
+    echo "[ios_device_run] console: $CONSOLE_LOG"
     echo "[ios_device_run] FAIL"
     exit 1
   fi
