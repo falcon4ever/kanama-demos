@@ -452,14 +452,14 @@ check_engine_errors() {  # <engine-errors extract> <bundle id> [<self-test ran: 
 # A locked phone reads "the device was not, or could not be, unlocked". Prints the reason and returns 1 on a refusal.
 launch_refusal_verdict() {
   if grep -q -E "has not been explicitly trusted|invalid code signature, inadequate entitlements" "$1"; then
-    echo "[ios_device_run] console: iOS refused the launch: the developer that signed this app is not trusted on the phone. On the phone open Settings > General > VPN & Device Management, tap the Apple Development entry under Developer App and Trust it, then re-run. (A free Apple account loses this trust whenever its last app leaves the phone.)"
+    echo "[ios_device_run] console: iOS refused the launch, most likely because the phone does not trust the developer that signed this app (devicectl gives the same reason for a bad signature). On the phone open Settings > General > VPN & Device Management, tap the Apple Development entry under Developer App and Trust it, then re-run. (A free Apple account loses this trust whenever its last app leaves the phone.)"
     return 1
   fi
   if grep -q -E "could not be, unlocked" "$1"; then
     echo "[ios_device_run] console: iOS refused the launch: the device is locked. Unlock it and keep it awake (Settings > Display & Brightness > Auto-Lock: Never), then re-run."
     return 1
   fi
-  if grep -q -E "failed to launch|RequestDenied" "$1"; then
+  if grep -q -E "The application failed to launch|BSErrorCodeDescription = RequestDenied" "$1"; then
     echo "[ios_device_run] console: iOS refused the launch — $(grep -m1 -o 'Unable to launch[^(]*' "$1" | head -1)"
     return 1
   fi
@@ -542,6 +542,8 @@ LOG
     fi
   }
   case_refusal "launch refusal: a clean console is no refusal" - "$good"
+  { cat "$good"; echo '[kanama][ios][kn] a generated name that is no refusal: spatialContainerBoundsModeRequestDenied'; } >"$dir/denied-name.log"
+  case_refusal "launch refusal: a generated name ending in RequestDenied is no refusal" - "$dir/denied-name.log"
   cat >"$dir/untrusted.log" <<'LOG'
 ERROR: The application failed to launch. (com.apple.dt.CoreDeviceError error 10002 (0x2712))
        BundleIdentifier = net.multigesture.kanama.match3
