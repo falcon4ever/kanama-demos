@@ -6,7 +6,7 @@ guide to work on demos without scanning every project directory first.
 ## Current Baseline
 
 - Kanama version: `0.4.0`.
-- Godot baseline: Godot `4.8 beta 2`, as Kanama's `main` (0.5.0 ships on 4.8 stable).
+- Godot baseline: Godot `4.8 beta 4`, as Kanama's `main` (0.5.0 ships on 4.8 stable).
 - Desktop/runtime JDK: JDK `25+`.
 - Default layout keeps this checkout beside `kanama`:
 
